@@ -3,7 +3,6 @@ package br.com.powercards;
 import br.com.powercards.services.AnkiService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -16,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 
 @Path("/v1/anki")
-public class GreetingResource {
+public class AnkiResource {
 
-    Logger logger = LoggerFactory.getLogger(GreetingResource.class);
+    Logger logger = LoggerFactory.getLogger(AnkiResource.class);
 
     @Inject
     AnkiService anki;
