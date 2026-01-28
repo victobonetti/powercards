@@ -12,10 +12,12 @@ public class Card extends PanacheEntityBase {
 
     @ManyToOne
     @JoinColumn(name = "nid")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public Note note;
 
     @ManyToOne
     @JoinColumn(name = "did")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public Deck deck;
 
     public Integer ord;
@@ -38,6 +40,7 @@ public class Card extends PanacheEntityBase {
 
     public Integer lapses;
 
+    @Column(name = "\"left\"")
     public Integer left;
 
     public Long odue;

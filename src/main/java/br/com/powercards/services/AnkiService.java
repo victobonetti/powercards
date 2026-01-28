@@ -48,8 +48,22 @@ public class AnkiService {
 
         // 1. Persistir Models
         Map<Long, AnkiModel> modelMap = anki4j.getModels().stream()
-                .map(m -> new AnkiModel(m.getId(), m.getName(), m.getCss()))
-                .peek(m -> m.persist())
+                .map(m -> {
+                    AnkiModel model = new AnkiModel(m.getId(), m.getName(), m.getCss());
+                    if (m.getFlds() != null) {
+                        model.fields = m.getFlds().stream()
+                                .map(f -> new br.com.powercards.model.AnkiField(f.getName(), f.getOrd(), model))
+                                .collect(Collectors.toList());
+                    }
+                    if (m.getTmpls() != null) {
+                        model.templates = m.getTmpls().stream()
+                                .map(t -> new br.com.powercards.model.AnkiTemplate(t.getName(), t.getQfmt(),
+                                        t.getAfmt(), t.getOrd(), model))
+                                .collect(Collectors.toList());
+                    }
+                    model.persist();
+                    return model;
+                })
                 .collect(Collectors.toMap(m -> m.id, Function.identity()));
 
         // 2. Persistir Decks
