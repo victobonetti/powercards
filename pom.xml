@@ -72,6 +72,10 @@
             <artifactId>quarkus-anki4j</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-openapi</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -130,6 +134,27 @@
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.10.0</version>
+                <configuration>
+                    <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
+                    <generatorName>typescript-axios</generatorName>
+                    <output>${project.basedir}/generated/frontend</output>
+                    <configOptions>
+                        <typescriptThreePlus>true</typescriptThreePlus>
+                        <supportsES6>true</supportsES6>
+                    </configOptions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

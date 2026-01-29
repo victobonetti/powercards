@@ -26,7 +26,15 @@ public class AnkiResource {
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Upload Anki package", description = "Uploads an .apkg file and returns the loaded decks.")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "File uploaded successfully")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "400", description = "No file provided")
     public Response upload(@RestForm("file") InputStream file) {
+        if (file == null) {
+            logger.warn("Não foi encontrado arquivo .apk");
+            return Response.status(400).build();
+        }
+
         anki.load(file);
         return Response.ok(anki.getDecks()).build();
     }

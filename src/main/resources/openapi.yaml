@@ -1,0 +1,551 @@
+---
+openapi: 3.1.0
+info:
+  contact:
+    name: PowerCards Support
+    url: https://github.com/victobonetti/powercards
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  title: PowerCards API
+  version: 1.0.0
+paths:
+  /v1/anki/upload:
+    post:
+      summary: Upload Anki package
+      description: Uploads an .apkg file and returns the loaded decks.
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        "200":
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: No file provided
+      tags:
+      - Anki Resource
+  /v1/cards:
+    get:
+      summary: List all cards
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Card"
+      tags:
+      - Card Resource
+    post:
+      summary: Create a new card
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Card"
+        required: true
+      responses:
+        "201":
+          description: Card created
+        "400":
+          description: Bad Request
+      tags:
+      - Card Resource
+  /v1/cards/{id}:
+    put:
+      summary: Update an existing card
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Card"
+        required: true
+      responses:
+        "200":
+          description: Card updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          description: Card not found
+        "400":
+          description: Bad Request
+      tags:
+      - Card Resource
+    get:
+      summary: Get a card by ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Card found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          description: Card not found
+      tags:
+      - Card Resource
+    delete:
+      summary: Delete a card
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Card deleted
+        "404":
+          description: Card not found
+      tags:
+      - Card Resource
+  /v1/decks:
+    get:
+      summary: List all decks
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deck"
+      tags:
+      - Deck Resource
+    post:
+      summary: Create a new deck
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Deck"
+        required: true
+      responses:
+        "201":
+          description: Deck created
+        "400":
+          description: Bad Request
+      tags:
+      - Deck Resource
+  /v1/decks/{id}:
+    put:
+      summary: Update an existing deck
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Deck"
+        required: true
+      responses:
+        "200":
+          description: Deck updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deck"
+        "404":
+          description: Deck not found
+        "400":
+          description: Bad Request
+      tags:
+      - Deck Resource
+    get:
+      summary: Get a deck by ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Deck found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deck"
+        "404":
+          description: Deck not found
+      tags:
+      - Deck Resource
+    delete:
+      summary: Delete a deck
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Deck deleted
+        "404":
+          description: Deck not found
+      tags:
+      - Deck Resource
+  /v1/models:
+    get:
+      summary: List all Anki models
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnkiModel"
+      tags:
+      - Anki Model Resource
+    post:
+      summary: Create a new Anki model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnkiModel"
+        required: true
+      responses:
+        "201":
+          description: Model created
+        "400":
+          description: Bad Request
+      tags:
+      - Anki Model Resource
+  /v1/models/{id}:
+    put:
+      summary: Update an existing Anki model
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnkiModel"
+        required: true
+      responses:
+        "200":
+          description: Model updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnkiModel"
+        "404":
+          description: Model not found
+        "400":
+          description: Bad Request
+      tags:
+      - Anki Model Resource
+    get:
+      summary: Get an Anki model by ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Model found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnkiModel"
+        "404":
+          description: Model not found
+      tags:
+      - Anki Model Resource
+    delete:
+      summary: Delete an Anki model
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Model deleted
+        "404":
+          description: Model not found
+      tags:
+      - Anki Model Resource
+  /v1/notes:
+    get:
+      summary: List all notes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+      tags:
+      - Note Resource
+    post:
+      summary: Create a new note
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Note"
+        required: true
+      responses:
+        "201":
+          description: Note created
+        "400":
+          description: Bad Request
+      tags:
+      - Note Resource
+  /v1/notes/{id}:
+    put:
+      summary: Update an existing note
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Note"
+        required: true
+      responses:
+        "200":
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "404":
+          description: Note not found
+        "400":
+          description: Bad Request
+      tags:
+      - Note Resource
+    get:
+      summary: Get a note by ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Note found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "404":
+          description: Note not found
+      tags:
+      - Note Resource
+    delete:
+      summary: Delete a note
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Note deleted
+        "404":
+          description: Note not found
+      tags:
+      - Note Resource
+components:
+  schemas:
+    AnkiField:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        ord:
+          type: integer
+          format: int32
+    AnkiModel:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        css:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnkiField"
+        templates:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnkiTemplate"
+    AnkiTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        qfmt:
+          type: string
+        afmt:
+          type: string
+        ord:
+          type: integer
+          format: int32
+    Card:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        ord:
+          type: integer
+          format: int32
+        mod:
+          type: integer
+          format: int64
+        usn:
+          type: integer
+          format: int32
+        type:
+          type: integer
+          format: int32
+        queue:
+          type: integer
+          format: int32
+        due:
+          type: integer
+          format: int64
+        ivl:
+          type: integer
+          format: int32
+        factor:
+          type: integer
+          format: int32
+        reps:
+          type: integer
+          format: int32
+        lapses:
+          type: integer
+          format: int32
+        left:
+          type: integer
+          format: int32
+        odue:
+          type: integer
+          format: int64
+        odid:
+          type: integer
+          format: int64
+        flags:
+          type: integer
+          format: int32
+        data:
+          type: string
+    Deck:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        guid:
+          type: string
+        model:
+          $ref: "#/components/schemas/AnkiModel"
+        mod:
+          type: integer
+          format: int64
+        usn:
+          type: integer
+          format: int32
+        tags:
+          type: string
+        flds:
+          type: string
+        sfld:
+          type: string
+        csum:
+          type: integer
+          format: int64
+        flags:
+          type: integer
+          format: int32
+        data:
+          type: string
+servers:
+- url: http://localhost:8088
+  description: Auto generated value
+- url: http://0.0.0.0:8088
+  description: Auto generated value

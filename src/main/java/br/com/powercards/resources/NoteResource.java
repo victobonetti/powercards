@@ -13,12 +13,16 @@ import java.util.List;
 public class NoteResource {
 
     @GET
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all notes")
     public List<Note> list() {
         return Note.listAll();
     }
 
     @GET
     @Path("/{id}")
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Get a note by ID")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Note found")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
     public Note get(@PathParam("id") Long id) {
         Note note = Note.findById(id);
         if (note == null) {
@@ -29,6 +33,8 @@ public class NoteResource {
 
     @POST
     @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Create a new note")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201", description = "Note created")
     public Response create(Note note) {
         note.persist();
         return Response.status(Response.Status.CREATED).entity(note).build();
@@ -37,6 +43,9 @@ public class NoteResource {
     @PUT
     @Path("/{id}")
     @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Update an existing note")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Note updated")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
     public Note update(@PathParam("id") Long id, Note note) {
         Note entity = Note.findById(id);
         if (entity == null) {
@@ -58,6 +67,9 @@ public class NoteResource {
     @DELETE
     @Path("/{id}")
     @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Delete a note")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "204", description = "Note deleted")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
     public void delete(@PathParam("id") Long id) {
         Note entity = Note.findById(id);
         if (entity == null) {

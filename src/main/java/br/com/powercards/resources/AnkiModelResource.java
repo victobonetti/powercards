@@ -13,12 +13,16 @@ import java.util.List;
 public class AnkiModelResource {
 
     @GET
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all Anki models")
     public List<AnkiModel> list() {
         return AnkiModel.listAll();
     }
 
     @GET
     @Path("/{id}")
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Get an Anki model by ID")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Model found")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Model not found")
     public AnkiModel get(@PathParam("id") Long id) {
         AnkiModel model = AnkiModel.findById(id);
         if (model == null) {
@@ -29,6 +33,8 @@ public class AnkiModelResource {
 
     @POST
     @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Create a new Anki model")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201", description = "Model created")
     public Response create(AnkiModel model) {
         model.persist();
         return Response.status(Response.Status.CREATED).entity(model).build();
@@ -37,6 +43,9 @@ public class AnkiModelResource {
     @PUT
     @Path("/{id}")
     @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Update an existing Anki model")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Model updated")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Model not found")
     public AnkiModel update(@PathParam("id") Long id, AnkiModel model) {
         AnkiModel entity = AnkiModel.findById(id);
         if (entity == null) {
@@ -53,6 +62,9 @@ public class AnkiModelResource {
     @DELETE
     @Path("/{id}")
     @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Delete an Anki model")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "204", description = "Model deleted")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Model not found")
     public void delete(@PathParam("id") Long id) {
         AnkiModel entity = AnkiModel.findById(id);
         if (entity == null) {
