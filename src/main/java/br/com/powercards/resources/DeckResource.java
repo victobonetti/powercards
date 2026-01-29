@@ -1,6 +1,8 @@
 package br.com.powercards.resources;
 
 import br.com.powercards.model.Deck;
+import br.com.powercards.dto.DeckRequest;
+import br.com.powercards.dto.DeckResponse;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -14,8 +16,10 @@ public class DeckResource {
 
     @GET
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all decks")
-    public List<Deck> list() {
-        return Deck.listAll();
+    public List<DeckResponse> list() {
+        return Deck.<Deck>listAll().stream()
+                .map(d -> new DeckResponse(d.id, d.name))
+                .toList();
     }
 
     @GET
@@ -23,21 +27,25 @@ public class DeckResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Get a deck by ID")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Deck found")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Deck not found")
-    public Deck get(@PathParam("id") Long id) {
+    public DeckResponse get(@PathParam("id") Long id) {
         Deck deck = Deck.findById(id);
         if (deck == null) {
             throw new NotFoundException();
         }
-        return deck;
+        return new DeckResponse(deck.id, deck.name);
     }
 
     @POST
     @Transactional
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Create a new deck")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201", description = "Deck created")
-    public Response create(Deck deck) {
+    public Response create(DeckRequest deckRequest) {
+        Deck deck = new Deck();
+        deck.name = deckRequest.name();
         deck.persist();
-        return Response.status(Response.Status.CREATED).entity(deck).build();
+        return Response.status(Response.Status.CREATED)
+                .entity(new DeckResponse(deck.id, deck.name))
+                .build();
     }
 
     @PUT
@@ -46,13 +54,13 @@ public class DeckResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Update an existing deck")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Deck updated")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Deck not found")
-    public Deck update(@PathParam("id") Long id, Deck deck) {
+    public DeckResponse update(@PathParam("id") Long id, DeckRequest deckRequest) {
         Deck entity = Deck.findById(id);
         if (entity == null) {
             throw new NotFoundException();
         }
-        entity.name = deck.name;
-        return entity;
+        entity.name = deckRequest.name();
+        return new DeckResponse(entity.id, entity.name);
     }
 
     @DELETE

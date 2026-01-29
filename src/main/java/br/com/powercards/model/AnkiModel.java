@@ -10,6 +10,8 @@ import java.util.List;
 public class AnkiModel extends PanacheEntityBase {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "anki_models_seq")
+    @SequenceGenerator(name = "anki_models_seq", sequenceName = "anki_models_seq", allocationSize = 1)
     public Long id;
 
     public String name;

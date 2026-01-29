@@ -8,6 +8,8 @@ import jakarta.persistence.*;
 public class Note extends PanacheEntityBase {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "notes_seq")
+    @SequenceGenerator(name = "notes_seq", sequenceName = "notes_seq", allocationSize = 1)
     public Long id;
 
     public String guid;

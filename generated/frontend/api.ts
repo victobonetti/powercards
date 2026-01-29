@@ -26,294 +26,466 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerM
 /**
  * 
  * @export
- * @interface AnkiField
+ * @interface AnkiFieldDto
  */
-export interface AnkiField {
-    /**
-     * 
-     * @type {number}
-     * @memberof AnkiField
-     */
-    'id'?: number;
+export interface AnkiFieldDto {
     /**
      * 
      * @type {string}
-     * @memberof AnkiField
+     * @memberof AnkiFieldDto
      */
     'name'?: string;
     /**
      * 
      * @type {number}
-     * @memberof AnkiField
+     * @memberof AnkiFieldDto
      */
     'ord'?: number;
 }
 /**
  * 
  * @export
- * @interface AnkiModel
+ * @interface AnkiModelRequest
  */
-export interface AnkiModel {
-    /**
-     * 
-     * @type {number}
-     * @memberof AnkiModel
-     */
-    'id'?: number;
+export interface AnkiModelRequest {
     /**
      * 
      * @type {string}
-     * @memberof AnkiModel
+     * @memberof AnkiModelRequest
      */
     'name'?: string;
     /**
      * 
      * @type {string}
-     * @memberof AnkiModel
+     * @memberof AnkiModelRequest
      */
     'css'?: string;
     /**
      * 
-     * @type {Array<AnkiField>}
-     * @memberof AnkiModel
+     * @type {Array<AnkiFieldDto>}
+     * @memberof AnkiModelRequest
      */
-    'fields'?: Array<AnkiField>;
+    'fields'?: Array<AnkiFieldDto>;
     /**
      * 
-     * @type {Array<AnkiTemplate>}
-     * @memberof AnkiModel
+     * @type {Array<AnkiTemplateDto>}
+     * @memberof AnkiModelRequest
      */
-    'templates'?: Array<AnkiTemplate>;
+    'templates'?: Array<AnkiTemplateDto>;
 }
 /**
  * 
  * @export
- * @interface AnkiTemplate
+ * @interface AnkiModelResponse
  */
-export interface AnkiTemplate {
+export interface AnkiModelResponse {
     /**
      * 
      * @type {number}
-     * @memberof AnkiTemplate
+     * @memberof AnkiModelResponse
      */
     'id'?: number;
     /**
      * 
      * @type {string}
-     * @memberof AnkiTemplate
+     * @memberof AnkiModelResponse
      */
     'name'?: string;
     /**
      * 
      * @type {string}
-     * @memberof AnkiTemplate
+     * @memberof AnkiModelResponse
+     */
+    'css'?: string;
+    /**
+     * 
+     * @type {Array<AnkiFieldDto>}
+     * @memberof AnkiModelResponse
+     */
+    'fields'?: Array<AnkiFieldDto>;
+    /**
+     * 
+     * @type {Array<AnkiTemplateDto>}
+     * @memberof AnkiModelResponse
+     */
+    'templates'?: Array<AnkiTemplateDto>;
+}
+/**
+ * 
+ * @export
+ * @interface AnkiTemplateDto
+ */
+export interface AnkiTemplateDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof AnkiTemplateDto
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AnkiTemplateDto
      */
     'qfmt'?: string;
     /**
      * 
      * @type {string}
-     * @memberof AnkiTemplate
+     * @memberof AnkiTemplateDto
      */
     'afmt'?: string;
     /**
      * 
      * @type {number}
-     * @memberof AnkiTemplate
+     * @memberof AnkiTemplateDto
      */
     'ord'?: number;
 }
 /**
  * 
  * @export
- * @interface Card
+ * @interface CardRequest
  */
-export interface Card {
+export interface CardRequest {
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
-    'id'?: number;
+    'noteId'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
+     */
+    'deckId'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardRequest
      */
     'ord'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
-     */
-    'mod'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof Card
-     */
-    'usn'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'type'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'queue'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'due'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'ivl'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'factor'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'reps'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'lapses'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'left'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'odue'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'odid'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'flags'?: number;
     /**
      * 
      * @type {string}
-     * @memberof Card
+     * @memberof CardRequest
      */
     'data'?: string;
 }
 /**
  * 
  * @export
- * @interface Deck
+ * @interface CardResponse
  */
-export interface Deck {
+export interface CardResponse {
     /**
      * 
      * @type {number}
-     * @memberof Deck
+     * @memberof CardResponse
      */
     'id'?: number;
     /**
      * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'noteId'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'deckId'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'ord'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'mod'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'usn'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'type'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'queue'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'due'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'ivl'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'factor'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'reps'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'lapses'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'left'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'odue'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'odid'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardResponse
+     */
+    'flags'?: number;
+    /**
+     * 
      * @type {string}
-     * @memberof Deck
+     * @memberof CardResponse
+     */
+    'data'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface DeckRequest
+ */
+export interface DeckRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DeckRequest
      */
     'name'?: string;
 }
 /**
  * 
  * @export
- * @interface Note
+ * @interface DeckResponse
  */
-export interface Note {
+export interface DeckResponse {
     /**
      * 
      * @type {number}
-     * @memberof Note
+     * @memberof DeckResponse
      */
     'id'?: number;
     /**
      * 
      * @type {string}
-     * @memberof Note
+     * @memberof DeckResponse
      */
-    'guid'?: string;
-    /**
-     * 
-     * @type {AnkiModel}
-     * @memberof Note
-     */
-    'model'?: AnkiModel;
-    /**
-     * 
-     * @type {number}
-     * @memberof Note
-     */
-    'mod'?: number;
+    'name'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface NoteRequest
+ */
+export interface NoteRequest {
     /**
      * 
      * @type {number}
-     * @memberof Note
+     * @memberof NoteRequest
      */
-    'usn'?: number;
+    'modelId'?: number;
     /**
      * 
      * @type {string}
-     * @memberof Note
+     * @memberof NoteRequest
      */
     'tags'?: string;
     /**
      * 
      * @type {string}
-     * @memberof Note
+     * @memberof NoteRequest
      */
     'flds'?: string;
     /**
      * 
      * @type {string}
-     * @memberof Note
+     * @memberof NoteRequest
+     */
+    'data'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface NoteResponse
+ */
+export interface NoteResponse {
+    /**
+     * 
+     * @type {number}
+     * @memberof NoteResponse
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof NoteResponse
+     */
+    'guid'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof NoteResponse
+     */
+    'modelId'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof NoteResponse
+     */
+    'mod'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof NoteResponse
+     */
+    'usn'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof NoteResponse
+     */
+    'tags'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NoteResponse
+     */
+    'flds'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NoteResponse
      */
     'sfld'?: string;
     /**
      * 
      * @type {number}
-     * @memberof Note
+     * @memberof NoteResponse
      */
     'csum'?: number;
     /**
      * 
      * @type {number}
-     * @memberof Note
+     * @memberof NoteResponse
      */
     'flags'?: number;
     /**
      * 
      * @type {string}
-     * @memberof Note
+     * @memberof NoteResponse
      */
     'data'?: string;
 }
@@ -426,15 +598,15 @@ export const AnkiModelResourceApiAxiosParamCreator = function (configuration?: C
          * 
          * @summary Update an existing Anki model
          * @param {number} id 
-         * @param {AnkiModel} ankiModel 
+         * @param {AnkiModelRequest} ankiModelRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1ModelsIdPut: async (id: number, ankiModel: AnkiModel, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1ModelsIdPut: async (id: number, ankiModelRequest: AnkiModelRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('v1ModelsIdPut', 'id', id)
-            // verify required parameter 'ankiModel' is not null or undefined
-            assertParamExists('v1ModelsIdPut', 'ankiModel', ankiModel)
+            // verify required parameter 'ankiModelRequest' is not null or undefined
+            assertParamExists('v1ModelsIdPut', 'ankiModelRequest', ankiModelRequest)
             const localVarPath = `/v1/models/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -455,7 +627,7 @@ export const AnkiModelResourceApiAxiosParamCreator = function (configuration?: C
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(ankiModel, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(ankiModelRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -465,13 +637,13 @@ export const AnkiModelResourceApiAxiosParamCreator = function (configuration?: C
         /**
          * 
          * @summary Create a new Anki model
-         * @param {AnkiModel} ankiModel 
+         * @param {AnkiModelRequest} ankiModelRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1ModelsPost: async (ankiModel: AnkiModel, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'ankiModel' is not null or undefined
-            assertParamExists('v1ModelsPost', 'ankiModel', ankiModel)
+        v1ModelsPost: async (ankiModelRequest: AnkiModelRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'ankiModelRequest' is not null or undefined
+            assertParamExists('v1ModelsPost', 'ankiModelRequest', ankiModelRequest)
             const localVarPath = `/v1/models`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -491,7 +663,7 @@ export const AnkiModelResourceApiAxiosParamCreator = function (configuration?: C
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(ankiModel, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(ankiModelRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -514,7 +686,7 @@ export const AnkiModelResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1ModelsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AnkiModel>>> {
+        async v1ModelsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AnkiModelResponse>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1ModelsGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AnkiModelResourceApi.v1ModelsGet']?.[localVarOperationServerIndex]?.url;
@@ -540,7 +712,7 @@ export const AnkiModelResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1ModelsIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AnkiModel>> {
+        async v1ModelsIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AnkiModelResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1ModelsIdGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AnkiModelResourceApi.v1ModelsIdGet']?.[localVarOperationServerIndex]?.url;
@@ -550,12 +722,12 @@ export const AnkiModelResourceApiFp = function(configuration?: Configuration) {
          * 
          * @summary Update an existing Anki model
          * @param {number} id 
-         * @param {AnkiModel} ankiModel 
+         * @param {AnkiModelRequest} ankiModelRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1ModelsIdPut(id: number, ankiModel: AnkiModel, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AnkiModel>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ModelsIdPut(id, ankiModel, options);
+        async v1ModelsIdPut(id: number, ankiModelRequest: AnkiModelRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AnkiModelResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ModelsIdPut(id, ankiModelRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AnkiModelResourceApi.v1ModelsIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -563,12 +735,12 @@ export const AnkiModelResourceApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Create a new Anki model
-         * @param {AnkiModel} ankiModel 
+         * @param {AnkiModelRequest} ankiModelRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1ModelsPost(ankiModel: AnkiModel, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ModelsPost(ankiModel, options);
+        async v1ModelsPost(ankiModelRequest: AnkiModelRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ModelsPost(ankiModelRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AnkiModelResourceApi.v1ModelsPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -589,7 +761,7 @@ export const AnkiModelResourceApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1ModelsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<AnkiModel>> {
+        v1ModelsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<AnkiModelResponse>> {
             return localVarFp.v1ModelsGet(options).then((request) => request(axios, basePath));
         },
         /**
@@ -609,29 +781,29 @@ export const AnkiModelResourceApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1ModelsIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<AnkiModel> {
+        v1ModelsIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<AnkiModelResponse> {
             return localVarFp.v1ModelsIdGet(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Update an existing Anki model
          * @param {number} id 
-         * @param {AnkiModel} ankiModel 
+         * @param {AnkiModelRequest} ankiModelRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1ModelsIdPut(id: number, ankiModel: AnkiModel, options?: RawAxiosRequestConfig): AxiosPromise<AnkiModel> {
-            return localVarFp.v1ModelsIdPut(id, ankiModel, options).then((request) => request(axios, basePath));
+        v1ModelsIdPut(id: number, ankiModelRequest: AnkiModelRequest, options?: RawAxiosRequestConfig): AxiosPromise<AnkiModelResponse> {
+            return localVarFp.v1ModelsIdPut(id, ankiModelRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Create a new Anki model
-         * @param {AnkiModel} ankiModel 
+         * @param {AnkiModelRequest} ankiModelRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1ModelsPost(ankiModel: AnkiModel, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.v1ModelsPost(ankiModel, options).then((request) => request(axios, basePath));
+        v1ModelsPost(ankiModelRequest: AnkiModelRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1ModelsPost(ankiModelRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -682,25 +854,25 @@ export class AnkiModelResourceApi extends BaseAPI {
      * 
      * @summary Update an existing Anki model
      * @param {number} id 
-     * @param {AnkiModel} ankiModel 
+     * @param {AnkiModelRequest} ankiModelRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AnkiModelResourceApi
      */
-    public v1ModelsIdPut(id: number, ankiModel: AnkiModel, options?: RawAxiosRequestConfig) {
-        return AnkiModelResourceApiFp(this.configuration).v1ModelsIdPut(id, ankiModel, options).then((request) => request(this.axios, this.basePath));
+    public v1ModelsIdPut(id: number, ankiModelRequest: AnkiModelRequest, options?: RawAxiosRequestConfig) {
+        return AnkiModelResourceApiFp(this.configuration).v1ModelsIdPut(id, ankiModelRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Create a new Anki model
-     * @param {AnkiModel} ankiModel 
+     * @param {AnkiModelRequest} ankiModelRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AnkiModelResourceApi
      */
-    public v1ModelsPost(ankiModel: AnkiModel, options?: RawAxiosRequestConfig) {
-        return AnkiModelResourceApiFp(this.configuration).v1ModelsPost(ankiModel, options).then((request) => request(this.axios, this.basePath));
+    public v1ModelsPost(ankiModelRequest: AnkiModelRequest, options?: RawAxiosRequestConfig) {
+        return AnkiModelResourceApiFp(this.configuration).v1ModelsPost(ankiModelRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -927,15 +1099,15 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
          * 
          * @summary Update an existing card
          * @param {number} id 
-         * @param {Card} card 
+         * @param {CardRequest} cardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsIdPut: async (id: number, card: Card, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1CardsIdPut: async (id: number, cardRequest: CardRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('v1CardsIdPut', 'id', id)
-            // verify required parameter 'card' is not null or undefined
-            assertParamExists('v1CardsIdPut', 'card', card)
+            // verify required parameter 'cardRequest' is not null or undefined
+            assertParamExists('v1CardsIdPut', 'cardRequest', cardRequest)
             const localVarPath = `/v1/cards/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -956,7 +1128,7 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(card, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(cardRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -966,13 +1138,13 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Create a new card
-         * @param {Card} card 
+         * @param {CardRequest} cardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsPost: async (card: Card, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'card' is not null or undefined
-            assertParamExists('v1CardsPost', 'card', card)
+        v1CardsPost: async (cardRequest: CardRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'cardRequest' is not null or undefined
+            assertParamExists('v1CardsPost', 'cardRequest', cardRequest)
             const localVarPath = `/v1/cards`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -992,7 +1164,7 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(card, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(cardRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1015,7 +1187,7 @@ export const CardResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1CardsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Card>>> {
+        async v1CardsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<CardResponse>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CardResourceApi.v1CardsGet']?.[localVarOperationServerIndex]?.url;
@@ -1041,7 +1213,7 @@ export const CardResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1CardsIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Card>> {
+        async v1CardsIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CardResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsIdGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CardResourceApi.v1CardsIdGet']?.[localVarOperationServerIndex]?.url;
@@ -1051,12 +1223,12 @@ export const CardResourceApiFp = function(configuration?: Configuration) {
          * 
          * @summary Update an existing card
          * @param {number} id 
-         * @param {Card} card 
+         * @param {CardRequest} cardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1CardsIdPut(id: number, card: Card, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Card>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsIdPut(id, card, options);
+        async v1CardsIdPut(id: number, cardRequest: CardRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CardResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsIdPut(id, cardRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CardResourceApi.v1CardsIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1064,12 +1236,12 @@ export const CardResourceApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Create a new card
-         * @param {Card} card 
+         * @param {CardRequest} cardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1CardsPost(card: Card, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsPost(card, options);
+        async v1CardsPost(cardRequest: CardRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsPost(cardRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CardResourceApi.v1CardsPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1090,7 +1262,7 @@ export const CardResourceApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<Card>> {
+        v1CardsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<CardResponse>> {
             return localVarFp.v1CardsGet(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1110,29 +1282,29 @@ export const CardResourceApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<Card> {
+        v1CardsIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<CardResponse> {
             return localVarFp.v1CardsIdGet(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Update an existing card
          * @param {number} id 
-         * @param {Card} card 
+         * @param {CardRequest} cardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsIdPut(id: number, card: Card, options?: RawAxiosRequestConfig): AxiosPromise<Card> {
-            return localVarFp.v1CardsIdPut(id, card, options).then((request) => request(axios, basePath));
+        v1CardsIdPut(id: number, cardRequest: CardRequest, options?: RawAxiosRequestConfig): AxiosPromise<CardResponse> {
+            return localVarFp.v1CardsIdPut(id, cardRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Create a new card
-         * @param {Card} card 
+         * @param {CardRequest} cardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsPost(card: Card, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.v1CardsPost(card, options).then((request) => request(axios, basePath));
+        v1CardsPost(cardRequest: CardRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1CardsPost(cardRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1183,25 +1355,25 @@ export class CardResourceApi extends BaseAPI {
      * 
      * @summary Update an existing card
      * @param {number} id 
-     * @param {Card} card 
+     * @param {CardRequest} cardRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CardResourceApi
      */
-    public v1CardsIdPut(id: number, card: Card, options?: RawAxiosRequestConfig) {
-        return CardResourceApiFp(this.configuration).v1CardsIdPut(id, card, options).then((request) => request(this.axios, this.basePath));
+    public v1CardsIdPut(id: number, cardRequest: CardRequest, options?: RawAxiosRequestConfig) {
+        return CardResourceApiFp(this.configuration).v1CardsIdPut(id, cardRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Create a new card
-     * @param {Card} card 
+     * @param {CardRequest} cardRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CardResourceApi
      */
-    public v1CardsPost(card: Card, options?: RawAxiosRequestConfig) {
-        return CardResourceApiFp(this.configuration).v1CardsPost(card, options).then((request) => request(this.axios, this.basePath));
+    public v1CardsPost(cardRequest: CardRequest, options?: RawAxiosRequestConfig) {
+        return CardResourceApiFp(this.configuration).v1CardsPost(cardRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -1315,15 +1487,15 @@ export const DeckResourceApiAxiosParamCreator = function (configuration?: Config
          * 
          * @summary Update an existing deck
          * @param {number} id 
-         * @param {Deck} deck 
+         * @param {DeckRequest} deckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1DecksIdPut: async (id: number, deck: Deck, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1DecksIdPut: async (id: number, deckRequest: DeckRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('v1DecksIdPut', 'id', id)
-            // verify required parameter 'deck' is not null or undefined
-            assertParamExists('v1DecksIdPut', 'deck', deck)
+            // verify required parameter 'deckRequest' is not null or undefined
+            assertParamExists('v1DecksIdPut', 'deckRequest', deckRequest)
             const localVarPath = `/v1/decks/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -1344,7 +1516,7 @@ export const DeckResourceApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(deck, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(deckRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1354,13 +1526,13 @@ export const DeckResourceApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Create a new deck
-         * @param {Deck} deck 
+         * @param {DeckRequest} deckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1DecksPost: async (deck: Deck, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'deck' is not null or undefined
-            assertParamExists('v1DecksPost', 'deck', deck)
+        v1DecksPost: async (deckRequest: DeckRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'deckRequest' is not null or undefined
+            assertParamExists('v1DecksPost', 'deckRequest', deckRequest)
             const localVarPath = `/v1/decks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1380,7 +1552,7 @@ export const DeckResourceApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(deck, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(deckRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1403,7 +1575,7 @@ export const DeckResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1DecksGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Deck>>> {
+        async v1DecksGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<DeckResponse>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1DecksGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DeckResourceApi.v1DecksGet']?.[localVarOperationServerIndex]?.url;
@@ -1429,7 +1601,7 @@ export const DeckResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1DecksIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Deck>> {
+        async v1DecksIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeckResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1DecksIdGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DeckResourceApi.v1DecksIdGet']?.[localVarOperationServerIndex]?.url;
@@ -1439,12 +1611,12 @@ export const DeckResourceApiFp = function(configuration?: Configuration) {
          * 
          * @summary Update an existing deck
          * @param {number} id 
-         * @param {Deck} deck 
+         * @param {DeckRequest} deckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1DecksIdPut(id: number, deck: Deck, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Deck>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1DecksIdPut(id, deck, options);
+        async v1DecksIdPut(id: number, deckRequest: DeckRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeckResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1DecksIdPut(id, deckRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DeckResourceApi.v1DecksIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1452,12 +1624,12 @@ export const DeckResourceApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Create a new deck
-         * @param {Deck} deck 
+         * @param {DeckRequest} deckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1DecksPost(deck: Deck, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1DecksPost(deck, options);
+        async v1DecksPost(deckRequest: DeckRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1DecksPost(deckRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DeckResourceApi.v1DecksPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1478,7 +1650,7 @@ export const DeckResourceApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1DecksGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<Deck>> {
+        v1DecksGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<DeckResponse>> {
             return localVarFp.v1DecksGet(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1498,29 +1670,29 @@ export const DeckResourceApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1DecksIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<Deck> {
+        v1DecksIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<DeckResponse> {
             return localVarFp.v1DecksIdGet(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Update an existing deck
          * @param {number} id 
-         * @param {Deck} deck 
+         * @param {DeckRequest} deckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1DecksIdPut(id: number, deck: Deck, options?: RawAxiosRequestConfig): AxiosPromise<Deck> {
-            return localVarFp.v1DecksIdPut(id, deck, options).then((request) => request(axios, basePath));
+        v1DecksIdPut(id: number, deckRequest: DeckRequest, options?: RawAxiosRequestConfig): AxiosPromise<DeckResponse> {
+            return localVarFp.v1DecksIdPut(id, deckRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Create a new deck
-         * @param {Deck} deck 
+         * @param {DeckRequest} deckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1DecksPost(deck: Deck, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.v1DecksPost(deck, options).then((request) => request(axios, basePath));
+        v1DecksPost(deckRequest: DeckRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1DecksPost(deckRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1571,25 +1743,25 @@ export class DeckResourceApi extends BaseAPI {
      * 
      * @summary Update an existing deck
      * @param {number} id 
-     * @param {Deck} deck 
+     * @param {DeckRequest} deckRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DeckResourceApi
      */
-    public v1DecksIdPut(id: number, deck: Deck, options?: RawAxiosRequestConfig) {
-        return DeckResourceApiFp(this.configuration).v1DecksIdPut(id, deck, options).then((request) => request(this.axios, this.basePath));
+    public v1DecksIdPut(id: number, deckRequest: DeckRequest, options?: RawAxiosRequestConfig) {
+        return DeckResourceApiFp(this.configuration).v1DecksIdPut(id, deckRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Create a new deck
-     * @param {Deck} deck 
+     * @param {DeckRequest} deckRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DeckResourceApi
      */
-    public v1DecksPost(deck: Deck, options?: RawAxiosRequestConfig) {
-        return DeckResourceApiFp(this.configuration).v1DecksPost(deck, options).then((request) => request(this.axios, this.basePath));
+    public v1DecksPost(deckRequest: DeckRequest, options?: RawAxiosRequestConfig) {
+        return DeckResourceApiFp(this.configuration).v1DecksPost(deckRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -1703,15 +1875,15 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
          * 
          * @summary Update an existing note
          * @param {number} id 
-         * @param {Note} note 
+         * @param {NoteRequest} noteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesIdPut: async (id: number, note: Note, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1NotesIdPut: async (id: number, noteRequest: NoteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('v1NotesIdPut', 'id', id)
-            // verify required parameter 'note' is not null or undefined
-            assertParamExists('v1NotesIdPut', 'note', note)
+            // verify required parameter 'noteRequest' is not null or undefined
+            assertParamExists('v1NotesIdPut', 'noteRequest', noteRequest)
             const localVarPath = `/v1/notes/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -1732,7 +1904,7 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(note, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(noteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1742,13 +1914,13 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Create a new note
-         * @param {Note} note 
+         * @param {NoteRequest} noteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesPost: async (note: Note, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'note' is not null or undefined
-            assertParamExists('v1NotesPost', 'note', note)
+        v1NotesPost: async (noteRequest: NoteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'noteRequest' is not null or undefined
+            assertParamExists('v1NotesPost', 'noteRequest', noteRequest)
             const localVarPath = `/v1/notes`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1768,7 +1940,7 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(note, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(noteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1791,7 +1963,7 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1NotesGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Note>>> {
+        async v1NotesGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<NoteResponse>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesGet']?.[localVarOperationServerIndex]?.url;
@@ -1817,7 +1989,7 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1NotesIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Note>> {
+        async v1NotesIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NoteResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesIdGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesIdGet']?.[localVarOperationServerIndex]?.url;
@@ -1827,12 +1999,12 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
          * 
          * @summary Update an existing note
          * @param {number} id 
-         * @param {Note} note 
+         * @param {NoteRequest} noteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1NotesIdPut(id: number, note: Note, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Note>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesIdPut(id, note, options);
+        async v1NotesIdPut(id: number, noteRequest: NoteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NoteResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesIdPut(id, noteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1840,12 +2012,12 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Create a new note
-         * @param {Note} note 
+         * @param {NoteRequest} noteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1NotesPost(note: Note, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesPost(note, options);
+        async v1NotesPost(noteRequest: NoteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesPost(noteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1866,7 +2038,7 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<Note>> {
+        v1NotesGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<NoteResponse>> {
             return localVarFp.v1NotesGet(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1886,29 +2058,29 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<Note> {
+        v1NotesIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<NoteResponse> {
             return localVarFp.v1NotesIdGet(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Update an existing note
          * @param {number} id 
-         * @param {Note} note 
+         * @param {NoteRequest} noteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesIdPut(id: number, note: Note, options?: RawAxiosRequestConfig): AxiosPromise<Note> {
-            return localVarFp.v1NotesIdPut(id, note, options).then((request) => request(axios, basePath));
+        v1NotesIdPut(id: number, noteRequest: NoteRequest, options?: RawAxiosRequestConfig): AxiosPromise<NoteResponse> {
+            return localVarFp.v1NotesIdPut(id, noteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Create a new note
-         * @param {Note} note 
+         * @param {NoteRequest} noteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesPost(note: Note, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.v1NotesPost(note, options).then((request) => request(axios, basePath));
+        v1NotesPost(noteRequest: NoteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1NotesPost(noteRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1959,25 +2131,25 @@ export class NoteResourceApi extends BaseAPI {
      * 
      * @summary Update an existing note
      * @param {number} id 
-     * @param {Note} note 
+     * @param {NoteRequest} noteRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NoteResourceApi
      */
-    public v1NotesIdPut(id: number, note: Note, options?: RawAxiosRequestConfig) {
-        return NoteResourceApiFp(this.configuration).v1NotesIdPut(id, note, options).then((request) => request(this.axios, this.basePath));
+    public v1NotesIdPut(id: number, noteRequest: NoteRequest, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesIdPut(id, noteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Create a new note
-     * @param {Note} note 
+     * @param {NoteRequest} noteRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NoteResourceApi
      */
-    public v1NotesPost(note: Note, options?: RawAxiosRequestConfig) {
-        return NoteResourceApiFp(this.configuration).v1NotesPost(note, options).then((request) => request(this.axios, this.basePath));
+    public v1NotesPost(noteRequest: NoteRequest, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesPost(noteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

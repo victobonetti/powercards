@@ -1,6 +1,9 @@
 package br.com.powercards.resources;
 
 import br.com.powercards.model.Note;
+import br.com.powercards.model.AnkiModel;
+import br.com.powercards.dto.NoteRequest;
+import br.com.powercards.dto.NoteResponse;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -14,8 +17,10 @@ public class NoteResource {
 
     @GET
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all notes")
-    public List<Note> list() {
-        return Note.listAll();
+    public List<NoteResponse> list() {
+        return Note.<Note>listAll().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @GET
@@ -23,21 +28,28 @@ public class NoteResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Get a note by ID")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Note found")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
-    public Note get(@PathParam("id") Long id) {
+    public NoteResponse get(@PathParam("id") Long id) {
         Note note = Note.findById(id);
         if (note == null) {
             throw new NotFoundException();
         }
-        return note;
+        return toResponse(note);
     }
 
     @POST
     @Transactional
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Create a new note")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201", description = "Note created")
-    public Response create(Note note) {
+    public Response create(NoteRequest noteRequest) {
+        Note note = new Note();
+        note.tags = noteRequest.tags();
+        note.flds = noteRequest.flds();
+        note.data = noteRequest.data();
+        if (noteRequest.modelId() != null) {
+            note.model = AnkiModel.findById(noteRequest.modelId());
+        }
         note.persist();
-        return Response.status(Response.Status.CREATED).entity(note).build();
+        return Response.status(Response.Status.CREATED).entity(toResponse(note)).build();
     }
 
     @PUT
@@ -46,22 +58,18 @@ public class NoteResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Update an existing note")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Note updated")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
-    public Note update(@PathParam("id") Long id, Note note) {
+    public NoteResponse update(@PathParam("id") Long id, NoteRequest noteRequest) {
         Note entity = Note.findById(id);
         if (entity == null) {
             throw new NotFoundException();
         }
-        entity.guid = note.guid;
-        entity.model = note.model;
-        entity.mod = note.mod;
-        entity.usn = note.usn;
-        entity.tags = note.tags;
-        entity.flds = note.flds;
-        entity.sfld = note.sfld;
-        entity.csum = note.csum;
-        entity.flags = note.flags;
-        entity.data = note.data;
-        return entity;
+        entity.tags = noteRequest.tags();
+        entity.flds = noteRequest.flds();
+        entity.data = noteRequest.data();
+        if (noteRequest.modelId() != null) {
+            entity.model = AnkiModel.findById(noteRequest.modelId());
+        }
+        return toResponse(entity);
     }
 
     @DELETE
@@ -76,5 +84,20 @@ public class NoteResource {
             throw new NotFoundException();
         }
         entity.delete();
+    }
+
+    private NoteResponse toResponse(Note note) {
+        return new NoteResponse(
+                note.id,
+                note.guid,
+                note.model != null ? note.model.id : null,
+                note.mod,
+                note.usn,
+                note.tags,
+                note.flds,
+                note.sfld,
+                note.csum,
+                note.flags,
+                note.data);
     }
 }

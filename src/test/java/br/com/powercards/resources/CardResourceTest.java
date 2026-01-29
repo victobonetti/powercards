@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
 public class CardResourceTest {
@@ -13,51 +14,55 @@ public class CardResourceTest {
         @Test
         public void testCardCRUD() {
                 // Dependency: Deck
-                given()
+                Integer deckId = given()
                                 .contentType(ContentType.JSON)
-                                .body("{\"id\": 502, \"name\": \"Card Deck\"}")
-                                .post("/v1/decks");
+                                .body("{\"name\": \"Card Deck\"}")
+                                .post("/v1/decks")
+                                .then().extract().path("id");
 
                 // Dependency: Model and Note
-                given()
+                Integer modelId = given()
                                 .contentType(ContentType.JSON)
-                                .body("{\"id\": 503, \"name\": \"Card Model\"}")
-                                .post("/v1/models");
-                given()
+                                .body("{\"name\": \"Card Model\"}")
+                                .post("/v1/models")
+                                .then().extract().path("id");
+                Integer noteId = given()
                                 .contentType(ContentType.JSON)
-                                .body("{\"id\": 501, \"model\": {\"id\": 503}, \"flds\": \"F\\u001fB\"}")
-                                .post("/v1/notes");
+                                .body("{\"modelId\": " + modelId + ", \"flds\": \"F\\u001fB\"}")
+                                .post("/v1/notes")
+                                .then().extract().path("id");
 
                 // Create Card
-                String cardJson = "{\"id\": 500, \"note\": {\"id\": 501}, \"deck\": {\"id\": 502}, \"ord\": 0}";
-                given()
+                String cardJson = "{\"noteId\": " + noteId + ", \"deckId\": " + deckId + ", \"ord\": 0}";
+                Integer cardId = given()
                                 .contentType(ContentType.JSON)
                                 .body(cardJson)
                                 .when().post("/v1/cards")
                                 .then()
                                 .statusCode(201)
-                                .body("id", is(500));
+                                .body("id", notNullValue())
+                                .extract().path("id");
 
                 // Get
                 given()
-                                .when().get("/v1/cards/500")
+                                .when().get("/v1/cards/" + cardId)
                                 .then()
                                 .statusCode(200)
                                 .body("ord", is(0));
 
                 // Update
-                String updatedCardJson = "{\"id\": 500, \"ord\": 1}";
+                String updatedCardJson = "{\"ord\": 1}";
                 given()
                                 .contentType(ContentType.JSON)
                                 .body(updatedCardJson)
-                                .when().put("/v1/cards/500")
+                                .when().put("/v1/cards/" + cardId)
                                 .then()
                                 .statusCode(200)
                                 .body("ord", is(1));
 
                 // Delete
                 given()
-                                .when().delete("/v1/cards/500")
+                                .when().delete("/v1/cards/" + cardId)
                                 .then()
                                 .statusCode(204);
         }

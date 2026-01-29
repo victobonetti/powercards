@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
 public class NoteResourceTest {
@@ -13,43 +14,46 @@ public class NoteResourceTest {
         @Test
         public void testNoteCRUD() {
                 // Create a model first (dependency)
-                String modelJson = "{\"id\": 401, \"name\": \"Note Model\"}";
-                given()
+                String modelJson = "{\"name\": \"Note Model\"}";
+                Integer modelId = given()
                                 .contentType(ContentType.JSON)
                                 .body(modelJson)
-                                .post("/v1/models");
+                                .post("/v1/models")
+                                .then()
+                                .extract().path("id");
 
                 // Create Note
-                String noteJson = "{\"id\": 400, \"guid\": \"note-guid\", \"model\": {\"id\": 401}, \"flds\": \"Front\\u001fBack\"}";
-                given()
+                String noteJson = "{\"modelId\": " + modelId + ", \"flds\": \"Front\\u001fBack\"}";
+                Integer noteId = given()
                                 .contentType(ContentType.JSON)
                                 .body(noteJson)
                                 .when().post("/v1/notes")
                                 .then()
                                 .statusCode(201)
-                                .body("id", is(400))
-                                .body("flds", is("Front\u001fBack"));
+                                .body("id", notNullValue())
+                                .body("flds", is("Front\u001fBack"))
+                                .extract().path("id");
 
                 // Get
                 given()
-                                .when().get("/v1/notes/400")
+                                .when().get("/v1/notes/" + noteId)
                                 .then()
                                 .statusCode(200)
-                                .body("guid", is("note-guid"));
+                                .body("flds", is("Front\u001fBack"));
 
                 // Update
-                String updatedNoteJson = "{\"id\": 400, \"flds\": \"Updated Front\\u001fUpdated Back\"}";
+                String updatedNoteJson = "{\"flds\": \"Updated Front\\u001fUpdated Back\"}";
                 given()
                                 .contentType(ContentType.JSON)
                                 .body(updatedNoteJson)
-                                .when().put("/v1/notes/400")
+                                .when().put("/v1/notes/" + noteId)
                                 .then()
                                 .statusCode(200)
                                 .body("flds", is("Updated Front\u001fUpdated Back"));
 
                 // Delete
                 given()
-                                .when().delete("/v1/notes/400")
+                                .when().delete("/v1/notes/" + noteId)
                                 .then()
                                 .statusCode(204);
         }

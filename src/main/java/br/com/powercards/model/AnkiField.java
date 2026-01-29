@@ -8,7 +8,8 @@ import jakarta.persistence.*;
 public class AnkiField extends PanacheEntityBase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "anki_fields_seq")
+    @SequenceGenerator(name = "anki_fields_seq", sequenceName = "anki_fields_seq", allocationSize = 1)
     public Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

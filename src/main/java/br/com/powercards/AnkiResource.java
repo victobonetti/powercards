@@ -12,6 +12,7 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.com.powercards.dto.DeckResponse;
 import java.io.InputStream;
 
 @Path("/v1/anki")
@@ -36,6 +37,8 @@ public class AnkiResource {
         }
 
         anki.load(file);
-        return Response.ok(anki.getDecks()).build();
+        return Response.ok(anki.getDecks().stream()
+                .map(d -> new DeckResponse(d.id, d.name))
+                .collect(java.util.stream.Collectors.toList())).build();
     }
 }

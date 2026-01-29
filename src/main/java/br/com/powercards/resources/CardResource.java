@@ -1,6 +1,10 @@
 package br.com.powercards.resources;
 
 import br.com.powercards.model.Card;
+import br.com.powercards.model.Note;
+import br.com.powercards.model.Deck;
+import br.com.powercards.dto.CardRequest;
+import br.com.powercards.dto.CardResponse;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -14,8 +18,10 @@ public class CardResource {
 
     @GET
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all cards")
-    public List<Card> list() {
-        return Card.listAll();
+    public List<CardResponse> list() {
+        return Card.<Card>listAll().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @GET
@@ -23,21 +29,23 @@ public class CardResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Get a card by ID")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Card found")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Card not found")
-    public Card get(@PathParam("id") Long id) {
+    public CardResponse get(@PathParam("id") Long id) {
         Card card = Card.findById(id);
         if (card == null) {
             throw new NotFoundException();
         }
-        return card;
+        return toResponse(card);
     }
 
     @POST
     @Transactional
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Create a new card")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201", description = "Card created")
-    public Response create(Card card) {
+    public Response create(CardRequest cardRequest) {
+        Card card = new Card();
+        updateEntity(card, cardRequest);
         card.persist();
-        return Response.status(Response.Status.CREATED).entity(card).build();
+        return Response.status(Response.Status.CREATED).entity(toResponse(card)).build();
     }
 
     @PUT
@@ -46,29 +54,13 @@ public class CardResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Update an existing card")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Card updated")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Card not found")
-    public Card update(@PathParam("id") Long id, Card card) {
+    public CardResponse update(@PathParam("id") Long id, CardRequest cardRequest) {
         Card entity = Card.findById(id);
         if (entity == null) {
             throw new NotFoundException();
         }
-        entity.note = card.note;
-        entity.deck = card.deck;
-        entity.ord = card.ord;
-        entity.mod = card.mod;
-        entity.usn = card.usn;
-        entity.type = card.type;
-        entity.queue = card.queue;
-        entity.due = card.due;
-        entity.ivl = card.ivl;
-        entity.factor = card.factor;
-        entity.reps = card.reps;
-        entity.lapses = card.lapses;
-        entity.left = card.left;
-        entity.odue = card.odue;
-        entity.odid = card.odid;
-        entity.flags = card.flags;
-        entity.data = card.data;
-        return entity;
+        updateEntity(entity, cardRequest);
+        return toResponse(entity);
     }
 
     @DELETE
@@ -83,5 +75,49 @@ public class CardResource {
             throw new NotFoundException();
         }
         entity.delete();
+    }
+
+    private void updateEntity(Card entity, CardRequest request) {
+        if (request.noteId() != null) {
+            entity.note = Note.findById(request.noteId());
+        }
+        if (request.deckId() != null) {
+            entity.deck = Deck.findById(request.deckId());
+        }
+        entity.ord = request.ord();
+        entity.type = request.type();
+        entity.queue = request.queue();
+        entity.due = request.due();
+        entity.ivl = request.ivl();
+        entity.factor = request.factor();
+        entity.reps = request.reps();
+        entity.lapses = request.lapses();
+        entity.left = request.left();
+        entity.odue = request.odue();
+        entity.odid = request.odid();
+        entity.flags = request.flags();
+        entity.data = request.data();
+    }
+
+    private CardResponse toResponse(Card card) {
+        return new CardResponse(
+                card.id,
+                card.note != null ? card.note.id : null,
+                card.deck != null ? card.deck.id : null,
+                card.ord,
+                card.mod,
+                card.usn,
+                card.type,
+                card.queue,
+                card.due,
+                card.ivl,
+                card.factor,
+                card.reps,
+                card.lapses,
+                card.left,
+                card.odue,
+                card.odid,
+                card.flags,
+                card.data);
     }
 }

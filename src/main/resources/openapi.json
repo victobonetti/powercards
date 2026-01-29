@@ -60,7 +60,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/Card"
+                    "$ref" : "#/components/schemas/CardResponse"
                   }
                 }
               }
@@ -75,7 +75,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/Card"
+                "$ref" : "#/components/schemas/CardRequest"
               }
             }
           },
@@ -108,7 +108,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/Card"
+                "$ref" : "#/components/schemas/CardRequest"
               }
             }
           },
@@ -120,7 +120,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Card"
+                  "$ref" : "#/components/schemas/CardResponse"
                 }
               }
             }
@@ -151,7 +151,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Card"
+                  "$ref" : "#/components/schemas/CardResponse"
                 }
               }
             }
@@ -195,7 +195,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/Deck"
+                    "$ref" : "#/components/schemas/DeckResponse"
                   }
                 }
               }
@@ -210,7 +210,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/Deck"
+                "$ref" : "#/components/schemas/DeckRequest"
               }
             }
           },
@@ -243,7 +243,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/Deck"
+                "$ref" : "#/components/schemas/DeckRequest"
               }
             }
           },
@@ -255,7 +255,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Deck"
+                  "$ref" : "#/components/schemas/DeckResponse"
                 }
               }
             }
@@ -286,7 +286,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Deck"
+                  "$ref" : "#/components/schemas/DeckResponse"
                 }
               }
             }
@@ -330,7 +330,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/AnkiModel"
+                    "$ref" : "#/components/schemas/AnkiModelResponse"
                   }
                 }
               }
@@ -345,7 +345,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/AnkiModel"
+                "$ref" : "#/components/schemas/AnkiModelRequest"
               }
             }
           },
@@ -378,7 +378,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/AnkiModel"
+                "$ref" : "#/components/schemas/AnkiModelRequest"
               }
             }
           },
@@ -390,7 +390,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/AnkiModel"
+                  "$ref" : "#/components/schemas/AnkiModelResponse"
                 }
               }
             }
@@ -421,7 +421,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/AnkiModel"
+                  "$ref" : "#/components/schemas/AnkiModelResponse"
                 }
               }
             }
@@ -465,7 +465,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/Note"
+                    "$ref" : "#/components/schemas/NoteResponse"
                   }
                 }
               }
@@ -480,7 +480,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/Note"
+                "$ref" : "#/components/schemas/NoteRequest"
               }
             }
           },
@@ -513,7 +513,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/Note"
+                "$ref" : "#/components/schemas/NoteRequest"
               }
             }
           },
@@ -525,7 +525,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Note"
+                  "$ref" : "#/components/schemas/NoteResponse"
                 }
               }
             }
@@ -556,7 +556,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Note"
+                  "$ref" : "#/components/schemas/NoteResponse"
                 }
               }
             }
@@ -592,13 +592,9 @@
   },
   "components" : {
     "schemas" : {
-      "AnkiField" : {
+      "AnkiFieldDto" : {
         "type" : "object",
         "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "name" : {
             "type" : "string"
           },
@@ -608,7 +604,30 @@
           }
         }
       },
-      "AnkiModel" : {
+      "AnkiModelRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "css" : {
+            "type" : "string"
+          },
+          "fields" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AnkiFieldDto"
+            }
+          },
+          "templates" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AnkiTemplateDto"
+            }
+          }
+        }
+      },
+      "AnkiModelResponse" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -624,24 +643,20 @@
           "fields" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/AnkiField"
+              "$ref" : "#/components/schemas/AnkiFieldDto"
             }
           },
           "templates" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/AnkiTemplate"
+              "$ref" : "#/components/schemas/AnkiTemplateDto"
             }
           }
         }
       },
-      "AnkiTemplate" : {
+      "AnkiTemplateDto" : {
         "type" : "object",
         "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "name" : {
             "type" : "string"
           },
@@ -657,10 +672,82 @@
           }
         }
       },
-      "Card" : {
+      "CardRequest" : {
+        "type" : "object",
+        "properties" : {
+          "noteId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "deckId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "ord" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "type" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "queue" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "due" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "ivl" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "factor" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "reps" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "lapses" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "left" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "odue" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "odid" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "flags" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CardResponse" : {
         "type" : "object",
         "properties" : {
           "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "noteId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "deckId" : {
             "type" : "integer",
             "format" : "int64"
           },
@@ -725,7 +812,15 @@
           }
         }
       },
-      "Deck" : {
+      "DeckRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DeckResponse" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -737,7 +832,25 @@
           }
         }
       },
-      "Note" : {
+      "NoteRequest" : {
+        "type" : "object",
+        "properties" : {
+          "modelId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tags" : {
+            "type" : "string"
+          },
+          "flds" : {
+            "type" : "string"
+          },
+          "data" : {
+            "type" : "string"
+          }
+        }
+      },
+      "NoteResponse" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -747,8 +860,9 @@
           "guid" : {
             "type" : "string"
           },
-          "model" : {
-            "$ref" : "#/components/schemas/AnkiModel"
+          "modelId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "mod" : {
             "type" : "integer",

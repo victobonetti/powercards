@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RequestScoped
@@ -31,71 +30,71 @@ public class AnkiService {
     }
 
     @Transactional
-    public List<com.anki4j.model.Deck> getDecks() {
+    public List<Deck> getDecks() {
         Objects.requireNonNull(apkg, "Arquivo .apkg não foi carregado.");
 
         try (Anki4j anki4j = Anki4j.read(apkg)) {
-            persistCollection(anki4j);
-            return anki4j.getDecks();
+            return persistCollection(anki4j);
         } catch (Exception e) {
             LOGGER.error("Erro ao processar arquivo Anki", e);
             throw new InternalServerErrorException(e);
         }
     }
 
-    private void persistCollection(Anki4j anki4j) {
+    private List<Deck> persistCollection(Anki4j anki4j) {
         LOGGER.info("Persistindo coleção Anki no banco de dados...");
 
         // 1. Persistir Models
-        Map<Long, AnkiModel> modelMap = anki4j.getModels().stream()
-                .map(m -> {
-                    AnkiModel model = new AnkiModel(m.getId(), m.getName(), m.getCss());
-                    if (m.getFlds() != null) {
-                        model.fields = m.getFlds().stream()
-                                .map(f -> new br.com.powercards.model.AnkiField(f.getName(), f.getOrd(), model))
-                                .collect(Collectors.toList());
-                    }
-                    if (m.getTmpls() != null) {
-                        model.templates = m.getTmpls().stream()
-                                .map(t -> new br.com.powercards.model.AnkiTemplate(t.getName(), t.getQfmt(),
-                                        t.getAfmt(), t.getOrd(), model))
-                                .collect(Collectors.toList());
-                    }
-                    model.persist();
-                    return model;
-                })
-                .collect(Collectors.toMap(m -> m.id, Function.identity()));
+        Map<Long, AnkiModel> modelMap = new java.util.HashMap<>();
+        for (com.anki4j.model.Model m : anki4j.getModels()) {
+            AnkiModel model = new AnkiModel();
+            model.name = m.getName();
+            model.css = m.getCss();
+            if (m.getFlds() != null) {
+                model.fields = m.getFlds().stream()
+                        .map(f -> new br.com.powercards.model.AnkiField(f.getName(), f.getOrd(), model))
+                        .collect(Collectors.toList());
+            }
+            if (m.getTmpls() != null) {
+                model.templates = m.getTmpls().stream()
+                        .map(t -> new br.com.powercards.model.AnkiTemplate(t.getName(), t.getQfmt(),
+                                t.getAfmt(), t.getOrd(), model))
+                        .collect(Collectors.toList());
+            }
+            model.persist();
+            modelMap.put(m.getId(), model);
+        }
 
         // 2. Persistir Decks
-        Map<Long, Deck> deckMap = anki4j.getDecks().stream()
-                .map(d -> new Deck(d.getId(), d.getName()))
-                .peek(d -> d.persist())
-                .collect(Collectors.toMap(d -> d.id, Function.identity()));
+        Map<Long, Deck> deckMap = new java.util.HashMap<>();
+        for (com.anki4j.model.Deck d : anki4j.getDecks()) {
+            Deck deck = new Deck();
+            deck.name = d.getName();
+            deck.persist();
+            deckMap.put(d.getId(), deck);
+        }
 
         // 3. Persistir Notes
-        Map<Long, Note> noteMap = anki4j.getNotes().stream()
-                .map(n -> {
-                    Note note = new Note();
-                    note.id = n.getId();
-                    note.guid = n.getGuid();
-                    note.model = modelMap.get(n.getMid());
-                    note.mod = n.getMod();
-                    note.usn = n.getUsn();
-                    note.tags = n.getTags();
-                    note.flds = n.getFlds();
-                    note.sfld = n.getSfld();
-                    note.csum = n.getCsum();
-                    note.flags = n.getFlags();
-                    note.data = n.getData();
-                    note.persist();
-                    return note;
-                })
-                .collect(Collectors.toMap(n -> n.id, Function.identity()));
+        Map<Long, Note> noteMap = new java.util.HashMap<>();
+        for (com.anki4j.model.Note n : anki4j.getNotes()) {
+            Note note = new Note();
+            note.guid = n.getGuid();
+            note.model = modelMap.get(n.getMid());
+            note.mod = n.getMod();
+            note.usn = n.getUsn();
+            note.tags = n.getTags();
+            note.flds = n.getFlds();
+            note.sfld = n.getSfld();
+            note.csum = n.getCsum();
+            note.flags = n.getFlags();
+            note.data = n.getData();
+            note.persist();
+            noteMap.put(n.getId(), note);
+        }
 
         // 4. Persistir Cards
-        anki4j.getCards().forEach(c -> {
+        for (com.anki4j.model.Card c : anki4j.getCards()) {
             Card card = new Card();
-            card.id = c.getId();
             card.note = noteMap.get(c.getNid());
             card.deck = deckMap.get(c.getDid());
             card.ord = c.getOrd();
@@ -114,9 +113,12 @@ public class AnkiService {
             card.flags = c.getFlags();
             card.data = c.getData();
             card.persist();
-        });
+        }
 
         LOGGER.info("Persistência concluída.");
+        return anki4j.getDecks().stream()
+                .map(d -> deckMap.get(d.getId()))
+                .collect(Collectors.toList());
     }
 
 }
