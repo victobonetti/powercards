@@ -142,7 +142,7 @@
                 <configuration>
                     <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
                     <generatorName>typescript-axios</generatorName>
-                    <output>${project.basedir}/generated/frontend</output>
+                    <output>${project.basedir}/frontend/src/api</output>
                     <configOptions>
                         <typescriptThreePlus>true</typescriptThreePlus>
                         <supportsES6>true</supportsES6>
