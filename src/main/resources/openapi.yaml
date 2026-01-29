@@ -417,7 +417,7 @@ components:
       properties:
         name:
           type: string
-        ord:
+        ordinal:
           type: integer
           format: int32
     AnkiModelRequest:
@@ -458,11 +458,11 @@ components:
       properties:
         name:
           type: string
-        qfmt:
+        questionFormat:
           type: string
-        afmt:
+        answerFormat:
           type: string
-        ord:
+        ordinal:
           type: integer
           format: int32
     CardRequest:
@@ -474,7 +474,13 @@ components:
         deckId:
           type: integer
           format: int64
-        ord:
+        ordinal:
+          type: integer
+          format: int32
+        modificationTimestamp:
+          type: integer
+          format: int64
+        updateSequenceNumber:
           type: integer
           format: int32
         type:
@@ -486,31 +492,31 @@ components:
         due:
           type: integer
           format: int64
-        ivl:
+        interval:
           type: integer
           format: int32
-        factor:
+        easeFactor:
           type: integer
           format: int32
-        reps:
+        repetitions:
           type: integer
           format: int32
         lapses:
           type: integer
           format: int32
-        left:
+        remainingSteps:
           type: integer
           format: int32
-        odue:
+        originalDue:
           type: integer
           format: int64
-        odid:
+        originalDeckId:
           type: integer
           format: int64
         flags:
           type: integer
           format: int32
-        data:
+        customData:
           type: string
     CardResponse:
       type: object
@@ -524,13 +530,13 @@ components:
         deckId:
           type: integer
           format: int64
-        ord:
+        ordinal:
           type: integer
           format: int32
-        mod:
+        modificationTimestamp:
           type: integer
           format: int64
-        usn:
+        updateSequenceNumber:
           type: integer
           format: int32
         type:
@@ -542,31 +548,31 @@ components:
         due:
           type: integer
           format: int64
-        ivl:
+        interval:
           type: integer
           format: int32
-        factor:
+        easeFactor:
           type: integer
           format: int32
-        reps:
+        repetitions:
           type: integer
           format: int32
         lapses:
           type: integer
           format: int32
-        left:
+        remainingSteps:
           type: integer
           format: int32
-        odue:
+        originalDue:
           type: integer
           format: int64
-        odid:
+        originalDeckId:
           type: integer
           format: int64
         flags:
           type: integer
           format: int32
-        data:
+        customData:
           type: string
     DeckRequest:
       type: object
@@ -587,11 +593,25 @@ components:
         modelId:
           type: integer
           format: int64
+        modificationTimestamp:
+          type: integer
+          format: int64
+        updateSequenceNumber:
+          type: integer
+          format: int32
         tags:
           type: string
-        flds:
+        fields:
           type: string
-        data:
+        sortField:
+          type: string
+        checksum:
+          type: integer
+          format: int64
+        flags:
+          type: integer
+          format: int32
+        customData:
           type: string
     NoteResponse:
       type: object
@@ -604,25 +624,25 @@ components:
         modelId:
           type: integer
           format: int64
-        mod:
+        modificationTimestamp:
           type: integer
           format: int64
-        usn:
+        updateSequenceNumber:
           type: integer
           format: int32
         tags:
           type: string
-        flds:
+        fields:
           type: string
-        sfld:
+        sortField:
           type: string
-        csum:
+        checksum:
           type: integer
           format: int64
         flags:
           type: integer
           format: int32
-        data:
+        customData:
           type: string
 servers:
 - url: http://localhost:8088

@@ -43,8 +43,8 @@ public class NoteResource {
     public Response create(NoteRequest noteRequest) {
         Note note = new Note();
         note.tags = noteRequest.tags();
-        note.flds = noteRequest.flds();
-        note.data = noteRequest.data();
+        note.flds = noteRequest.fields();
+        note.data = noteRequest.customData();
         if (noteRequest.modelId() != null) {
             note.model = AnkiModel.findById(noteRequest.modelId());
         }
@@ -64,8 +64,8 @@ public class NoteResource {
             throw new NotFoundException();
         }
         entity.tags = noteRequest.tags();
-        entity.flds = noteRequest.flds();
-        entity.data = noteRequest.data();
+        entity.flds = noteRequest.fields();
+        entity.data = noteRequest.customData();
         if (noteRequest.modelId() != null) {
             entity.model = AnkiModel.findById(noteRequest.modelId());
         }

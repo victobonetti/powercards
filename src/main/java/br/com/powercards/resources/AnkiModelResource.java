@@ -50,12 +50,12 @@ public class AnkiModelResource {
         // Mapping fields and templates if provided
         if (modelRequest.fields() != null) {
             model.fields = modelRequest.fields().stream()
-                    .map(f -> new AnkiField(f.name(), f.ord(), model))
+                    .map(f -> new AnkiField(f.name(), f.ordinal(), model))
                     .toList();
         }
         if (modelRequest.templates() != null) {
             model.templates = modelRequest.templates().stream()
-                    .map(t -> new AnkiTemplate(t.name(), t.qfmt(), t.afmt(), t.ord(), model))
+                    .map(t -> new AnkiTemplate(t.name(), t.questionFormat(), t.answerFormat(), t.ordinal(), model))
                     .toList();
         }
         model.persist();
@@ -80,13 +80,13 @@ public class AnkiModelResource {
         if (modelRequest.fields() != null) {
             entity.fields.clear();
             entity.fields.addAll(modelRequest.fields().stream()
-                    .map(f -> new AnkiField(f.name(), f.ord(), entity))
+                    .map(f -> new AnkiField(f.name(), f.ordinal(), entity))
                     .toList());
         }
         if (modelRequest.templates() != null) {
             entity.templates.clear();
             entity.templates.addAll(modelRequest.templates().stream()
-                    .map(t -> new AnkiTemplate(t.name(), t.qfmt(), t.afmt(), t.ord(), entity))
+                    .map(t -> new AnkiTemplate(t.name(), t.questionFormat(), t.answerFormat(), t.ordinal(), entity))
                     .toList());
         }
         return toResponse(entity);

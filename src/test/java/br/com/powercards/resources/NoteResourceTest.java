@@ -23,7 +23,7 @@ public class NoteResourceTest {
                                 .extract().path("id");
 
                 // Create Note
-                String noteJson = "{\"modelId\": " + modelId + ", \"flds\": \"Front\\u001fBack\"}";
+                String noteJson = "{\"modelId\": " + modelId + ", \"fields\": \"Front\\u001fBack\"}";
                 Integer noteId = given()
                                 .contentType(ContentType.JSON)
                                 .body(noteJson)
@@ -31,7 +31,7 @@ public class NoteResourceTest {
                                 .then()
                                 .statusCode(201)
                                 .body("id", notNullValue())
-                                .body("flds", is("Front\u001fBack"))
+                                .body("fields", is("Front\u001fBack"))
                                 .extract().path("id");
 
                 // Get
@@ -39,17 +39,17 @@ public class NoteResourceTest {
                                 .when().get("/v1/notes/" + noteId)
                                 .then()
                                 .statusCode(200)
-                                .body("flds", is("Front\u001fBack"));
+                                .body("fields", is("Front\u001fBack"));
 
                 // Update
-                String updatedNoteJson = "{\"flds\": \"Updated Front\\u001fUpdated Back\"}";
+                String updatedNoteJson = "{\"fields\": \"Updated Front\\u001fUpdated Back\"}";
                 given()
                                 .contentType(ContentType.JSON)
                                 .body(updatedNoteJson)
                                 .when().put("/v1/notes/" + noteId)
                                 .then()
                                 .statusCode(200)
-                                .body("flds", is("Updated Front\u001fUpdated Back"));
+                                .body("fields", is("Updated Front\u001fUpdated Back"));
 
                 // Delete
                 given()

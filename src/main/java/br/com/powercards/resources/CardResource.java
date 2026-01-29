@@ -84,19 +84,19 @@ public class CardResource {
         if (request.deckId() != null) {
             entity.deck = Deck.findById(request.deckId());
         }
-        entity.ord = request.ord();
+        entity.ord = request.ordinal();
         entity.type = request.type();
         entity.queue = request.queue();
         entity.due = request.due();
-        entity.ivl = request.ivl();
-        entity.factor = request.factor();
-        entity.reps = request.reps();
+        entity.ivl = request.interval();
+        entity.factor = request.easeFactor();
+        entity.reps = request.repetitions();
         entity.lapses = request.lapses();
-        entity.left = request.left();
-        entity.odue = request.odue();
-        entity.odid = request.odid();
+        entity.left = request.remainingSteps();
+        entity.odue = request.originalDue();
+        entity.odid = request.originalDeckId();
         entity.flags = request.flags();
-        entity.data = request.data();
+        entity.data = request.customData();
     }
 
     private CardResponse toResponse(Card card) {

@@ -1,4 +1,12 @@
 package br.com.powercards.dto;
 
-public record AnkiFieldDto(String name, Integer ord) {
+/**
+ * DTO for Anki Note Fields.
+ *
+ * @param name    Field name.
+ * @param ordinal The order/index of this field.
+ */
+public record AnkiFieldDto(
+        String name,
+        Integer ordinal) {
 }

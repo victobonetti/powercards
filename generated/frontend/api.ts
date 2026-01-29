@@ -40,7 +40,7 @@ export interface AnkiFieldDto {
      * @type {number}
      * @memberof AnkiFieldDto
      */
-    'ord'?: number;
+    'ordinal'?: number;
 }
 /**
  * 
@@ -127,19 +127,19 @@ export interface AnkiTemplateDto {
      * @type {string}
      * @memberof AnkiTemplateDto
      */
-    'qfmt'?: string;
+    'questionFormat'?: string;
     /**
      * 
      * @type {string}
      * @memberof AnkiTemplateDto
      */
-    'afmt'?: string;
+    'answerFormat'?: string;
     /**
      * 
      * @type {number}
      * @memberof AnkiTemplateDto
      */
-    'ord'?: number;
+    'ordinal'?: number;
 }
 /**
  * 
@@ -164,7 +164,19 @@ export interface CardRequest {
      * @type {number}
      * @memberof CardRequest
      */
-    'ord'?: number;
+    'ordinal'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardRequest
+     */
+    'modificationTimestamp'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CardRequest
+     */
+    'updateSequenceNumber'?: number;
     /**
      * 
      * @type {number}
@@ -188,19 +200,19 @@ export interface CardRequest {
      * @type {number}
      * @memberof CardRequest
      */
-    'ivl'?: number;
+    'interval'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardRequest
      */
-    'factor'?: number;
+    'easeFactor'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardRequest
      */
-    'reps'?: number;
+    'repetitions'?: number;
     /**
      * 
      * @type {number}
@@ -212,19 +224,19 @@ export interface CardRequest {
      * @type {number}
      * @memberof CardRequest
      */
-    'left'?: number;
+    'remainingSteps'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardRequest
      */
-    'odue'?: number;
+    'originalDue'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardRequest
      */
-    'odid'?: number;
+    'originalDeckId'?: number;
     /**
      * 
      * @type {number}
@@ -236,7 +248,7 @@ export interface CardRequest {
      * @type {string}
      * @memberof CardRequest
      */
-    'data'?: string;
+    'customData'?: string;
 }
 /**
  * 
@@ -267,19 +279,19 @@ export interface CardResponse {
      * @type {number}
      * @memberof CardResponse
      */
-    'ord'?: number;
+    'ordinal'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardResponse
      */
-    'mod'?: number;
+    'modificationTimestamp'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardResponse
      */
-    'usn'?: number;
+    'updateSequenceNumber'?: number;
     /**
      * 
      * @type {number}
@@ -303,19 +315,19 @@ export interface CardResponse {
      * @type {number}
      * @memberof CardResponse
      */
-    'ivl'?: number;
+    'interval'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardResponse
      */
-    'factor'?: number;
+    'easeFactor'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardResponse
      */
-    'reps'?: number;
+    'repetitions'?: number;
     /**
      * 
      * @type {number}
@@ -327,19 +339,19 @@ export interface CardResponse {
      * @type {number}
      * @memberof CardResponse
      */
-    'left'?: number;
+    'remainingSteps'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardResponse
      */
-    'odue'?: number;
+    'originalDue'?: number;
     /**
      * 
      * @type {number}
      * @memberof CardResponse
      */
-    'odid'?: number;
+    'originalDeckId'?: number;
     /**
      * 
      * @type {number}
@@ -351,7 +363,7 @@ export interface CardResponse {
      * @type {string}
      * @memberof CardResponse
      */
-    'data'?: string;
+    'customData'?: string;
 }
 /**
  * 
@@ -399,6 +411,18 @@ export interface NoteRequest {
     'modelId'?: number;
     /**
      * 
+     * @type {number}
+     * @memberof NoteRequest
+     */
+    'modificationTimestamp'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof NoteRequest
+     */
+    'updateSequenceNumber'?: number;
+    /**
+     * 
      * @type {string}
      * @memberof NoteRequest
      */
@@ -408,13 +432,31 @@ export interface NoteRequest {
      * @type {string}
      * @memberof NoteRequest
      */
-    'flds'?: string;
+    'fields'?: string;
     /**
      * 
      * @type {string}
      * @memberof NoteRequest
      */
-    'data'?: string;
+    'sortField'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof NoteRequest
+     */
+    'checksum'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof NoteRequest
+     */
+    'flags'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof NoteRequest
+     */
+    'customData'?: string;
 }
 /**
  * 
@@ -445,13 +487,13 @@ export interface NoteResponse {
      * @type {number}
      * @memberof NoteResponse
      */
-    'mod'?: number;
+    'modificationTimestamp'?: number;
     /**
      * 
      * @type {number}
      * @memberof NoteResponse
      */
-    'usn'?: number;
+    'updateSequenceNumber'?: number;
     /**
      * 
      * @type {string}
@@ -463,19 +505,19 @@ export interface NoteResponse {
      * @type {string}
      * @memberof NoteResponse
      */
-    'flds'?: string;
+    'fields'?: string;
     /**
      * 
      * @type {string}
      * @memberof NoteResponse
      */
-    'sfld'?: string;
+    'sortField'?: string;
     /**
      * 
      * @type {number}
      * @memberof NoteResponse
      */
-    'csum'?: number;
+    'checksum'?: number;
     /**
      * 
      * @type {number}
@@ -487,7 +529,7 @@ export interface NoteResponse {
      * @type {string}
      * @memberof NoteResponse
      */
-    'data'?: string;
+    'customData'?: string;
 }
 
 /**

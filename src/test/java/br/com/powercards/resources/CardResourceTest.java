@@ -28,12 +28,12 @@ public class CardResourceTest {
                                 .then().extract().path("id");
                 Integer noteId = given()
                                 .contentType(ContentType.JSON)
-                                .body("{\"modelId\": " + modelId + ", \"flds\": \"F\\u001fB\"}")
+                                .body("{\"modelId\": " + modelId + ", \"fields\": \"F\\u001fB\"}")
                                 .post("/v1/notes")
                                 .then().extract().path("id");
 
                 // Create Card
-                String cardJson = "{\"noteId\": " + noteId + ", \"deckId\": " + deckId + ", \"ord\": 0}";
+                String cardJson = "{\"noteId\": " + noteId + ", \"deckId\": " + deckId + ", \"ordinal\": 0}";
                 Integer cardId = given()
                                 .contentType(ContentType.JSON)
                                 .body(cardJson)
@@ -48,17 +48,17 @@ public class CardResourceTest {
                                 .when().get("/v1/cards/" + cardId)
                                 .then()
                                 .statusCode(200)
-                                .body("ord", is(0));
+                                .body("ordinal", is(0));
 
                 // Update
-                String updatedCardJson = "{\"ord\": 1}";
+                String updatedCardJson = "{\"ordinal\": 1}";
                 given()
                                 .contentType(ContentType.JSON)
                                 .body(updatedCardJson)
                                 .when().put("/v1/cards/" + cardId)
                                 .then()
                                 .statusCode(200)
-                                .body("ord", is(1));
+                                .body("ordinal", is(1));
 
                 // Delete
                 given()
