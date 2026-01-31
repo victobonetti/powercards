@@ -137,6 +137,9 @@ public class NoteResource {
         if (noteRequest.modelId() != null) {
             entity.model = AnkiModel.findById(noteRequest.modelId());
         }
+        // Force flush to ensure update is visible to cleanup query
+        Note.getEntityManager().flush();
+        deleteOrphanTags();
         return toResponse(entity);
     }
 
@@ -152,6 +155,32 @@ public class NoteResource {
             throw new NotFoundException();
         }
         entity.delete();
+        deleteOrphanTags();
+    }
+
+    private void deleteOrphanTags() {
+        // Delete tags that do not have any associated notes
+        // Note: Ideally this should be an async background job for performance,
+        // but for now we do it synchronously as requested.
+        // We use native query or JPQL to find tags with no notes.
+        // Assuming tags are stored as simple string in Note for now, we rely on LIKE
+        // search which is heavy.
+        // A better approach in future is valid ManyToMany relationship.
+
+        // Find tags where no note has this tag name
+        // Iterate all tags and check if any note uses it. This is potentially slow.
+        // Optimized:
+        // DELETE FROM Tag t WHERE NOT EXISTS (SELECT 1 FROM Note n WHERE n.tags LIKE
+        // concat('%', t.name, '%'))
+
+        try {
+            // Creating native query or HQL for bulk delete
+            Note.getEntityManager().createQuery(
+                    "DELETE FROM Tag t WHERE (SELECT count(n) FROM Note n WHERE n.tags LIKE concat('%', t.name, '%')) = 0")
+                    .executeUpdate();
+        } catch (Exception e) {
+            System.err.println("Failed to cleanup orphan tags: " + e.getMessage());
+        }
     }
 
     private NoteResponse toResponse(Note note) {

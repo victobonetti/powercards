@@ -1,35 +1,29 @@
-import { describe, it, expect, mock, spyOn, beforeEach } from "bun:test";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { CardEditDialog } from "./CardEditDialog";
+import { NoteDialog } from "./NoteDialog";
 import { noteApi, modelApi } from "@/lib/api";
 import { AxiosResponse } from "axios";
 import { ANKI_FIELD_SEPARATOR } from "@/lib/anki";
 
 // Mock toaster
-mock.module("@/hooks/use-toast", () => ({
-    useToast: () => ({ toast: mock() })
+vi.mock("@/hooks/use-toast", () => ({
+    useToast: () => ({ toast: vi.fn() })
 }));
 
 // Mock TagInput as it might be complex
-mock.module("./ui/tag-input", () => ({
-    TagInput: ({ selected, onChange }: any) => (
+vi.mock("./ui/tag-input", () => ({
+    TagInput: ({ selected, onChange, disabled }: any) => (
         <input
             data-testid="tag-input"
             value={selected.join(",")}
             onChange={(e) => onChange(e.target.value.split(","))}
+            disabled={disabled}
         />
     )
 }));
 
 
-describe("CardEditDialog", () => {
-
-    const mockCard = {
-        id: 100,
-        noteId: 200,
-        noteTags: "tag1",
-        noteField: "Front Field"
-    } as any;
+describe("NoteDialog", () => {
 
     const mockNote = {
         id: 200,
@@ -47,25 +41,26 @@ describe("CardEditDialog", () => {
     } as any;
 
     beforeEach(() => {
-        mock.restore();
+        vi.restoreAllMocks();
     });
 
-    it("should fetch details and render fields when opened", async () => {
+    it("should fetch details and render fields when opened in edit mode", async () => {
         // Setup Mocks
-        const noteSpy = spyOn(noteApi, "v1NotesIdGet").mockResolvedValue({
+        const noteSpy = vi.spyOn(noteApi, "v1NotesIdGet").mockResolvedValue({
             data: mockNote
         } as AxiosResponse);
 
-        const modelSpy = spyOn(modelApi, "v1ModelsIdGet").mockResolvedValue({
+        const modelSpy = vi.spyOn(modelApi, "v1ModelsIdGet").mockResolvedValue({
             data: mockModel
         } as AxiosResponse);
 
         render(
-            <CardEditDialog
-                card={mockCard}
+            <NoteDialog
+                noteId={200}
                 open={true}
-                onOpenChange={mock()}
-                onSaved={mock()}
+                onOpenChange={vi.fn()}
+                onSaved={vi.fn()}
+                initialReadOnly={false}
             />
         );
 
@@ -78,36 +73,35 @@ describe("CardEditDialog", () => {
         expect(screen.getByText("Back")).toBeDefined();
 
         // Check values
-        // Textarea might display value. Textarea usually has role textbox?
-        const textareas = screen.getAllByRole("textbox"); // Might pick up label inputs? No, labels aren't textboxes.
-        // We have 2 fields, plus maybe TagInput? TagInput is mocked as input.
-        // Let's find by content
-        // Check values
         expect(screen.getAllByDisplayValue("Front Value").length).toBeGreaterThan(0);
         expect(screen.getAllByDisplayValue("Back Value").length).toBeGreaterThan(0);
     });
 
     it("should reconstruct flds and save", async () => {
         // Setup Mocks
-        spyOn(noteApi, "v1NotesIdGet").mockResolvedValue({
+        vi.spyOn(noteApi, "v1NotesIdGet").mockResolvedValue({
             data: mockNote
         } as AxiosResponse);
 
-        spyOn(modelApi, "v1ModelsIdGet").mockResolvedValue({
+        vi.spyOn(modelApi, "v1ModelsIdGet").mockResolvedValue({
             data: mockModel
         } as AxiosResponse);
 
-        const putSpy = spyOn(noteApi, "v1NotesIdPut").mockResolvedValue({} as AxiosResponse);
-        const onSaved = mock();
+        const putSpy = vi.spyOn(noteApi, "v1NotesIdPut").mockResolvedValue({} as AxiosResponse);
+        const onSaved = vi.fn();
 
         render(
-            <CardEditDialog
-                card={mockCard}
+            <NoteDialog
+                noteId={200}
                 open={true}
-                onOpenChange={mock()}
+                onOpenChange={vi.fn()}
                 onSaved={onSaved}
+                initialReadOnly={false}
             />
         );
+
+        // Wait for fetch
+        await waitFor(() => expect(screen.getAllByDisplayValue("Front Value").length).toBeGreaterThan(0));
 
         // Edit "Front Value" -> "Edited Front"
         const frontInputs = screen.getAllByDisplayValue("Front Value");
@@ -115,7 +109,6 @@ describe("CardEditDialog", () => {
         fireEvent.change(frontInput, { target: { value: "Edited Front" } });
 
         // Save
-        // We might have duplicates due to dialog mounting or other reasons, pick the enabled one or first one
         const saveButtons = screen.getAllByText("Save Changes");
         fireEvent.click(saveButtons[0]);
 

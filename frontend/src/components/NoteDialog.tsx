@@ -16,20 +16,25 @@ import { CardResponse, NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/a
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
 import { splitAnkiFields, joinAnkiFields } from "@/lib/anki";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 
-interface CardEditDialogProps {
-    card: CardResponse | null;
+interface NoteDialogProps {
+    noteId: number | null; // Can come from Card or Note
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSaved: () => void;
-    readOnly?: boolean;
+    initialReadOnly?: boolean;
 }
 
-export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = false }: CardEditDialogProps) {
+export function NoteDialog({ noteId, open, onOpenChange, onSaved, initialReadOnly = false }: NoteDialogProps) {
     const [tags, setTags] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingDetails, setFetchingDetails] = useState(false);
+
+    // Edit Mode State
+    // If initialReadOnly is true, we start in view mode (isEditing=false).
+    // If initialReadOnly is false, we start in edit mode (isEditing=true).
+    const [isEditing, setIsEditing] = useState(!initialReadOnly);
 
     // Model Aware State
     const [model, setModel] = useState<AnkiModelResponse | null>(null);
@@ -38,25 +43,35 @@ export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = f
 
     const { toast } = useToast();
 
+    // Reset editing state when dialog opens/closes
     useEffect(() => {
-        if (card && open && card.noteId) {
-            fetchNoteDetails(card.noteId);
-            const tagString = card.noteTags || "";
-            setTags(tagString.split(" ").filter(Boolean));
+        if (open) {
+            setIsEditing(!initialReadOnly);
+        }
+    }, [open, initialReadOnly]);
+
+    useEffect(() => {
+        if (noteId && open) {
+            fetchNoteDetails(noteId);
         } else {
             // Reset state
             setModel(null);
             setFieldValues([]);
             setNote(null);
+            setTags([]);
         }
-    }, [card, open]);
+    }, [noteId, open]);
 
-    const fetchNoteDetails = async (noteId: number) => {
+    const fetchNoteDetails = async (id: number) => {
         setFetchingDetails(true);
         try {
             // 1. Fetch Note
-            const noteRes = await noteApi.v1NotesIdGet(noteId);
+            const noteRes = await noteApi.v1NotesIdGet(id);
             setNote(noteRes.data);
+
+            // Set tags from note
+            const tagString = noteRes.data.tags || "";
+            setTags(tagString.split(" ").filter(Boolean));
 
             // 2. Parse existing fields
             const currentFields = splitAnkiFields(noteRes.data.fields || "");
@@ -65,10 +80,6 @@ export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = f
             if (noteRes.data.modelId) {
                 const modelRes = await modelApi.v1ModelsIdGet(noteRes.data.modelId);
                 setModel(modelRes.data);
-
-                // Ensure fieldValues matches model fields length (pad with empty strings if needed)
-                // or assume Anki flds matches model fields count.
-                // We should align them.
                 setFieldValues(currentFields);
             }
         } catch (error) {
@@ -86,38 +97,21 @@ export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = f
     };
 
     const handleSave = async () => {
-        if (!card?.id || !note) return;
+        if (!note?.id) return;
 
         setLoading(true);
         try {
             // Reconstruct flds string
             const flds = joinAnkiFields(fieldValues);
 
-            // We update the Card (which implicitly updates the Note via our backend logic if we send noteContent/Tags)
-            // But wait, our Backend CardResource.update updates properties on the CARD entity mainly.
-            // However, we modified CardResource to update Note properties if passed?
-            // Actually, the previous backend code showed:
-            // "if (request.noteContent() != null) ..." - wait, I need to check if CardResource DOES update note fields.
-            // checking CardResource.java...
-            // It has 'noteContent' and 'noteTags' in CardRequest.
-            // But 'noteContent' usually mapped to just one field or the 'sfld'. 
-            // We want to update FULL 'flds'.
-
-            // Since we exposed 'fields' in NoteRequest and NoteResource, maybe we should update the NOTE directly?
-            // Updating the Note directly is cleaner for "Model-Aware" editing as we are editing the Note's data.
-            // The Card is just a scheduling wrapper.
-
-            // Let's update the Note directly using v1NotesIdPut.
-            if (note.id) {
-                await noteApi.v1NotesIdPut(note.id, {
-                    ...note,
-                    modelId: note.modelId,
-                    modificationTimestamp: Date.now() / 1000,
-                    tags: tags.join(" "),
-                    fields: flds,
-                    customData: note.customData
-                });
-            }
+            await noteApi.v1NotesIdPut(note.id, {
+                ...note,
+                modelId: note.modelId,
+                modificationTimestamp: Date.now() / 1000,
+                tags: tags.join(" "),
+                fields: flds,
+                customData: note.customData
+            });
 
             toast({ title: "Success", description: "Note updated successfully" });
             onOpenChange(false);
@@ -134,9 +128,11 @@ export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = f
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Edit Card</DialogTitle>
+                    <DialogTitle>
+                        {isEditing ? "Edit Note" : "View Note"}
+                    </DialogTitle>
                     <DialogDescription>
-                        Edit the note fields and tags.
+                        {isEditing ? "Edit the note fields and tags." : "View note details."}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -146,6 +142,15 @@ export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = f
                     </div>
                 ) : (
                     <div className="grid gap-4 py-4">
+                        {/* View Mode Actions */}
+                        {!isEditing && (
+                            <div className="flex justify-end">
+                                <Button size="sm" onClick={() => setIsEditing(true)}>
+                                    <Pencil className="mr-2 h-4 w-4" /> Enable Editing
+                                </Button>
+                            </div>
+                        )}
+
                         {model?.fields?.map((field: AnkiFieldDto, index: number) => (
                             <div key={index} className="grid gap-2">
                                 <Label htmlFor={`field-${index}`}>{field.name}</Label>
@@ -154,7 +159,7 @@ export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = f
                                     value={fieldValues[index] || ""}
                                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange(index, e.target.value)}
                                     className="min-h-[80px]"
-                                    disabled={readOnly}
+                                    disabled={!isEditing}
                                 />
                             </div>
                         ))}
@@ -170,21 +175,23 @@ export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = f
                             <TagInput
                                 selected={tags}
                                 onChange={setTags}
-                                placeholder="Add tags..."
-                                disabled={readOnly}
+                                placeholder={isEditing ? "Add tags..." : "No tags"}
+                                disabled={!isEditing}
                             />
-                            <p className="text-xs text-muted-foreground">
-                                Press Space to add a tag.
-                            </p>
+                            {isEditing && (
+                                <p className="text-xs text-muted-foreground">
+                                    Type and select to create tags.
+                                </p>
+                            )}
                         </div>
                     </div>
                 )}
 
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-                        {readOnly ? "Close" : "Cancel"}
+                        Close
                     </Button>
-                    {!readOnly && (
+                    {isEditing && (
                         <Button onClick={handleSave} disabled={loading || fetchingDetails}>
                             {loading ? "Saving..." : "Save Changes"}
                         </Button>

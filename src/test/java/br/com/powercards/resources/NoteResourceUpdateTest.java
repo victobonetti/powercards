@@ -16,6 +16,7 @@ public class NoteResourceUpdateTest {
     @BeforeEach
     @Transactional
     public void setup() {
+        br.com.powercards.model.Card.deleteAll();
         Note.deleteAll();
     }
 

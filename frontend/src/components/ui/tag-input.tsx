@@ -88,6 +88,7 @@ export function TagInput({ selected, onChange, placeholder = "Add tags...", disa
 
     const onInputChange = (val: string) => {
         // Prevent spaces if user types them, treat as trigger to create tag
+        /* Space should not create tags anymore per user request
         if (val.includes(" ")) {
             const parts = val.split(" ");
             // If there's content before space, try to create tag
@@ -98,10 +99,13 @@ export function TagInput({ selected, onChange, placeholder = "Add tags...", disa
             setInputValue("");
             setOpen(false); // Close popover on creation? or keep open? 
             // User requested "I want only one tag generated at time". 
-            // Logic: User types "tag ", space triggers creation of "tag".
             return;
         }
+        */
         setInputValue(val);
+        if (val.trim()) {
+            setOpen(true);
+        }
     };
 
     return (

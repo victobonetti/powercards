@@ -58,9 +58,17 @@ public class CardResource {
 
         io.quarkus.hibernate.orm.panache.PanacheQuery<Card> query;
         if (search != null && !search.isBlank()) {
-            // Search by note content (flds)
-            query = Card.find("select c from Card c join c.note n where lower(n.flds) like ?1", sortObj,
-                    "%" + search.toLowerCase() + "%");
+            // Check for "tag=" prefix
+            if (search.toLowerCase().startsWith("tag=")) {
+                String tag = search.substring(4);
+                // Search cards by note's tag
+                query = Card.find("select c from Card c join c.note n where lower(n.tags) like ?1", sortObj,
+                        "%" + tag.toLowerCase() + "%");
+            } else {
+                // Search by note content (flds)
+                query = Card.find("select c from Card c join c.note n where lower(n.flds) like ?1", sortObj,
+                        "%" + search.toLowerCase() + "%");
+            }
         } else {
             query = Card.find("select c from Card c left join fetch c.note", sortObj);
         }

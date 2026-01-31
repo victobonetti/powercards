@@ -5,13 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -28,9 +27,8 @@ import { stringToColor } from "@/lib/colorUtils";
 import { PaginationControls } from "./ui/pagination-controls";
 import { TagInput } from "./ui/tag-input";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
-
 import { useDebounce } from "@/hooks/use-debounce";
-import { ArrowUpDown } from "lucide-react";
+import { NoteDialog } from "./NoteDialog";
 
 export function NoteCRUD() {
     const [notes, setNotes] = useState<NoteResponse[]>([]);
@@ -48,11 +46,10 @@ export function NoteCRUD() {
     const debouncedSearch = useDebounce(search, 500);
     const [sort, setSort] = useState("id");
 
-    // Edit State
+    // Edit State (reusing NoteDialog)
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editingNote, setEditingNote] = useState<NoteResponse | null>(null);
-    const [editFields, setEditFields] = useState<string[]>([]);
-    const [editTags, setEditTags] = useState<string[]>([]);
+    const [isReadOnly, setIsReadOnly] = useState(false);
 
     // Delete State
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -77,16 +74,6 @@ export function NoteCRUD() {
             setIsCreateOpen(open);
         }
     };
-
-    const handleOpenChangeEdit = (open: boolean) => {
-        if (!open) {
-            setPendingAction(() => () => setIsEditOpen(false));
-            setIsConfirmOpen(true);
-        } else {
-            setIsEditOpen(open);
-        }
-    };
-
 
     const fetchNotes = async (page: number) => {
         try {
@@ -140,25 +127,14 @@ export function NoteCRUD() {
 
     const handleEditClick = (note: NoteResponse) => {
         setEditingNote(note);
-        setEditFields(note.fields?.split("\u001f") || []);
-        setEditTags(note.tags ? note.tags.split(" ").filter(t => t.length > 0) : []);
+        setIsReadOnly(false);
         setIsEditOpen(true);
     };
 
-    const updateNote = async () => {
-        if (!editingNote || !editingNote.id) return;
-        try {
-            await noteApi.v1NotesIdPut(editingNote.id, {
-                modelId: editingNote.modelId,
-                fields: editFields.join("\u001f"),
-                tags: editTags.join(" "),
-            });
-            setIsEditOpen(false);
-            fetchNotes(currentPage);
-            toast({ title: "Success", description: "Note updated successfully" });
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to update note", variant: "destructive" });
-        }
+    const handleViewClick = (note: NoteResponse) => {
+        setEditingNote(note);
+        setIsReadOnly(true);
+        setIsEditOpen(true);
     };
 
     const handleDeleteClick = (id: number) => {
@@ -273,7 +249,14 @@ export function NoteCRUD() {
                         </TableHeader>
                         <TableBody>
                             {notes.map((note) => (
-                                <TableRow key={note.id}>
+                                <TableRow
+                                    key={note.id}
+                                    className="cursor-pointer hover:bg-muted/50"
+                                    onClick={(e) => {
+                                        if ((e.target as HTMLElement).closest('button')) return;
+                                        handleViewClick(note);
+                                    }}
+                                >
                                     <TableCell className="text-xs text-muted-foreground">{note.id}</TableCell>
                                     <TableCell className="font-medium max-w-xs truncate">
                                         {note.fields?.split("\u001f")[0]}
@@ -301,7 +284,8 @@ export function NoteCRUD() {
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
                                                     <MoreVertical className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
@@ -309,7 +293,7 @@ export function NoteCRUD() {
                                                 <DropdownMenuItem onClick={() => handleEditClick(note)}>
                                                     <Pencil className="mr-2 h-4 w-4" /> Edit
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-600" onClick={() => note.id && handleDeleteClick(note.id)}>
+                                                <DropdownMenuItem onClick={() => handleDeleteClick(note.id!)} className="text-red-600">
                                                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -317,13 +301,6 @@ export function NoteCRUD() {
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            {notes.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
-                                        No notes found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
                         </TableBody>
                     </Table>
                     <PaginationControls
@@ -336,53 +313,21 @@ export function NoteCRUD() {
                 </CardContent>
             </Card>
 
-            {/* Edit Dialog */}
-            <Dialog open={isEditOpen} onOpenChange={handleOpenChangeEdit}>
-                <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
-                    <DialogHeader>
-                        <DialogTitle>Edit Note</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        {editFields.map((fieldValue, idx) => (
-                            <div key={idx} className="space-y-2">
-                                <Label>Field {idx + 1}</Label>
-                                <Input
-                                    value={fieldValue}
-                                    onChange={(e) => {
-                                        const newFields = [...editFields];
-                                        newFields[idx] = e.target.value;
-                                        setEditFields(newFields);
-                                    }}
-                                />
-                            </div>
-                        ))}
-                        <div className="space-y-2">
-                            <Label>Tags</Label>
-                            <TagInput selected={editTags} onChange={setEditTags} />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={updateNote}>Save Changes</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <NoteDialog
+                noteId={editingNote?.id || null}
+                open={isEditOpen}
+                onOpenChange={(open) => setIsEditOpen(open)}
+                onSaved={() => fetchNotes(currentPage)}
+                initialReadOnly={isReadOnly}
+            />
 
-            {/* Delete Confirmation */}
-            <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete Note</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete this note? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
+            <ConfirmationDialog
+                open={isDeleteOpen}
+                onOpenChange={setIsDeleteOpen}
+                onConfirm={confirmDelete}
+                title="Delete Note"
+                description="Are you sure you want to delete this note? This action cannot be undone."
+            />
             <ConfirmationDialog
                 open={isConfirmOpen}
                 onOpenChange={setIsConfirmOpen}
@@ -390,9 +335,9 @@ export function NoteCRUD() {
                     if (pendingAction) pendingAction();
                     setIsConfirmOpen(false);
                 }}
-                description="You have unsaved changes. Are you sure you want to close?"
+                title="Unsaved Changes"
+                description="You have unsaved changes. Are you sure you want to discard them?"
             />
         </div>
     );
 }
-

@@ -10,15 +10,23 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MoreVertical, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PaginationControls } from "./ui/pagination-controls";
 import { useToast } from "@/hooks/use-toast";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { stringToColor } from "@/lib/colorUtils";
 
 import { useDebounce } from "@/hooks/use-debounce";
 import { ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { CardEditDialog } from "./CardEditDialog";
+import { NoteDialog } from "./NoteDialog";
 
 interface CardListProps {
     deckId: number;
@@ -106,7 +114,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                     <div className="flex items-center justify-between">
                         <CardTitle>Card List</CardTitle>
                         <Input
-                            placeholder="Search note content..."
+                            placeholder="Search note content or tag=..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-64"
@@ -126,7 +134,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                     Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
                                     {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                 </TableHead>
-                                <TableHead className="w-[100px]">Actions</TableHead>
+                                <TableHead className="w-[100px] text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -147,20 +155,38 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                         </TableCell>
                                         <TableCell className="max-w-xs truncate" title={(card as any).noteTags}>
                                             <div className="flex gap-1 flex-wrap">
-                                                {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => (
-                                                    <span key={tag} className="bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded text-xs">
-                                                        {tag}
-                                                    </span>
-                                                ))}
+                                                {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => {
+                                                    const color = stringToColor(tag);
+                                                    return (
+                                                        <Badge
+                                                            key={tag}
+                                                            variant="secondary"
+                                                            style={{
+                                                                backgroundColor: `${color}20`,
+                                                                color: color,
+                                                                borderColor: `${color}40`
+                                                            }}
+                                                        >
+                                                            {tag}
+                                                        </Badge>
+                                                    );
+                                                })}
                                             </div>
                                         </TableCell>
-                                        <TableCell>
-                                            <Button variant="outline" size="sm" onClick={() => handleEdit(card)} className="mr-2">
-                                                Edit
-                                            </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => handleView(card)}>
-                                                View
-                                            </Button>
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => handleEdit(card)}>
+                                                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -183,12 +209,12 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                 </CardContent>
             </Card>
 
-            <CardEditDialog
-                card={editingCard}
+            <NoteDialog
+                noteId={editingCard?.noteId || null}
                 open={!!editingCard}
                 onOpenChange={(open) => !open && setEditingCard(null)}
                 onSaved={handleSaved}
-                readOnly={isReadOnly}
+                initialReadOnly={isReadOnly}
             />
         </div>
     );
