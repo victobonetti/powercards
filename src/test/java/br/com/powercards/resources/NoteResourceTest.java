@@ -1,8 +1,8 @@
 package br.com.powercards.resources;
 
+import br.com.powercards.model.Card;
 import br.com.powercards.model.Note;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,10 +16,11 @@ public class NoteResourceTest {
         @BeforeEach
         @Transactional
         void setUp() {
+                Card.deleteAll();
                 Note.deleteAll();
                 for (int i = 0; i < 15; i++) {
                         Note note = new Note();
-                        note.flds = "Note " + i;
+                        note.flds = "Note " + i + (i % 2 == 0 ? " even" : " odd");
                         note.tags = "tag" + i;
                         note.persist();
                 }
@@ -45,5 +46,35 @@ public class NoteResourceTest {
                                 .statusCode(200)
                                 .body("data.size()", is(5))
                                 .body("pagination.page", is(2));
+        }
+
+        @Test
+        public void testListSearch() {
+                // Search by content
+                given()
+                                .queryParam("search", "even")
+                                .when().get("/v1/notes")
+                                .then()
+                                .statusCode(200)
+                                .body("data.size()", is(8)); // 0, 2, ... 14 -> 8 numbers
+
+                // Search by tag
+                given()
+                                .queryParam("search", "tag=tag1")
+                                .when().get("/v1/notes")
+                                .then()
+                                .statusCode(200)
+                                .body("data[0].tags", is("tag1"));
+        }
+
+        @Test
+        public void testListSort() {
+                // Sort by id desc
+                given()
+                                .queryParam("sort", "-id")
+                                .when().get("/v1/notes")
+                                .then()
+                                .statusCode(200)
+                                .body("data[0].fields", containsString("Note 14"));
         }
 }

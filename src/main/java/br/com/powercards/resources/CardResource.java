@@ -25,6 +25,8 @@ public class CardResource {
     public PaginatedResponse<CardResponse> list(
             @QueryParam("page") @DefaultValue("1") int page,
             @QueryParam("perPage") @DefaultValue("20") int perPage,
+            @QueryParam("search") String search,
+            @QueryParam("sort") String sort,
             @Context UriInfo uriInfo) {
 
         if (page < 1)
@@ -32,8 +34,33 @@ public class CardResource {
         if (perPage < 1)
             perPage = 20;
 
-        long total = Card.count();
-        List<Card> cards = Card.findAll().page(page - 1, perPage).list();
+        io.quarkus.panache.common.Sort sortObj = io.quarkus.panache.common.Sort.by("c.id");
+        if (sort != null && !sort.isBlank()) {
+            boolean descending = sort.startsWith("-");
+            String sortField = descending ? sort.substring(1) : sort;
+
+            // Qualify fields with 'c.' to avoid ambiguity with joined Note
+            // Assuming all sortable fields are on Card
+            String qualifiedField = "c." + sortField;
+
+            if (descending) {
+                sortObj = io.quarkus.panache.common.Sort.descending(qualifiedField);
+            } else {
+                sortObj = io.quarkus.panache.common.Sort.ascending(qualifiedField);
+            }
+        }
+
+        io.quarkus.hibernate.orm.panache.PanacheQuery<Card> query;
+        if (search != null && !search.isBlank()) {
+            // Search by note content (flds)
+            query = Card.find("select c from Card c join c.note n where lower(n.flds) like ?1", sortObj,
+                    "%" + search.toLowerCase() + "%");
+        } else {
+            query = Card.find("select c from Card c left join fetch c.note", sortObj);
+        }
+
+        long total = query.count();
+        List<Card> cards = query.page(page - 1, perPage).list();
         List<CardResponse> data = cards.stream()
                 .map(this::toResponse)
                 .toList();
@@ -44,18 +71,24 @@ public class CardResource {
 
         String nextPageUri = null;
         if (page < totalPages) {
-            nextPageUri = uriInfo.getAbsolutePathBuilder()
+            var builder = uriInfo.getAbsolutePathBuilder()
                     .queryParam("page", page + 1)
-                    .queryParam("perPage", perPage)
-                    .build()
-                    .toString();
+                    .queryParam("perPage", perPage);
+            if (search != null)
+                builder.queryParam("search", search);
+            if (sort != null)
+                builder.queryParam("sort", sort);
+            nextPageUri = builder.build().toString();
         }
 
-        String lastPageUri = uriInfo.getAbsolutePathBuilder()
+        var lastPageBuilder = uriInfo.getAbsolutePathBuilder()
                 .queryParam("page", totalPages)
-                .queryParam("perPage", perPage)
-                .build()
-                .toString();
+                .queryParam("perPage", perPage);
+        if (search != null)
+            lastPageBuilder.queryParam("search", search);
+        if (sort != null)
+            lastPageBuilder.queryParam("sort", sort);
+        String lastPageUri = lastPageBuilder.build().toString();
 
         PaginationMeta meta = new PaginationMeta(total, page, nextPageUri, lastPageUri);
         return new PaginatedResponse<>(meta, data);
@@ -155,6 +188,7 @@ public class CardResource {
                 card.odue,
                 card.odid,
                 card.flags,
-                card.data);
+                card.data,
+                card.note != null && card.note.flds != null ? card.note.flds.split("\u001f")[0] : "");
     }
 }

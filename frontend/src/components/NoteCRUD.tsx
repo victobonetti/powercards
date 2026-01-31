@@ -29,6 +29,9 @@ import { PaginationControls } from "./ui/pagination-controls";
 import { TagInput } from "./ui/tag-input";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 
+import { useDebounce } from "@/hooks/use-debounce";
+import { ArrowUpDown } from "lucide-react";
+
 export function NoteCRUD() {
     const [notes, setNotes] = useState<NoteResponse[]>([]);
     const [models, setModels] = useState<AnkiModelResponse[]>([]);
@@ -39,6 +42,11 @@ export function NoteCRUD() {
     const [selectedModel, setSelectedModel] = useState<AnkiModelResponse | null>(null);
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+    // Search & Sort
+    const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500);
+    const [sort, setSort] = useState("id");
 
     // Edit State
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -71,7 +79,7 @@ export function NoteCRUD() {
     };
 
     const handleOpenChangeEdit = (open: boolean) => {
-        if (!open) { // assuming check for dirty edit fields if we tracked original state, for now simple check
+        if (!open) {
             setPendingAction(() => () => setIsEditOpen(false));
             setIsConfirmOpen(true);
         } else {
@@ -82,7 +90,7 @@ export function NoteCRUD() {
 
     const fetchNotes = async (page: number) => {
         try {
-            const response = await noteApi.v1NotesGet(page, perPage);
+            const response = await noteApi.v1NotesGet(page, perPage, debouncedSearch, sort);
             const paginatedData = response.data as any;
             setNotes(paginatedData.data);
             setTotalNotes(paginatedData.pagination.total);
@@ -103,7 +111,12 @@ export function NoteCRUD() {
     useEffect(() => {
         fetchNotes(currentPage);
         fetchModels();
-    }, [currentPage]);
+    }, [currentPage, debouncedSearch, sort]);
+
+    // Reset page on search change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch]);
 
     const createNote = async () => {
         if (!selectedModel) return;
@@ -166,6 +179,14 @@ export function NoteCRUD() {
         }
     };
 
+    const toggleSort = (field: string) => {
+        if (sort === field) {
+            setSort(`-${field}`);
+        } else {
+            setSort(field);
+        }
+    };
+
     const totalPages = Math.ceil(totalNotes / perPage) || 1;
 
     return (
@@ -174,64 +195,78 @@ export function NoteCRUD() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <CardTitle>Notes</CardTitle>
-                        <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
-                            <DialogTrigger asChild>
-                                <Button size="sm">
-                                    <Plus className="mr-2 h-4 w-4" /> New Note
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
-                                <DialogHeader>
-                                    <DialogTitle>Create New Note</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="space-y-2">
-                                        <Label>Note Model</Label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {models.map(m => (
-                                                <Button
-                                                    key={m.id}
-                                                    variant={selectedModel?.id === m.id ? "default" : "outline"}
-                                                    size="sm"
-                                                    onClick={() => setSelectedModel(m)}
-                                                >
-                                                    {m.name}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {selectedModel && (
-                                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                                            {selectedModel.fields?.map((field, idx) => (
-                                                <div key={idx} className="space-y-2">
-                                                    <Label>{field.name}</Label>
-                                                    <Input
-                                                        value={fieldValues[field.name || ""] || ""}
-                                                        onChange={(e) => setFieldValues(prev => ({ ...prev, [field.name || ""]: e.target.value }))}
-                                                    />
-                                                </div>
-                                            ))}
-                                            <div className="space-y-2">
-                                                <Label>Tags</Label>
-                                                <TagInput selected={selectedTags} onChange={setSelectedTags} />
+                        <div className="flex items-center gap-2">
+                            <Input
+                                placeholder="Search content or tag=..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="w-64"
+                            />
+                            <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
+                                <DialogTrigger asChild>
+                                    <Button size="sm">
+                                        <Plus className="mr-2 h-4 w-4" /> New Note
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
+                                    <DialogHeader>
+                                        <DialogTitle>Create New Note</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label>Note Model</Label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {models.map(m => (
+                                                    <Button
+                                                        key={m.id}
+                                                        variant={selectedModel?.id === m.id ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setSelectedModel(m)}
+                                                    >
+                                                        {m.name}
+                                                    </Button>
+                                                ))}
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                                <DialogFooter>
-                                    <Button onClick={createNote} disabled={!selectedModel}>Create Note</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+
+                                        {selectedModel && (
+                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                                {selectedModel.fields?.map((field, idx) => (
+                                                    <div key={idx} className="space-y-2">
+                                                        <Label>{field.name}</Label>
+                                                        <Input
+                                                            value={fieldValues[field.name || ""] || ""}
+                                                            onChange={(e) => setFieldValues(prev => ({ ...prev, [field.name || ""]: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                ))}
+                                                <div className="space-y-2">
+                                                    <Label>Tags</Label>
+                                                    <TagInput selected={selectedTags} onChange={setSelectedTags} />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <DialogFooter>
+                                        <Button onClick={createNote} disabled={!selectedModel}>Create Note</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-24">ID</TableHead>
-                                <TableHead>Field Content</TableHead>
+                                <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
+                                    ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                    {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                </TableHead>
+                                <TableHead className="cursor-pointer" onClick={() => toggleSort("sfld")}>
+                                    Field Content {sort === "sfld" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                    {sort === "-sfld" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                </TableHead>
                                 <TableHead>Tags</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>

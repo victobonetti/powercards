@@ -68,6 +68,18 @@
             "format" : "int32",
             "default" : 20
           }
+        }, {
+          "name" : "search",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -216,6 +228,18 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 20
+          }
+        }, {
+          "name" : "search",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -500,6 +524,18 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 20
+          }
+        }, {
+          "name" : "search",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -926,6 +962,9 @@
             "format" : "int32"
           },
           "customData" : {
+            "type" : "string"
+          },
+          "noteField" : {
             "type" : "string"
           }
         }

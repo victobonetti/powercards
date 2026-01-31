@@ -24,6 +24,8 @@ public class NoteResource {
     public PaginatedResponse<NoteResponse> list(
             @QueryParam("page") @DefaultValue("1") int page,
             @QueryParam("perPage") @DefaultValue("20") int perPage,
+            @QueryParam("search") String search,
+            @QueryParam("sort") String sort,
             @Context UriInfo uriInfo) {
 
         if (page < 1)
@@ -31,8 +33,30 @@ public class NoteResource {
         if (perPage < 1)
             perPage = 20;
 
-        long total = Note.count();
-        List<Note> notes = Note.findAll().page(page - 1, perPage).list();
+        io.quarkus.panache.common.Sort sortObj = io.quarkus.panache.common.Sort.by("id");
+        if (sort != null && !sort.isBlank()) {
+            if (sort.startsWith("-")) {
+                sortObj = io.quarkus.panache.common.Sort.descending(sort.substring(1));
+            } else {
+                sortObj = io.quarkus.panache.common.Sort.ascending(sort);
+            }
+        }
+
+        io.quarkus.hibernate.orm.panache.PanacheQuery<Note> query;
+        if (search != null && !search.isBlank()) {
+            if (search.toLowerCase().startsWith("tag=")) {
+                String tag = search.substring(4);
+                query = Note.find("lower(tags) like ?1", sortObj, "%" + tag.toLowerCase() + "%");
+            } else {
+                String term = "%" + search.toLowerCase() + "%";
+                query = Note.find("lower(flds) like ?1 or lower(sfld) like ?1", sortObj, term);
+            }
+        } else {
+            query = Note.findAll(sortObj);
+        }
+
+        long total = query.count();
+        List<Note> notes = query.page(page - 1, perPage).list();
         List<NoteResponse> data = notes.stream()
                 .map(this::toResponse)
                 .toList();
@@ -43,18 +67,24 @@ public class NoteResource {
 
         String nextPageUri = null;
         if (page < totalPages) {
-            nextPageUri = uriInfo.getAbsolutePathBuilder()
+            var builder = uriInfo.getAbsolutePathBuilder()
                     .queryParam("page", page + 1)
-                    .queryParam("perPage", perPage)
-                    .build()
-                    .toString();
+                    .queryParam("perPage", perPage);
+            if (search != null)
+                builder.queryParam("search", search);
+            if (sort != null)
+                builder.queryParam("sort", sort);
+            nextPageUri = builder.build().toString();
         }
 
-        String lastPageUri = uriInfo.getAbsolutePathBuilder()
+        var lastPageBuilder = uriInfo.getAbsolutePathBuilder()
                 .queryParam("page", totalPages)
-                .queryParam("perPage", perPage)
-                .build()
-                .toString();
+                .queryParam("perPage", perPage);
+        if (search != null)
+            lastPageBuilder.queryParam("search", search);
+        if (sort != null)
+            lastPageBuilder.queryParam("sort", sort);
+        String lastPageUri = lastPageBuilder.build().toString();
 
         PaginationMeta meta = new PaginationMeta(total, page, nextPageUri, lastPageUri);
         return new PaginatedResponse<>(meta, data);

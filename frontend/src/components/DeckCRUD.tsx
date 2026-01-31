@@ -27,6 +27,9 @@ import { CardList } from "./CardList";
 import { PaginationControls } from "./ui/pagination-controls";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 
+import { useDebounce } from "@/hooks/use-debounce";
+import { ArrowUpDown } from "lucide-react";
+
 interface DeckCRUDProps {
     highlightNew?: boolean;
 }
@@ -37,6 +40,11 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const [perPage] = useState(10);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    // Search & Sort
+    const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500);
+    const [sort, setSort] = useState("id");
 
     // Create State
     const [newDeckName, setNewDeckName] = useState("");
@@ -59,6 +67,9 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
 
     const { toast } = useToast();
 
+    // ... handleOpenChangeCreate and handleOpenChangeEdit (omitted for brevity in replacement if unchanged, but I'm replacing the whole top part so I need to keep them or be careful with ranges)
+    // Actually, I'll replace the fetchDecks and render part mainly.
+
     const handleOpenChangeCreate = (open: boolean) => {
         if (!open && newDeckName) {
             setPendingAction(() => () => {
@@ -73,7 +84,6 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
 
     const handleOpenChangeEdit = (open: boolean) => {
         if (!open) {
-            // Simple check, in real app we might check if editName !== original
             setPendingAction(() => () => setIsEditOpen(false));
             setIsConfirmOpen(true);
         } else {
@@ -83,7 +93,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
 
     const fetchDecks = async (page: number) => {
         try {
-            const response = await deckApi.v1DecksGet(page, perPage);
+            const response = await deckApi.v1DecksGet(page, perPage, debouncedSearch, sort);
             const paginatedData = response.data as any;
             setDecks(paginatedData.data);
             setTotalDecks(paginatedData.pagination.total);
@@ -92,12 +102,16 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
         }
     };
 
-    // Refetch when highlightNew changes (implies a recent upload)
+    // Refetch when highlightNew changes or search/sort/page changes
     useEffect(() => {
-        if (highlightNew) {
-            fetchDecks(currentPage);
-        }
-    }, [highlightNew]);
+        fetchDecks(currentPage);
+    }, [highlightNew, currentPage, debouncedSearch, sort]);
+
+    // Reset page on search change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch]);
+
 
     const createDeck = async () => {
         if (!newDeckName) return;
@@ -155,9 +169,14 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
         }
     };
 
-    useEffect(() => {
-        fetchDecks(currentPage);
-    }, [currentPage]);
+    const toggleSort = (field: string) => {
+        if (sort === field) {
+            setSort(`-${field}`);
+        } else {
+            setSort(field);
+        }
+    };
+
 
     if (selectedDeck) {
         return (
@@ -180,40 +199,54 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                             Decks
                             {highlightNew && <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full animate-pulse">New Data</span>}
                         </CardTitle>
-                        <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
-                            <DialogTrigger asChild>
-                                <Button size="sm">
-                                    <Plus className="mr-2 h-4 w-4" /> New Deck
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-                                <DialogHeader>
-                                    <DialogTitle>Create New Deck</DialogTitle>
-                                    <DialogDescription>
-                                        Enter a name for your new deck.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <Input
-                                        placeholder="Deck name"
-                                        value={newDeckName}
-                                        onChange={(e) => setNewDeckName(e.target.value)}
-                                        onKeyDown={(e) => e.key === "Enter" && createDeck()}
-                                    />
-                                    <DialogFooter>
-                                        <Button onClick={createDeck}>Create</Button>
-                                    </DialogFooter>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                placeholder="Search decks..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="w-64"
+                            />
+                            <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
+                                <DialogTrigger asChild>
+                                    <Button size="sm">
+                                        <Plus className="mr-2 h-4 w-4" /> New Deck
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+                                    <DialogHeader>
+                                        <DialogTitle>Create New Deck</DialogTitle>
+                                        <DialogDescription>
+                                            Enter a name for your new deck.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        <Input
+                                            placeholder="Deck name"
+                                            value={newDeckName}
+                                            onChange={(e) => setNewDeckName(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && createDeck()}
+                                        />
+                                        <DialogFooter>
+                                            <Button onClick={createDeck}>Create</Button>
+                                        </DialogFooter>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-24">ID</TableHead>
-                                <TableHead>Name</TableHead>
+                                <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
+                                    ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                    {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                </TableHead>
+                                <TableHead className="cursor-pointer" onClick={() => toggleSort("name")}>
+                                    Name {sort === "name" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                    {sort === "-name" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                </TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -263,6 +296,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                     />
                 </CardContent>
             </Card>
+
 
             {/* Edit Dialog */}
             <Dialog open={isEditOpen} onOpenChange={handleOpenChangeEdit}>

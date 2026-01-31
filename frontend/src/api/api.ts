@@ -364,6 +364,12 @@ export interface CardResponse {
      * @memberof CardResponse
      */
     'customData'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CardResponse
+     */
+    'noteField'?: string;
 }
 /**
  * 
@@ -1151,10 +1157,12 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
          * @summary List all cards
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsGet: async (page?: number, perPage?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1CardsGet: async (page?: number, perPage?: number, search?: string, sort?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/v1/cards`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1173,6 +1181,14 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
 
             if (perPage !== undefined) {
                 localVarQueryParameter['perPage'] = perPage;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            if (sort !== undefined) {
+                localVarQueryParameter['sort'] = sort;
             }
 
 
@@ -1345,11 +1361,13 @@ export const CardResourceApiFp = function(configuration?: Configuration) {
          * @summary List all cards
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1CardsGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseCardResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsGet(page, perPage, options);
+        async v1CardsGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseCardResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsGet(page, perPage, search, sort, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CardResourceApi.v1CardsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1422,11 +1440,13 @@ export const CardResourceApiFactory = function (configuration?: Configuration, b
          * @summary List all cards
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseCardResponse> {
-            return localVarFp.v1CardsGet(page, perPage, options).then((request) => request(axios, basePath));
+        v1CardsGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseCardResponse> {
+            return localVarFp.v1CardsGet(page, perPage, search, sort, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1484,12 +1504,14 @@ export class CardResourceApi extends BaseAPI {
      * @summary List all cards
      * @param {number} [page] 
      * @param {number} [perPage] 
+     * @param {string} [search] 
+     * @param {string} [sort] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CardResourceApi
      */
-    public v1CardsGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig) {
-        return CardResourceApiFp(this.configuration).v1CardsGet(page, perPage, options).then((request) => request(this.axios, this.basePath));
+    public v1CardsGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig) {
+        return CardResourceApiFp(this.configuration).v1CardsGet(page, perPage, search, sort, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1555,10 +1577,12 @@ export const DeckResourceApiAxiosParamCreator = function (configuration?: Config
          * @summary List all decks
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1DecksGet: async (page?: number, perPage?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1DecksGet: async (page?: number, perPage?: number, search?: string, sort?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/v1/decks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1577,6 +1601,14 @@ export const DeckResourceApiAxiosParamCreator = function (configuration?: Config
 
             if (perPage !== undefined) {
                 localVarQueryParameter['perPage'] = perPage;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            if (sort !== undefined) {
+                localVarQueryParameter['sort'] = sort;
             }
 
 
@@ -1749,11 +1781,13 @@ export const DeckResourceApiFp = function(configuration?: Configuration) {
          * @summary List all decks
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1DecksGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseDeckResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1DecksGet(page, perPage, options);
+        async v1DecksGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseDeckResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1DecksGet(page, perPage, search, sort, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DeckResourceApi.v1DecksGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1826,11 +1860,13 @@ export const DeckResourceApiFactory = function (configuration?: Configuration, b
          * @summary List all decks
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1DecksGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseDeckResponse> {
-            return localVarFp.v1DecksGet(page, perPage, options).then((request) => request(axios, basePath));
+        v1DecksGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseDeckResponse> {
+            return localVarFp.v1DecksGet(page, perPage, search, sort, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1888,12 +1924,14 @@ export class DeckResourceApi extends BaseAPI {
      * @summary List all decks
      * @param {number} [page] 
      * @param {number} [perPage] 
+     * @param {string} [search] 
+     * @param {string} [sort] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DeckResourceApi
      */
-    public v1DecksGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig) {
-        return DeckResourceApiFp(this.configuration).v1DecksGet(page, perPage, options).then((request) => request(this.axios, this.basePath));
+    public v1DecksGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig) {
+        return DeckResourceApiFp(this.configuration).v1DecksGet(page, perPage, search, sort, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1959,10 +1997,12 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
          * @summary List all notes
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesGet: async (page?: number, perPage?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1NotesGet: async (page?: number, perPage?: number, search?: string, sort?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/v1/notes`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1981,6 +2021,14 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
 
             if (perPage !== undefined) {
                 localVarQueryParameter['perPage'] = perPage;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            if (sort !== undefined) {
+                localVarQueryParameter['sort'] = sort;
             }
 
 
@@ -2153,11 +2201,13 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
          * @summary List all notes
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1NotesGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseNoteResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesGet(page, perPage, options);
+        async v1NotesGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseNoteResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesGet(page, perPage, search, sort, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2230,11 +2280,13 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
          * @summary List all notes
          * @param {number} [page] 
          * @param {number} [perPage] 
+         * @param {string} [search] 
+         * @param {string} [sort] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseNoteResponse> {
-            return localVarFp.v1NotesGet(page, perPage, options).then((request) => request(axios, basePath));
+        v1NotesGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseNoteResponse> {
+            return localVarFp.v1NotesGet(page, perPage, search, sort, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2292,12 +2344,14 @@ export class NoteResourceApi extends BaseAPI {
      * @summary List all notes
      * @param {number} [page] 
      * @param {number} [perPage] 
+     * @param {string} [search] 
+     * @param {string} [sort] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NoteResourceApi
      */
-    public v1NotesGet(page?: number, perPage?: number, options?: RawAxiosRequestConfig) {
-        return NoteResourceApiFp(this.configuration).v1NotesGet(page, perPage, options).then((request) => request(this.axios, this.basePath));
+    public v1NotesGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesGet(page, perPage, search, sort, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
