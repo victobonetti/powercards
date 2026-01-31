@@ -3,8 +3,8 @@ import { Sidebar } from "./Sidebar";
 
 interface LayoutProps {
     children: ReactNode;
-    currentView: "upload" | "decks";
-    onNavigate: (view: "upload" | "decks") => void;
+    currentView: "upload" | "decks" | "tags";
+    onNavigate: (view: "upload" | "decks" | "tags") => void;
 }
 
 export function Layout({ children, currentView, onNavigate }: LayoutProps) {

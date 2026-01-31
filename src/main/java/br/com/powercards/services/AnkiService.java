@@ -88,8 +88,25 @@ public class AnkiService {
             note.csum = n.getCsum();
             note.flags = n.getFlags();
             note.data = n.getData();
+            note.data = n.getData();
             note.persist();
             noteMap.put(n.getId(), note);
+
+            if (note.tags != null && !note.tags.isBlank()) {
+                java.util.Arrays.stream(note.tags.trim().split("\\s+"))
+                        .filter(tag -> !tag.isBlank())
+                        .map(String::trim)
+                        .distinct()
+                        .forEach(tagName -> {
+                            br.com.powercards.model.Tag.find("name", tagName)
+                                    .firstResultOptional()
+                                    .orElseGet(() -> {
+                                        br.com.powercards.model.Tag newTag = new br.com.powercards.model.Tag(tagName);
+                                        newTag.persist();
+                                        return newTag;
+                                    });
+                        });
+            }
         }
 
         // 4. Persistir Cards

@@ -10,90 +10,121 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cardApi } from "@/lib/api";
-import { CardResponse } from "@/api/api";
+import { Input } from "@/components/ui/input";
+import { noteApi, modelApi } from "@/lib/api";
+import { CardResponse, NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
+import { splitAnkiFields, joinAnkiFields } from "@/lib/anki";
+import { Loader2 } from "lucide-react";
 
 interface CardEditDialogProps {
     card: CardResponse | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSaved: () => void;
+    readOnly?: boolean;
 }
 
-export function CardEditDialog({ card, open, onOpenChange, onSaved }: CardEditDialogProps) {
-    const [content, setContent] = useState("");
+export function CardEditDialog({ card, open, onOpenChange, onSaved, readOnly = false }: CardEditDialogProps) {
     const [tags, setTags] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [fetchingDetails, setFetchingDetails] = useState(false);
+
+    // Model Aware State
+    const [model, setModel] = useState<AnkiModelResponse | null>(null);
+    const [fieldValues, setFieldValues] = useState<string[]>([]);
+    const [note, setNote] = useState<NoteResponse | null>(null);
+
     const { toast } = useToast();
 
     useEffect(() => {
-        if (card && open) {
-            setContent(card.noteField || "");
+        if (card && open && card.noteId) {
+            fetchNoteDetails(card.noteId);
             const tagString = card.noteTags || "";
             setTags(tagString.split(" ").filter(Boolean));
+        } else {
+            // Reset state
+            setModel(null);
+            setFieldValues([]);
+            setNote(null);
         }
     }, [card, open]);
 
+    const fetchNoteDetails = async (noteId: number) => {
+        setFetchingDetails(true);
+        try {
+            // 1. Fetch Note
+            const noteRes = await noteApi.v1NotesIdGet(noteId);
+            setNote(noteRes.data);
+
+            // 2. Parse existing fields
+            const currentFields = splitAnkiFields(noteRes.data.fields || "");
+
+            // 3. Fetch Model
+            if (noteRes.data.modelId) {
+                const modelRes = await modelApi.v1ModelsIdGet(noteRes.data.modelId);
+                setModel(modelRes.data);
+
+                // Ensure fieldValues matches model fields length (pad with empty strings if needed)
+                // or assume Anki flds matches model fields count.
+                // We should align them.
+                setFieldValues(currentFields);
+            }
+        } catch (error) {
+            console.error("Failed to fetch details", error);
+            toast({ title: "Error", description: "Failed to load note details", variant: "destructive" });
+        } finally {
+            setFetchingDetails(false);
+        }
+    };
+
+    const handleFieldChange = (index: number, value: string) => {
+        const newValues = [...fieldValues];
+        newValues[index] = value;
+        setFieldValues(newValues);
+    };
+
     const handleSave = async () => {
-        if (!card?.id) return;
+        if (!card?.id || !note) return;
 
         setLoading(true);
         try {
-            await cardApi.v1CardsIdPut(card.id, {
-                // We typically need to pass all required fields for PUT, but our backend uses updateEntity which selectively updates
-                // However, CardRequest is a record (DTO), so we need to construct it compatible with backend expectations.
-                // Since our backend logic does null checks (e.g. if (request.noteId() != null)), we can send partial data if we only want to update specific fields?
-                // Actually CardRequest is a record, so all fields are present in JSON. But we can send what we have.
-                // The backend implementation:
-                /*
-                 if (request.noteId() != null) entity.note = Note.findById(request.noteId());
-                 entity.ord = request.ordinal(); // These are primitives (Integer), if null in JSON -> null in Java object?
-                 Wait, Java primitives vs wrappers. CardRequest uses Integer/Long wrappers. So nulls are fine.
-                */
+            // Reconstruct flds string
+            const flds = joinAnkiFields(fieldValues);
 
-                // We only want to update Note Content and Tags for now.
-                // But if we send null for 'ordinal', 'due', etc, will it overwrite existing values with null?
-                // Backend: entity.ord = request.ordinal(); -> If request.ordinal() is null, entity.ord becomes null.
-                // This suggests we SHOULD send existing values or the backend needs to handle nulls more gracefully (e.g. only update if not null).
-                // Let's re-read Backend CardResource.updateEntity.
+            // We update the Card (which implicitly updates the Note via our backend logic if we send noteContent/Tags)
+            // But wait, our Backend CardResource.update updates properties on the CARD entity mainly.
+            // However, we modified CardResource to update Note properties if passed?
+            // Actually, the previous backend code showed:
+            // "if (request.noteContent() != null) ..." - wait, I need to check if CardResource DOES update note fields.
+            // checking CardResource.java...
+            // It has 'noteContent' and 'noteTags' in CardRequest.
+            // But 'noteContent' usually mapped to just one field or the 'sfld'. 
+            // We want to update FULL 'flds'.
 
-                // Backend: entity.ord = request.ordinal();
-                // If request.ordinal() is null, entity.ord becomes null! 
-                // This is risky. I should send existing values back.
+            // Since we exposed 'fields' in NoteRequest and NoteResource, maybe we should update the NOTE directly?
+            // Updating the Note directly is cleaner for "Model-Aware" editing as we are editing the Note's data.
+            // The Card is just a scheduling wrapper.
 
-                ...card, // Spread existing card props? CardResponse structure != CardRequest structure exactly.
+            // Let's update the Note directly using v1NotesIdPut.
+            if (note.id) {
+                await noteApi.v1NotesIdPut(note.id, {
+                    ...note,
+                    modelId: note.modelId,
+                    modificationTimestamp: Date.now() / 1000,
+                    tags: tags.join(" "),
+                    fields: flds,
+                    customData: note.customData
+                });
+            }
 
-                noteContent: content,
-                noteTags: tags.join(" "),
-
-                // Map from CardResponse to CardRequest fields where names differ or are needed
-                noteId: card.noteId,
-                deckId: card.deckId,
-                ordinal: card.ordinal,
-                modificationTimestamp: card.modificationTimestamp,
-                updateSequenceNumber: card.updateSequenceNumber,
-                type: card.type,
-                queue: card.queue,
-                due: card.due,
-                interval: card.interval,
-                easeFactor: card.easeFactor,
-                repetitions: card.repetitions,
-                lapses: card.lapses,
-                remainingSteps: card.remainingSteps,
-                originalDue: card.originalDue,
-                originalDeckId: card.originalDeckId,
-                flags: card.flags,
-                customData: card.customData,
-            });
-
-            toast({ title: "Success", description: "Card updated successfully" });
+            toast({ title: "Success", description: "Note updated successfully" });
             onOpenChange(false);
             onSaved();
         } catch (error) {
-            console.error("Failed to update card", error);
-            toast({ title: "Error", description: "Failed to update card", variant: "destructive" });
+            console.error("Failed to update note", error);
+            toast({ title: "Error", description: "Failed to update note", variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -101,42 +132,63 @@ export function CardEditDialog({ card, open, onOpenChange, onSaved }: CardEditDi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Edit Card</DialogTitle>
                     <DialogDescription>
-                        Edit the card's note content and tags.
+                        Edit the note fields and tags.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="content">Note Content (Front)</Label>
-                        <Textarea
-                            id="content"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            className="min-h-[150px]"
-                        />
+
+                {fetchingDetails ? (
+                    <div className="flex justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
-                    <div className="grid gap-2">
-                        <Label>Tags</Label>
-                        <TagInput
-                            selected={tags}
-                            onChange={setTags}
-                            placeholder="Add tags..."
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            Press Space to add a tag.
-                        </p>
+                ) : (
+                    <div className="grid gap-4 py-4">
+                        {model?.fields?.map((field: AnkiFieldDto, index: number) => (
+                            <div key={index} className="grid gap-2">
+                                <Label htmlFor={`field-${index}`}>{field.name}</Label>
+                                <Textarea
+                                    id={`field-${index}`}
+                                    value={fieldValues[index] || ""}
+                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange(index, e.target.value)}
+                                    className="min-h-[80px]"
+                                    disabled={readOnly}
+                                />
+                            </div>
+                        ))}
+
+                        {!model && (
+                            <div className="text-center text-muted-foreground py-4">
+                                Could not load model details.
+                            </div>
+                        )}
+
+                        <div className="grid gap-2">
+                            <Label>Tags</Label>
+                            <TagInput
+                                selected={tags}
+                                onChange={setTags}
+                                placeholder="Add tags..."
+                                disabled={readOnly}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Press Space to add a tag.
+                            </p>
+                        </div>
                     </div>
-                </div>
+                )}
+
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-                        Cancel
+                        {readOnly ? "Close" : "Cancel"}
                     </Button>
-                    <Button onClick={handleSave} disabled={loading}>
-                        {loading ? "Saving..." : "Save Changes"}
-                    </Button>
+                    {!readOnly && (
+                        <Button onClick={handleSave} disabled={loading || fetchingDetails}>
+                            {loading ? "Saving..." : "Save Changes"}
+                        </Button>
+                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

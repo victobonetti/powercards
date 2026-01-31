@@ -1,12 +1,12 @@
-import { Layers, Upload, Moon, Sun, Pin } from "lucide-react";
+import { Layers, Upload, Moon, Sun, Pin, Tag } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useTheme } from "./theme-provider";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
-    currentView: "upload" | "decks";
-    onNavigate: (view: "upload" | "decks") => void;
+    currentView: "upload" | "decks" | "tags";
+    onNavigate: (view: "upload" | "decks" | "tags") => void;
     className?: string;
 }
 
@@ -64,6 +64,15 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     >
                         <Layers className={cn("h-4 w-4", isExpanded && "mr-2")} />
                         {isExpanded && <span>My Decks</span>}
+                    </Button>
+                    <Button
+                        variant={currentView === "tags" ? "secondary" : "ghost"}
+                        className={cn("w-full justify-start", !isExpanded && "justify-center px-2")}
+                        onClick={() => onNavigate("tags")}
+                        title={!isExpanded ? "Tags" : undefined}
+                    >
+                        <Tag className={cn("h-4 w-4", isExpanded && "mr-2")} />
+                        {isExpanded && <span>Tags</span>}
                     </Button>
                 </div>
             </div>

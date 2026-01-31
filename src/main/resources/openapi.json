@@ -722,6 +722,27 @@
         "tags" : [ "Tag Resource" ]
       }
     },
+    "/v1/tags/stats" : {
+      "get" : {
+        "summary" : "List tags with stats",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TagStats"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags" : [ "Tag Resource" ]
+      }
+    },
     "/v1/tags/{id}" : {
       "delete" : {
         "summary" : "Delete a tag",
@@ -1156,6 +1177,22 @@
           },
           "name" : {
             "type" : "string"
+          }
+        }
+      },
+      "TagStats" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "noteCount" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       }

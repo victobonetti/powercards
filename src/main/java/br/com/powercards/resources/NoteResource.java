@@ -116,6 +116,7 @@ public class NoteResource {
             note.model = AnkiModel.findById(noteRequest.modelId());
         }
         note.persist();
+        System.out.println("DEBUG: Created note with ID: " + note.id);
         return Response.status(Response.Status.CREATED).entity(toResponse(note)).build();
     }
 

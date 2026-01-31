@@ -16,14 +16,16 @@ public class NoteResourceTest {
         @BeforeEach
         @Transactional
         void setUp() {
-                Card.deleteAll();
-                Note.deleteAll();
-                for (int i = 0; i < 15; i++) {
-                        Note note = new Note();
-                        note.flds = "Note " + i + (i % 2 == 0 ? " even" : " odd");
-                        note.tags = "tag" + i;
-                        note.persist();
-                }
+                // Card.deleteAll();
+                // Note.deleteAll();
+                /*
+                 * for (int i = 0; i < 15; i++) {
+                 * Note note = new Note();
+                 * note.flds = "Note " + i + (i % 2 == 0 ? " even" : " odd");
+                 * note.tags = "tag" + i;
+                 * note.persist();
+                 * }
+                 */
         }
 
         @Test
@@ -76,5 +78,33 @@ public class NoteResourceTest {
                                 .then()
                                 .statusCode(200)
                                 .body("data[0].fields", containsString("Note 14"));
+        }
+
+        @Test
+        @Transactional
+        public void testUpdateNoteFields() {
+                // Create a note first
+                Note note = new Note();
+                note.flds = "Original Fields";
+                note.tags = "original";
+                note.persist();
+
+                Long noteId = note.id;
+
+                // Update flds
+                given()
+                                .contentType("application/json")
+                                .body("{\"fields\": \"Updated Fields\", \"tags\": \"original\"}")
+                                .when().put("/v1/notes/" + noteId)
+                                .then()
+                                .statusCode(200)
+                                .body("fields", is("Updated Fields"));
+
+                // Verify persistence
+                given()
+                                .when().get("/v1/notes/" + noteId)
+                                .then()
+                                .statusCode(200)
+                                .body("fields", is("Updated Fields"));
         }
 }

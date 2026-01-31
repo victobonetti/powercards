@@ -14,9 +14,10 @@ interface TagInputProps {
     selected: string[];
     onChange: (tags: string[]) => void;
     placeholder?: string;
+    disabled?: boolean;
 }
 
-export function TagInput({ selected, onChange, placeholder = "Add tags..." }: TagInputProps) {
+export function TagInput({ selected, onChange, placeholder = "Add tags...", disabled = false }: TagInputProps) {
     const [open, setOpen] = React.useState(false);
     const [inputValue, setInputValue] = React.useState("");
     const [allTags, setAllTags] = React.useState<Tag[]>([]);
@@ -120,6 +121,7 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
                         >
                             {tag}
                             <button
+                                aria-label="Delete tag"
                                 className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                 onMouseDown={(e) => {
                                     e.preventDefault();
@@ -134,13 +136,14 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
                 })}
             </div>
 
-            <Popover open={open} onOpenChange={setOpen}>
+            <Popover open={open && !disabled} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
                         className="w-full justify-between"
+                        disabled={disabled}
                     >
                         {placeholder}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

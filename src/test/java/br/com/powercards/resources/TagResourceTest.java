@@ -17,6 +17,7 @@ public class TagResourceTest {
     @BeforeEach
     @Transactional
     void setUp() {
+        br.com.powercards.model.Note.deleteAll();
         Tag.deleteAll();
 
         Tag t1 = new Tag();
@@ -60,6 +61,53 @@ public class TagResourceTest {
                 .then()
                 .statusCode(200)
                 .body("size()", is(10));
+    }
+
+    @Test
+    public void testTagStats() {
+        // Create notes with tags
+        createNoteWithTags("urgent", "important");
+        createNoteWithTags("urgent");
+        createNoteWithTags("other");
+
+        given()
+                .when().get("/v1/tags/stats")
+                .then()
+                .statusCode(200)
+                .body("find { it.name == 'urgent' }.noteCount", is(2))
+                .body("find { it.name == 'important' }.noteCount", is(1))
+                .body("find { it.name == 'waiting' }.noteCount", is(0));
+    }
+
+    @Test
+    public void testDeleteTagCascade() {
+        createNoteWithTags("urgent", "important");
+
+        Tag tag = Tag.find("name", "urgent").firstResult();
+
+        given()
+                .when().delete("/v1/tags/" + tag.id)
+                .then()
+                .statusCode(204);
+
+        // Verify tag is gone from Note
+        br.com.powercards.model.Note note = br.com.powercards.model.Note.findAll().firstResult();
+        // The tag "urgent" should be removed. "important" should remain.
+        // Logic implemented: TRIM(REPLACE(concat(' ', n.tags, ' '), concat(' ',
+        // :tagName, ' '), ' '))
+        // " urgent important " -> replace " urgent " with " " -> " important " -> trim
+        // -> "important"
+        assert !note.tags.contains("urgent");
+        assert note.tags.contains("important");
+    }
+
+    @Transactional
+    void createNoteWithTags(String... tags) {
+        br.com.powercards.model.Note note = new br.com.powercards.model.Note();
+        note.tags = String.join(" ", tags);
+        note.model = new br.com.powercards.model.AnkiModel();
+        note.model.persist(); // simple persist
+        note.persist();
     }
 
     @Transactional

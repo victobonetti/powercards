@@ -662,6 +662,31 @@ export interface Tag {
      */
     'name'?: string;
 }
+/**
+ * 
+ * @export
+ * @interface TagStats
+ */
+export interface TagStats {
+    /**
+     * 
+     * @type {number}
+     * @memberof TagStats
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof TagStats
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TagStats
+     */
+    'noteCount'?: number;
+}
 
 /**
  * AnkiModelResourceApi - axios parameter creator
@@ -2535,6 +2560,36 @@ export const TagResourceApiAxiosParamCreator = function (configuration?: Configu
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @summary List tags with stats
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1TagsStatsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/tags/stats`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -2584,6 +2639,18 @@ export const TagResourceApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['TagResourceApi.v1TagsPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * 
+         * @summary List tags with stats
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1TagsStatsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TagStats>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1TagsStatsGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TagResourceApi.v1TagsStatsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -2623,6 +2690,15 @@ export const TagResourceApiFactory = function (configuration?: Configuration, ba
          */
         v1TagsPost(tag: Tag, options?: RawAxiosRequestConfig): AxiosPromise<any> {
             return localVarFp.v1TagsPost(tag, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List tags with stats
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1TagsStatsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<TagStats>> {
+            return localVarFp.v1TagsStatsGet(options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -2668,6 +2744,17 @@ export class TagResourceApi extends BaseAPI {
      */
     public v1TagsPost(tag: Tag, options?: RawAxiosRequestConfig) {
         return TagResourceApiFp(this.configuration).v1TagsPost(tag, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List tags with stats
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TagResourceApi
+     */
+    public v1TagsStatsGet(options?: RawAxiosRequestConfig) {
+        return TagResourceApiFp(this.configuration).v1TagsStatsGet(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

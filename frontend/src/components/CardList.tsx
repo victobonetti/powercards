@@ -74,9 +74,16 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
 
 
     const [editingCard, setEditingCard] = useState<CardResponse | null>(null);
+    const [isReadOnly, setIsReadOnly] = useState(false);
 
     const handleEdit = (card: CardResponse) => {
         setEditingCard(card);
+        setIsReadOnly(false);
+    };
+
+    const handleView = (card: CardResponse) => {
+        setEditingCard(card);
+        setIsReadOnly(true);
     };
 
     const handleSaved = () => {
@@ -129,7 +136,11 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                 </TableRow>
                             ) : cards.length > 0 ? (
                                 cards.map((card) => (
-                                    <TableRow key={card.id}>
+                                    <TableRow key={card.id} className="cursor-pointer hover:bg-muted/50" onClick={(e) => {
+                                        // Prevent triggering when clicking buttons
+                                        if ((e.target as HTMLElement).closest('button')) return;
+                                        handleView(card);
+                                    }}>
                                         <TableCell className="text-xs text-muted-foreground">{card.id}</TableCell>
                                         <TableCell className="max-w-xs truncate" title={(card as any).noteField}>
                                             {(card as any).noteField || "-"}
@@ -144,8 +155,11 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Button variant="outline" size="sm" onClick={() => handleEdit(card)}>
+                                            <Button variant="outline" size="sm" onClick={() => handleEdit(card)} className="mr-2">
                                                 Edit
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => handleView(card)}>
+                                                View
                                             </Button>
                                         </TableCell>
                                     </TableRow>
@@ -174,6 +188,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                 open={!!editingCard}
                 onOpenChange={(open) => !open && setEditingCard(null)}
                 onSaved={handleSaved}
+                readOnly={isReadOnly}
             />
         </div>
     );

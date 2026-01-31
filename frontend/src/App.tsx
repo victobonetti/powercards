@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { DeckCRUD } from "./components/DeckCRUD";
 import { NoteCRUD } from "./components/NoteCRUD";
+import { TagList } from "./components/TagList";
 import { Button } from "./components/ui/button";
 import { Layers, FileText } from "lucide-react";
 import { Layout } from "./components/Layout";
@@ -8,7 +9,7 @@ import { UploadAnki } from "./components/UploadAnki";
 import { ThemeProvider } from "./components/theme-provider";
 
 function App() {
-  const [currentView, setCurrentView] = useState<"upload" | "decks">("upload");
+  const [currentView, setCurrentView] = useState<"upload" | "decks" | "tags">("upload");
   const [activeTab, setActiveTab] = useState<"decks" | "notes">("decks");
   const [highlightNewDecks, setHighlightNewDecks] = useState(false);
 
@@ -25,6 +26,12 @@ function App() {
       <Layout currentView={currentView} onNavigate={setCurrentView}>
         {currentView === "upload" ? (
           <UploadAnki onUploadSuccess={handleUploadSuccess} />
+        ) : currentView === "tags" ? (
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold tracking-tight">Tags</h2>
+            <p className="text-muted-foreground">Manage your collection tags.</p>
+            <TagList />
+          </div>
         ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
