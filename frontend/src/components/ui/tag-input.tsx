@@ -1,11 +1,13 @@
 import * as React from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, ChevronsUpDown, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Command as CommandPrimitive } from "cmdk";
+import { Command, CommandGroup, CommandItem, CommandList, CommandEmpty, CommandInput } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { stringToColor } from "@/lib/colorUtils";
 import { tagApi } from "@/lib/api";
 import { Tag } from "@/api/api";
+import { cn } from "@/lib/utils";
 
 interface TagInputProps {
     selected: string[];
@@ -14,7 +16,6 @@ interface TagInputProps {
 }
 
 export function TagInput({ selected, onChange, placeholder = "Add tags..." }: TagInputProps) {
-    const inputRef = React.useRef<HTMLInputElement>(null);
     const [open, setOpen] = React.useState(false);
     const [inputValue, setInputValue] = React.useState("");
     const [allTags, setAllTags] = React.useState<Tag[]>([]);
@@ -36,28 +37,18 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
         onChange(selected.filter((s) => s !== tag));
     };
 
-    const handleKeyDown = React.useCallback(
-        (e: React.KeyboardEvent<HTMLDivElement>) => {
-            const input = inputRef.current;
-            if (input) {
-                if (e.key === "Delete" || e.key === "Backspace") {
-                    if (input.value === "") {
-                        onChange(selected.slice(0, -1));
-                    }
-                }
-                if (e.key === "Escape") {
-                    input.blur();
-                }
-                if (e.key === "Enter" && inputValue) {
-                    handleCreateTag(inputValue);
-                }
-            }
-        },
-        [selected, onChange, inputValue]
-    );
+    const handleSelect = (tagName: string) => {
+        if (selected.includes(tagName)) {
+            handleUnselect(tagName);
+        } else {
+            onChange([...selected, tagName]);
+        }
+        setInputValue("");
+        setOpen(false);
+    };
 
-    const handleCreateTag = async (tagName: string) => {
-        const trimmed = tagName.trim();
+    const handleCreateTag = async () => {
+        const trimmed = inputValue.trim();
         if (!trimmed) return;
 
         if (!selected.includes(trimmed)) {
@@ -76,89 +67,107 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
             }
         }
         setInputValue("");
+        setOpen(false);
     };
 
-    const selectables = allTags.filter((tag) => !selected.includes(tag.name || ""));
+    const filteredTags = allTags.filter((tag) =>
+        tag.name?.toLowerCase().includes(inputValue.toLowerCase())
+    );
 
     return (
-        <Command onKeyDown={handleKeyDown} className="overflow-visible bg-transparent">
-            <div className="group border border-input px-3 py-2 text-sm ring-offset-background rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                <div className="flex flex-wrap gap-1">
-                    {selected.map((tag) => {
-                        const color = stringToColor(tag);
-                        return (
-                            <Badge
-                                key={tag}
-                                variant="secondary"
-                                style={{
-                                    backgroundColor: `${color}20`,
-                                    color: color,
-                                    borderColor: `${color}40`,
+        <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-1 mb-2">
+                {selected.map((tag) => {
+                    const color = stringToColor(tag);
+                    return (
+                        <Badge
+                            key={tag}
+                            variant="secondary"
+                            style={{
+                                backgroundColor: `${color}20`,
+                                color: color,
+                                borderColor: `${color}40`,
+                            }}
+                        >
+                            {tag}
+                            <button
+                                className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                 }}
+                                onClick={() => handleUnselect(tag)}
                             >
-                                {tag}
-                                <button
-                                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            handleUnselect(tag);
-                                        }
-                                    }}
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                    }}
-                                    onClick={() => handleUnselect(tag)}
-                                >
-                                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                </button>
-                            </Badge>
-                        );
-                    })}
-                    <CommandPrimitive.Input
-                        ref={inputRef}
-                        value={inputValue}
-                        onValueChange={setInputValue}
-                        onBlur={() => setOpen(false)}
-                        onFocus={() => setOpen(true)}
-                        placeholder={placeholder}
-                        className="ml-2 bg-transparent outline-none placeholder:text-muted-foreground flex-1"
-                    />
-                </div>
+                                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                            </button>
+                        </Badge>
+                    );
+                })}
             </div>
-            <div className="relative mt-2">
-                {open && (inputValue.length > 0 || selectables.length > 0) && (
-                    <div className="absolute w-full z-10 top-0 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-full justify-between"
+                    >
+                        {placeholder}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                        <CommandInput
+                            placeholder="Search or create tag..."
+                            value={inputValue}
+                            onValueChange={setInputValue}
+                        />
                         <CommandList>
-                            {inputValue.length > 0 && !allTags.some(t => t.name === inputValue) && (
-                                <CommandGroup>
-                                    <CommandItem
-                                        onSelect={() => handleCreateTag(inputValue)}
-                                        className="cursor-pointer"
+                            <CommandEmpty className="py-2 px-4 text-sm">
+                                {inputValue && (
+                                    <div
+                                        className="flex items-center gap-2 cursor-pointer hover:bg-accent hover:text-accent-foreground p-1 rounded-sm"
+                                        onClick={handleCreateTag}
                                     >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Create "{inputValue}"
-                                    </CommandItem>
-                                </CommandGroup>
-                            )}
-                            <CommandGroup className="h-full overflow-auto max-h-[200px]">
-                                {selectables.map((tag) => (
+                                        <Plus className="h-4 w-4" />
+                                        <span>Create "{inputValue}"</span>
+                                    </div>
+                                )}
+                                {!inputValue && "No tags found."}
+                            </CommandEmpty>
+                            <CommandGroup>
+                                {allTags.map((tag) => (
                                     <CommandItem
                                         key={tag.id}
-                                        onSelect={() => {
-                                            setInputValue("");
-                                            onChange([...selected, tag.name || ""]);
+                                        value={tag.name}
+                                        onSelect={(currentValue) => {
+                                            // cmdk lowercases values, so we find the original name
+                                            const originalTag = allTags.find(t => t.name?.toLowerCase() === currentValue.toLowerCase());
+                                            if (originalTag?.name) {
+                                                handleSelect(originalTag.name);
+                                            }
                                         }}
-                                        className="cursor-pointer"
                                     >
+                                        <div
+                                            className="mr-2 h-4 w-4 rounded-full"
+                                            style={{ backgroundColor: stringToColor(tag.name || "") }}
+                                        />
                                         {tag.name}
+                                        <Check
+                                            className={cn(
+                                                "ml-auto h-4 w-4",
+                                                selected.includes(tag.name || "") ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
                                     </CommandItem>
                                 ))}
                             </CommandGroup>
                         </CommandList>
-                    </div>
-                )}
-            </div>
-        </Command>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </div>
     );
 }

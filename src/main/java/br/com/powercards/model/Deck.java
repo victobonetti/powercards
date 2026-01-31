@@ -14,6 +14,9 @@ public class Deck extends PanacheEntityBase {
 
     public String name;
 
+    @OneToMany(mappedBy = "deck", cascade = CascadeType.ALL, orphanRemoval = true)
+    public java.util.List<Card> cards = new java.util.ArrayList<>();
+
     public Deck() {
     }
 

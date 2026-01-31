@@ -23,7 +23,9 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CardList } from "./CardList";
+
 import { PaginationControls } from "./ui/pagination-controls";
+import { ConfirmationDialog } from "./ui/confirmation-dialog";
 
 interface DeckCRUDProps {
     highlightNew?: boolean;
@@ -50,7 +52,34 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
     const [selectedDeck, setSelectedDeck] = useState<{ id: number; name: string } | null>(null);
+
+    // Confirmation State
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
     const { toast } = useToast();
+
+    const handleOpenChangeCreate = (open: boolean) => {
+        if (!open && newDeckName) {
+            setPendingAction(() => () => {
+                setIsCreateOpen(false);
+                setNewDeckName("");
+            });
+            setIsConfirmOpen(true);
+        } else {
+            setIsCreateOpen(open);
+        }
+    };
+
+    const handleOpenChangeEdit = (open: boolean) => {
+        if (!open) {
+            // Simple check, in real app we might check if editName !== original
+            setPendingAction(() => () => setIsEditOpen(false));
+            setIsConfirmOpen(true);
+        } else {
+            setIsEditOpen(open);
+        }
+    };
 
     const fetchDecks = async (page: number) => {
         try {
@@ -151,13 +180,13 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                             Decks
                             {highlightNew && <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full animate-pulse">New Data</span>}
                         </CardTitle>
-                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                        <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
                             <DialogTrigger asChild>
                                 <Button size="sm">
                                     <Plus className="mr-2 h-4 w-4" /> New Deck
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent onInteractOutside={(e) => e.preventDefault()}>
                                 <DialogHeader>
                                     <DialogTitle>Create New Deck</DialogTitle>
                                     <DialogDescription>
@@ -236,8 +265,8 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
             </Card>
 
             {/* Edit Dialog */}
-            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                <DialogContent>
+            <Dialog open={isEditOpen} onOpenChange={handleOpenChangeEdit}>
+                <DialogContent onInteractOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>Edit Deck</DialogTitle>
                         <DialogDescription>Rename your deck.</DialogDescription>
@@ -284,6 +313,16 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+
+            <ConfirmationDialog
+                open={isConfirmOpen}
+                onOpenChange={setIsConfirmOpen}
+                onConfirm={() => {
+                    if (pendingAction) pendingAction();
+                    setIsConfirmOpen(false);
+                }}
+                description="You have unsaved changes. Are you sure you want to close?"
+            />
+        </div >
     );
 }

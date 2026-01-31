@@ -757,6 +757,9 @@ components:
         total:
           type: integer
           format: int64
+        page:
+          type: integer
+          format: int32
         nextPageUri:
           type: string
         lastPageUri:

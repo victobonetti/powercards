@@ -36,6 +36,9 @@ public class Note extends PanacheEntityBase {
     @Column(columnDefinition = "TEXT")
     public String data;
 
+    @OneToMany(mappedBy = "note", cascade = CascadeType.ALL, orphanRemoval = true)
+    public java.util.List<Card> cards = new java.util.ArrayList<>();
+
     public Note() {
     }
 }

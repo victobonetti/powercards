@@ -56,7 +56,7 @@ public class NoteResource {
                 .build()
                 .toString();
 
-        PaginationMeta meta = new PaginationMeta(total, nextPageUri, lastPageUri);
+        PaginationMeta meta = new PaginationMeta(total, page, nextPageUri, lastPageUri);
         return new PaginatedResponse<>(meta, data);
     }
 

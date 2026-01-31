@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { stringToColor } from "@/lib/colorUtils";
 import { PaginationControls } from "./ui/pagination-controls";
 import { TagInput } from "./ui/tag-input";
+import { ConfirmationDialog } from "./ui/confirmation-dialog";
 
 export function NoteCRUD() {
     const [notes, setNotes] = useState<NoteResponse[]>([]);
@@ -49,7 +50,35 @@ export function NoteCRUD() {
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [deleteNoteId, setDeleteNoteId] = useState<number | null>(null);
 
+    // Confirmation State
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
     const { toast } = useToast();
+
+    const handleOpenChangeCreate = (open: boolean) => {
+        if (!open && (selectedModel || Object.keys(fieldValues).length > 0 || selectedTags.length > 0)) {
+            setPendingAction(() => () => {
+                setIsCreateOpen(false);
+                setSelectedModel(null);
+                setFieldValues({});
+                setSelectedTags([]);
+            });
+            setIsConfirmOpen(true);
+        } else {
+            setIsCreateOpen(open);
+        }
+    };
+
+    const handleOpenChangeEdit = (open: boolean) => {
+        if (!open) { // assuming check for dirty edit fields if we tracked original state, for now simple check
+            setPendingAction(() => () => setIsEditOpen(false));
+            setIsConfirmOpen(true);
+        } else {
+            setIsEditOpen(open);
+        }
+    };
+
 
     const fetchNotes = async (page: number) => {
         try {
@@ -145,13 +174,13 @@ export function NoteCRUD() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <CardTitle>Notes</CardTitle>
-                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                        <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
                             <DialogTrigger asChild>
                                 <Button size="sm">
                                     <Plus className="mr-2 h-4 w-4" /> New Note
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
+                            <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
                                 <DialogHeader>
                                     <DialogTitle>Create New Note</DialogTitle>
                                 </DialogHeader>
@@ -273,8 +302,8 @@ export function NoteCRUD() {
             </Card>
 
             {/* Edit Dialog */}
-            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                <DialogContent className="max-w-2xl">
+            <Dialog open={isEditOpen} onOpenChange={handleOpenChangeEdit}>
+                <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>Edit Note</DialogTitle>
                     </DialogHeader>
@@ -318,6 +347,17 @@ export function NoteCRUD() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmationDialog
+                open={isConfirmOpen}
+                onOpenChange={setIsConfirmOpen}
+                onConfirm={() => {
+                    if (pendingAction) pendingAction();
+                    setIsConfirmOpen(false);
+                }}
+                description="You have unsaved changes. Are you sure you want to close?"
+            />
         </div>
     );
 }
+

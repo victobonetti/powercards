@@ -602,6 +602,12 @@ export interface PaginationMeta {
     'total'?: number;
     /**
      * 
+     * @type {number}
+     * @memberof PaginationMeta
+     */
+    'page'?: number;
+    /**
+     * 
      * @type {string}
      * @memberof PaginationMeta
      */
