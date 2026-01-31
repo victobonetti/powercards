@@ -669,7 +669,14 @@
     },
     "/v1/tags" : {
       "get" : {
-        "summary" : "List all tags",
+        "summary" : "List tags",
+        "parameters" : [ {
+          "name" : "search",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -887,6 +894,12 @@
           },
           "customData" : {
             "type" : "string"
+          },
+          "noteContent" : {
+            "type" : "string"
+          },
+          "noteTags" : {
+            "type" : "string"
           }
         }
       },
@@ -965,6 +978,9 @@
             "type" : "string"
           },
           "noteField" : {
+            "type" : "string"
+          },
+          "noteTags" : {
             "type" : "string"
           }
         }

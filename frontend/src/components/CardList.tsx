@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { CardEditDialog } from "./CardEditDialog";
 
 interface CardListProps {
     deckId: number;
@@ -72,6 +73,16 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
     };
 
 
+    const [editingCard, setEditingCard] = useState<CardResponse | null>(null);
+
+    const handleEdit = (card: CardResponse) => {
+        setEditingCard(card);
+    };
+
+    const handleSaved = () => {
+        fetchCards(currentPage);
+    };
+
     const totalPages = Math.ceil(totalCards / perPage) || 1;
 
     return (
@@ -104,24 +115,17 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                     {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                 </TableHead>
                                 <TableHead>Note Content</TableHead>
-                                <TableHead className="cursor-pointer" onClick={() => toggleSort("ord")}>
-                                    Ordinal {sort === "ord" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-ord" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                <TableHead className="cursor-pointer" onClick={() => toggleSort("tags")}>
+                                    Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                    {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                 </TableHead>
-                                <TableHead className="cursor-pointer" onClick={() => toggleSort("type")}>
-                                    Type {sort === "type" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-type" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                </TableHead>
-                                <TableHead className="cursor-pointer" onClick={() => toggleSort("due")}>
-                                    Due {sort === "due" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-due" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                </TableHead>
+                                <TableHead className="w-[100px]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center h-24">Loading...</TableCell>
+                                    <TableCell colSpan={4} className="text-center h-24">Loading...</TableCell>
                                 </TableRow>
                             ) : cards.length > 0 ? (
                                 cards.map((card) => (
@@ -130,14 +134,25 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                         <TableCell className="max-w-xs truncate" title={(card as any).noteField}>
                                             {(card as any).noteField || "-"}
                                         </TableCell>
-                                        <TableCell>{card.ordinal}</TableCell>
-                                        <TableCell>{card.type}</TableCell>
-                                        <TableCell>{card.due}</TableCell>
+                                        <TableCell className="max-w-xs truncate" title={(card as any).noteTags}>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => (
+                                                    <span key={tag} className="bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded text-xs">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="outline" size="sm" onClick={() => handleEdit(card)}>
+                                                Edit
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                                    <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
                                         No cards found.
                                     </TableCell>
                                 </TableRow>
@@ -152,8 +167,14 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                         perPage={perPage}
                     />
                 </CardContent>
-
             </Card>
+
+            <CardEditDialog
+                card={editingCard}
+                open={!!editingCard}
+                onOpenChange={(open) => !open && setEditingCard(null)}
+                onSaved={handleSaved}
+            />
         </div>
     );
 }

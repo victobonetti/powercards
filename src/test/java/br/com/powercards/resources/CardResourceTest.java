@@ -1,5 +1,6 @@
 package br.com.powercards.resources;
 
+import br.com.powercards.dto.CardRequest;
 import br.com.powercards.model.Card;
 import br.com.powercards.model.Deck;
 import br.com.powercards.model.Note;
@@ -18,6 +19,7 @@ public class CardResourceTest {
 
         private Long deckId;
         private Long noteId;
+        private Long cardId;
 
         @BeforeEach
         @Transactional
@@ -43,6 +45,7 @@ public class CardResourceTest {
                 card1.ord = 0;
                 card1.due = 100L;
                 card1.persist();
+                cardId = card1.id;
 
                 Card card2 = new Card();
                 card2.deck = deck;
@@ -131,5 +134,40 @@ public class CardResourceTest {
                                 .when().delete("/v1/cards/" + cardId)
                                 .then()
                                 .statusCode(204);
+        }
+
+        @Test
+        public void testUpdateCardAndNote() {
+                CardRequest request = new CardRequest(
+                                noteId, deckId, 1, System.currentTimeMillis() / 1000, 1, 0, 0, 0L, 0, 0, 0, 0, 0, 0L,
+                                0L, 0, "{}"
+                                // Note: we need to match the constructor arguments for CardRequest
+                                , "Updated Content", "updated tag");
+
+                given()
+                                .contentType(ContentType.JSON)
+                                .body(request)
+                                .when().put("/v1/cards/" + cardId) // Need to access card id correctly
+                                .then()
+                                .statusCode(200)
+                                .body("noteField", is("Updated Content"))
+                                .body("noteTags", is("updated tag"));
+
+                // Verify changes are persisted in Note
+                given()
+                                .when().get("/v1/notes/" + noteId)
+                                .then()
+                                .statusCode(200)
+                                .body("fields", is("Updated Content"))
+                                .body("tags", is("updated tag"));
+        }
+
+        @Test
+        public void testCardListSortByTags() {
+                given()
+                                .queryParam("sort", "tags")
+                                .when().get("/v1/cards")
+                                .then()
+                                .statusCode(200);
         }
 }

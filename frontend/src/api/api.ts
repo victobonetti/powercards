@@ -249,6 +249,18 @@ export interface CardRequest {
      * @memberof CardRequest
      */
     'customData'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CardRequest
+     */
+    'noteContent'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CardRequest
+     */
+    'noteTags'?: string;
 }
 /**
  * 
@@ -370,6 +382,12 @@ export interface CardResponse {
      * @memberof CardResponse
      */
     'noteField'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CardResponse
+     */
+    'noteTags'?: string;
 }
 /**
  * 
@@ -2414,11 +2432,12 @@ export const TagResourceApiAxiosParamCreator = function (configuration?: Configu
     return {
         /**
          * 
-         * @summary List all tags
+         * @summary List tags
+         * @param {string} [search] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1TagsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1TagsGet: async (search?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/v1/tags`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2430,6 +2449,10 @@ export const TagResourceApiAxiosParamCreator = function (configuration?: Configu
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
 
 
     
@@ -2524,12 +2547,13 @@ export const TagResourceApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @summary List all tags
+         * @summary List tags
+         * @param {string} [search] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1TagsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Tag>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1TagsGet(options);
+        async v1TagsGet(search?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Tag>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1TagsGet(search, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['TagResourceApi.v1TagsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2572,12 +2596,13 @@ export const TagResourceApiFactory = function (configuration?: Configuration, ba
     return {
         /**
          * 
-         * @summary List all tags
+         * @summary List tags
+         * @param {string} [search] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1TagsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<Tag>> {
-            return localVarFp.v1TagsGet(options).then((request) => request(axios, basePath));
+        v1TagsGet(search?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<Tag>> {
+            return localVarFp.v1TagsGet(search, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2611,13 +2636,14 @@ export const TagResourceApiFactory = function (configuration?: Configuration, ba
 export class TagResourceApi extends BaseAPI {
     /**
      * 
-     * @summary List all tags
+     * @summary List tags
+     * @param {string} [search] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TagResourceApi
      */
-    public v1TagsGet(options?: RawAxiosRequestConfig) {
-        return TagResourceApiFp(this.configuration).v1TagsGet(options).then((request) => request(this.axios, this.basePath));
+    public v1TagsGet(search?: string, options?: RawAxiosRequestConfig) {
+        return TagResourceApiFp(this.configuration).v1TagsGet(search, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

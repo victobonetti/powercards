@@ -40,8 +40,14 @@ public class CardResource {
             String sortField = descending ? sort.substring(1) : sort;
 
             // Qualify fields with 'c.' to avoid ambiguity with joined Note
-            // Assuming all sortable fields are on Card
-            String qualifiedField = "c." + sortField;
+            // Assuming all sortable fields are on Card unless specific override
+            String qualifiedField;
+
+            if (sortField.equals("tags")) {
+                qualifiedField = "c.note.tags";
+            } else {
+                qualifiedField = "c." + sortField;
+            }
 
             if (descending) {
                 sortObj = io.quarkus.panache.common.Sort.descending(qualifiedField);
@@ -167,6 +173,16 @@ public class CardResource {
         entity.odid = request.originalDeckId();
         entity.flags = request.flags();
         entity.data = request.customData();
+
+        // Update Note fields if present
+        if (entity.note != null) {
+            if (request.noteContent() != null) {
+                entity.note.flds = request.noteContent();
+            }
+            if (request.noteTags() != null) {
+                entity.note.tags = request.noteTags();
+            }
+        }
     }
 
     private CardResponse toResponse(Card card) {
@@ -189,6 +205,7 @@ public class CardResource {
                 card.odid,
                 card.flags,
                 card.data,
-                card.note != null && card.note.flds != null ? card.note.flds.split("\u001f")[0] : "");
+                card.note != null && card.note.flds != null ? card.note.flds.split("\u001f")[0] : "",
+                card.note != null ? card.note.tags : "");
     }
 }

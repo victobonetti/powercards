@@ -13,9 +13,14 @@ import java.util.List;
 public class TagResource {
 
     @GET
-    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all tags")
-    public List<Tag> list() {
-        return Tag.listAll();
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List tags")
+    public List<Tag> list(@QueryParam("search") String search) {
+        if (search != null && !search.isBlank()) {
+            return Tag.find("lower(name) like ?1", "%" + search.toLowerCase() + "%")
+                    .page(0, 10)
+                    .list();
+        }
+        return Tag.findAll().page(0, 10).list();
     }
 
     @POST

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X, Plus, ChevronsUpDown, Check } from "lucide-react";
+import { X, Plus, ChevronsUpDown, Check, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandGroup, CommandItem, CommandList, CommandEmpty, CommandInput } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -8,6 +8,7 @@ import { stringToColor } from "@/lib/colorUtils";
 import { tagApi } from "@/lib/api";
 import { Tag } from "@/api/api";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface TagInputProps {
     selected: string[];
@@ -19,19 +20,29 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
     const [open, setOpen] = React.useState(false);
     const [inputValue, setInputValue] = React.useState("");
     const [allTags, setAllTags] = React.useState<Tag[]>([]);
+    const [loading, setLoading] = React.useState(false);
 
-    const fetchTags = async () => {
+    // Debounce search input for lazy loading
+    const debouncedSearch = useDebounce(inputValue, 300);
+
+    const fetchTags = async (query: string) => {
+        setLoading(true);
         try {
-            const response = await tagApi.v1TagsGet();
+            // Using the new search param in API
+            const response = await tagApi.v1TagsGet(query);
             setAllTags(response.data);
         } catch (error) {
             console.error("Failed to fetch tags", error);
+        } finally {
+            setLoading(false);
         }
     };
 
     React.useEffect(() => {
-        fetchTags();
-    }, []);
+        // Fetch initially or when debounced search changes
+        fetchTags(debouncedSearch);
+    }, [debouncedSearch]);
+
 
     const handleUnselect = (tag: string) => {
         onChange(selected.filter((s) => s !== tag));
@@ -47,32 +58,50 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
         setOpen(false);
     };
 
-    const handleCreateTag = async () => {
-        const trimmed = inputValue.trim();
+    const createTag = async (name: string) => {
+        const trimmed = name.trim();
         if (!trimmed) return;
 
         if (!selected.includes(trimmed)) {
-            // Optimistically add to UI
             onChange([...selected, trimmed]);
 
-            // Ensure it exists in backend
+            // Check existence in fetched tags (approximate check)
             const exists = allTags.some(t => t.name === trimmed);
             if (!exists) {
                 try {
                     await tagApi.v1TagsPost({ name: trimmed });
-                    fetchTags();
+                    // Refresh current list to include new tag if matching search
+                    fetchTags(debouncedSearch);
                 } catch (err) {
                     console.error("Failed to create tag in backend", err);
                 }
             }
         }
+    };
+
+    const handleCreateTag = async () => {
+        await createTag(inputValue);
         setInputValue("");
         setOpen(false);
     };
 
-    const filteredTags = allTags.filter((tag) =>
-        tag.name?.toLowerCase().includes(inputValue.toLowerCase())
-    );
+    const onInputChange = (val: string) => {
+        // Prevent spaces if user types them, treat as trigger to create tag
+        if (val.includes(" ")) {
+            const parts = val.split(" ");
+            // If there's content before space, try to create tag
+            if (parts[0]) {
+                createTag(parts[0]);
+            }
+            // Clear input or set to remaining part if any (but typically just clear)
+            setInputValue("");
+            setOpen(false); // Close popover on creation? or keep open? 
+            // User requested "I want only one tag generated at time". 
+            // Logic: User types "tag ", space triggers creation of "tag".
+            return;
+        }
+        setInputValue(val);
+    };
 
     return (
         <div className="flex flex-col gap-2">
@@ -118,15 +147,26 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command>
+                    <Command shouldFilter={false}>
+                        {/* Disable internal filtering since we use backend search */}
                         <CommandInput
-                            placeholder="Search or create tag..."
+                            placeholder="Search or create tag (Space to create)..."
                             value={inputValue}
-                            onValueChange={setInputValue}
+                            onValueChange={onInputChange}
+                            onKeyDown={(e) => {
+                                if (e.key === ' ' || e.key === 'Spacebar') {
+                                    e.preventDefault();
+                                    handleCreateTag();
+                                }
+                            }}
                         />
                         <CommandList>
                             <CommandEmpty className="py-2 px-4 text-sm">
-                                {inputValue && (
+                                {loading ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+                                    </div>
+                                ) : inputValue ? (
                                     <div
                                         className="flex items-center gap-2 cursor-pointer hover:bg-accent hover:text-accent-foreground p-1 rounded-sm"
                                         onClick={handleCreateTag}
@@ -134,8 +174,9 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
                                         <Plus className="h-4 w-4" />
                                         <span>Create "{inputValue}"</span>
                                     </div>
+                                ) : (
+                                    "Start typing to search tags."
                                 )}
-                                {!inputValue && "No tags found."}
                             </CommandEmpty>
                             <CommandGroup>
                                 {allTags.map((tag) => (
@@ -143,10 +184,9 @@ export function TagInput({ selected, onChange, placeholder = "Add tags..." }: Ta
                                         key={tag.id}
                                         value={tag.name}
                                         onSelect={(currentValue) => {
-                                            // cmdk lowercases values, so we find the original name
-                                            const originalTag = allTags.find(t => t.name?.toLowerCase() === currentValue.toLowerCase());
-                                            if (originalTag?.name) {
-                                                handleSelect(originalTag.name);
+                                            // cmdk might lowercase, but we disabled filtering so value matches
+                                            if (tag.name) {
+                                                handleSelect(tag.name);
                                             }
                                         }}
                                     >
