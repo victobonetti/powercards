@@ -2,57 +2,66 @@ import { useState } from "react";
 import { DeckCRUD } from "./components/DeckCRUD";
 import { NoteCRUD } from "./components/NoteCRUD";
 import { Button } from "./components/ui/button";
-import { Toaster } from "./components/ui/toaster";
-import { Layers, FileText, Settings } from "lucide-react";
+import { Layers, FileText } from "lucide-react";
+import { Layout } from "./components/Layout";
+import { UploadAnki } from "./components/UploadAnki";
+import { ThemeProvider } from "./components/theme-provider";
 
 function App() {
+  const [currentView, setCurrentView] = useState<"upload" | "decks">("upload");
   const [activeTab, setActiveTab] = useState<"decks" | "notes">("decks");
+  const [highlightNewDecks, setHighlightNewDecks] = useState(false);
+
+  const handleUploadSuccess = () => {
+    setCurrentView("decks");
+    setActiveTab("decks");
+    setHighlightNewDecks(true);
+    // Reset highlight after some time
+    setTimeout(() => setHighlightNewDecks(false), 5000);
+  };
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 font-sans antialiased text-neutral-900 dark:text-neutral-50">
-      <header className="border-b bg-white dark:bg-neutral-900 sticky top-0 z-10">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary p-1.5 rounded-lg">
-              <Layers className="h-6 w-6 text-primary-foreground" />
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Layout currentView={currentView} onNavigate={setCurrentView}>
+        {currentView === "upload" ? (
+          <UploadAnki onUploadSuccess={handleUploadSuccess} />
+        ) : (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight">My Decks</h2>
+                <p className="text-muted-foreground">Manage your decks and notes here.</p>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-xs font-medium text-muted-foreground mr-1">View</span>
+                <div className="flex items-center bg-muted p-1 rounded-lg">
+                  <Button
+                    variant={activeTab === "decks" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("decks")}
+                    className={activeTab === "decks" ? "bg-background shadow-sm" : ""}
+                  >
+                    <Layers className="mr-2 h-4 w-4" /> Decks
+                  </Button>
+                  <Button
+                    variant={activeTab === "notes" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("notes")}
+                    className={activeTab === "notes" ? "bg-background shadow-sm" : ""}
+                  >
+                    <FileText className="mr-2 h-4 w-4" /> Notes
+                  </Button>
+                </div>
+              </div>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">PowerCards</h1>
+
+            <div className="border rounded-lg p-6 bg-card">
+              {activeTab === "decks" ? <DeckCRUD highlightNew={highlightNewDecks} /> : <NoteCRUD />}
+            </div>
           </div>
-          <nav className="flex items-center gap-1">
-            <Button
-              variant={activeTab === "decks" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("decks")}
-            >
-              <Layers className="mr-2 h-4 w-4" /> Decks
-            </Button>
-            <Button
-              variant={activeTab === "notes" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("notes")}
-            >
-              <FileText className="mr-2 h-4 w-4" /> Notes
-            </Button>
-            <div className="w-[1px] h-6 bg-border mx-2" />
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </nav>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {activeTab === "decks" ? (
-            <DeckCRUD />
-          ) : (
-            <NoteCRUD />
-          )}
-        </div>
-      </main>
-
-      <Toaster />
-    </div>
+        )}
+      </Layout>
+    </ThemeProvider >
   );
 }
 
