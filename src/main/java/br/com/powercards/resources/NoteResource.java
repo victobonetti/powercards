@@ -4,10 +4,14 @@ import br.com.powercards.model.Note;
 import br.com.powercards.model.AnkiModel;
 import br.com.powercards.dto.NoteRequest;
 import br.com.powercards.dto.NoteResponse;
+import br.com.powercards.dto.PaginatedResponse;
+import br.com.powercards.dto.PaginationMeta;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import java.util.List;
 
 @Path("/v1/notes")
@@ -17,10 +21,43 @@ public class NoteResource {
 
     @GET
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all notes")
-    public List<NoteResponse> list() {
-        return Note.<Note>listAll().stream()
+    public PaginatedResponse<NoteResponse> list(
+            @QueryParam("page") @DefaultValue("1") int page,
+            @QueryParam("perPage") @DefaultValue("20") int perPage,
+            @Context UriInfo uriInfo) {
+
+        if (page < 1)
+            page = 1;
+        if (perPage < 1)
+            perPage = 20;
+
+        long total = Note.count();
+        List<Note> notes = Note.findAll().page(page - 1, perPage).list();
+        List<NoteResponse> data = notes.stream()
                 .map(this::toResponse)
                 .toList();
+
+        long totalPages = (total + perPage - 1) / perPage;
+        if (totalPages == 0)
+            totalPages = 1;
+
+        String nextPageUri = null;
+        if (page < totalPages) {
+            nextPageUri = uriInfo.getAbsolutePathBuilder()
+                    .queryParam("page", page + 1)
+                    .queryParam("perPage", perPage)
+                    .build()
+                    .toString();
+        }
+
+        String lastPageUri = uriInfo.getAbsolutePathBuilder()
+                .queryParam("page", totalPages)
+                .queryParam("perPage", perPage)
+                .build()
+                .toString();
+
+        PaginationMeta meta = new PaginationMeta(total, nextPageUri, lastPageUri);
+        return new PaginatedResponse<>(meta, data);
     }
 
     @GET

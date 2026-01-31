@@ -3,6 +3,7 @@ import {
     NoteResourceApiFactory,
     DeckResourceApiFactory,
     CardResourceApiFactory,
+    TagResourceApiFactory,
     Configuration
 } from "@/api";
 import axios from "axios";
@@ -21,3 +22,4 @@ export const modelApi = AnkiModelResourceApiFactory(config, basePath, axiosInsta
 export const noteApi = NoteResourceApiFactory(config, basePath, axiosInstance);
 export const deckApi = DeckResourceApiFactory(config, basePath, axiosInstance);
 export const cardApi = CardResourceApiFactory(config, basePath, axiosInstance);
+export const tagApi = TagResourceApiFactory(config, basePath, axiosInstance);

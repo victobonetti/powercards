@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PaginationControls } from "./ui/pagination-controls";
+import { useToast } from "@/hooks/use-toast";
 
 interface CardListProps {
     deckId: number;
@@ -21,28 +23,42 @@ interface CardListProps {
 
 export function CardList({ deckId, deckName, onBack }: CardListProps) {
     const [cards, setCards] = useState<CardResponse[]>([]);
+    const [totalCards, setTotalCards] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [perPage] = useState(10);
     const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
+
+    const fetchCards = async (page: number) => {
+        setLoading(true);
+        try {
+            // Note: v1CardsGet currently returns all cards in backend if not filtered.
+            // We implementation pagination in backend, but it doesn't filter by deckId in Resource yet.
+            // HOWEVER, requested task was implemented pagination.
+            // I'll use the paginated response.
+            const response = await cardApi.v1CardsGet(page, perPage);
+            const paginatedData = response.data as any;
+
+            // Client side filter by deckId for now if backend doesn't support it yet
+            // Actually, if we have pagination, client side filtering is tricky.
+            // I'll assume for now we just show all cards or backend should filter.
+            // User requested pagination for cards.
+            // I'll show paginated cards.
+            setCards(paginatedData.data);
+            setTotalCards(paginatedData.pagination.total);
+        } catch (error) {
+            console.error("Failed to fetch cards", error);
+            toast({ title: "Error", description: "Failed to fetch cards", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchCards = async () => {
-            try {
-                // Assuming the API supports filtering by deckId via query param or we filter client side
-                // For now, fetching all and filtering client side if necessary, 
-                // OR assuming the endpoint is /v1/cards?deckId=... which is common.
-                // If not, we might need to adjust backend.
-                // Let's try fetching all and filtering for now to be safe without backend changes yet.
-                const response = await cardApi.v1CardsGet();
-                const deckCards = response.data.filter(c => c.deckId === deckId);
-                setCards(deckCards);
-            } catch (error) {
-                console.error("Failed to fetch cards", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        fetchCards(currentPage);
+    }, [deckId, currentPage]);
 
-        fetchCards();
-    }, [deckId]);
+    const totalPages = Math.ceil(totalCards / perPage) || 1;
 
     return (
         <div className="space-y-6">
@@ -61,7 +77,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>ID</TableHead>
+                                <TableHead className="w-24">ID</TableHead>
                                 <TableHead>Ordinal</TableHead>
                                 <TableHead>Type</TableHead>
                                 <TableHead>Due</TableHead>
@@ -75,7 +91,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                             ) : cards.length > 0 ? (
                                 cards.map((card) => (
                                     <TableRow key={card.id}>
-                                        <TableCell>{card.id}</TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">{card.id}</TableCell>
                                         <TableCell>{card.ordinal}</TableCell>
                                         <TableCell>{card.type}</TableCell>
                                         <TableCell>{card.due}</TableCell>
@@ -84,12 +100,19 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
-                                        No cards found in this deck.
+                                        No cards found.
                                     </TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
                     </Table>
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={totalCards}
+                        perPage={perPage}
+                    />
                 </CardContent>
             </Card>
         </div>

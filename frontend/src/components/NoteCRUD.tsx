@@ -23,26 +23,40 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { stringToColor } from "@/lib/colorUtils";
+import { PaginationControls } from "./ui/pagination-controls";
+import { TagInput } from "./ui/tag-input";
 
 export function NoteCRUD() {
     const [notes, setNotes] = useState<NoteResponse[]>([]);
     const [models, setModels] = useState<AnkiModelResponse[]>([]);
-    const { toast } = useToast();
-
-    // Create State
+    const [totalNotes, setTotalNotes] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [perPage] = useState(10);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [selectedModelId, setSelectedModelId] = useState<string>("");
+    const [selectedModel, setSelectedModel] = useState<AnkiModelResponse | null>(null);
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
-    const [tags, setTags] = useState("");
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+    // Edit State
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingNote, setEditingNote] = useState<NoteResponse | null>(null);
+    const [editFields, setEditFields] = useState<string[]>([]);
+    const [editTags, setEditTags] = useState<string[]>([]);
 
     // Delete State
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [deleteNoteId, setDeleteNoteId] = useState<number | null>(null);
 
-    const fetchNotes = async () => {
+    const { toast } = useToast();
+
+    const fetchNotes = async (page: number) => {
         try {
-            const response = await noteApi.v1NotesGet();
-            setNotes(response.data);
+            const response = await noteApi.v1NotesGet(page, perPage);
+            const paginatedData = response.data as any;
+            setNotes(paginatedData.data);
+            setTotalNotes(paginatedData.pagination.total);
         } catch (error) {
             toast({ title: "Error", description: "Failed to fetch notes", variant: "destructive" });
         }
@@ -52,57 +66,56 @@ export function NoteCRUD() {
         try {
             const response = await modelApi.v1ModelsGet();
             setModels(response.data);
-            if (response.data.length > 0) {
-                // Do not auto-select here to force user choice or handle in Valid effect
-                // Actually good UX to select first
-                setSelectedModelId(response.data[0].id?.toString() || "");
-            }
         } catch (error) {
-            toast({ title: "Error", description: "Failed to fetch models", variant: "destructive" });
+            console.error("Failed to fetch models", error);
         }
     };
 
     useEffect(() => {
-        fetchNotes();
+        fetchNotes(currentPage);
         fetchModels();
-    }, []);
-
-    // Reset fields when model changes
-    useEffect(() => {
-        setFieldValues({});
-    }, [selectedModelId]);
-
-    const getSelectedModel = () => {
-        return models.find(m => m.id?.toString() === selectedModelId);
-    };
-
-    const handleFieldChange = (fieldName: string, value: string) => {
-        setFieldValues(prev => ({ ...prev, [fieldName]: value }));
-    };
+    }, [currentPage]);
 
     const createNote = async () => {
-        if (!selectedModelId) return;
-
-        const model = getSelectedModel();
-        if (!model || !model.fields) return;
-
-        // Construct fields string using specific separator (unit separator 0x1f)
-        // Order must match model.fields order
-        const joinedFields = model.fields.map(f => fieldValues[f.name || ""] || "").join("\x1f");
-
+        if (!selectedModel) return;
         try {
+            const fieldsString = selectedModel.fields?.map(f => fieldValues[f.name || ""] || "").join("\u001f") || "";
             await noteApi.v1NotesPost({
-                modelId: parseInt(selectedModelId),
-                fields: joinedFields,
-                tags: tags,
+                modelId: selectedModel.id,
+                fields: fieldsString,
+                tags: selectedTags.join(" "),
             });
-            setFieldValues({});
-            setTags("");
             setIsCreateOpen(false);
-            fetchNotes();
+            setSelectedModel(null);
+            setFieldValues({});
+            setSelectedTags([]);
+            fetchNotes(currentPage);
             toast({ title: "Success", description: "Note created successfully" });
         } catch (error) {
             toast({ title: "Error", description: "Failed to create note", variant: "destructive" });
+        }
+    };
+
+    const handleEditClick = (note: NoteResponse) => {
+        setEditingNote(note);
+        setEditFields(note.fields?.split("\u001f") || []);
+        setEditTags(note.tags ? note.tags.split(" ").filter(t => t.length > 0) : []);
+        setIsEditOpen(true);
+    };
+
+    const updateNote = async () => {
+        if (!editingNote || !editingNote.id) return;
+        try {
+            await noteApi.v1NotesIdPut(editingNote.id, {
+                modelId: editingNote.modelId,
+                fields: editFields.join("\u001f"),
+                tags: editTags.join(" "),
+            });
+            setIsEditOpen(false);
+            fetchNotes(currentPage);
+            toast({ title: "Success", description: "Note updated successfully" });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to update note", variant: "destructive" });
         }
     };
 
@@ -117,12 +130,14 @@ export function NoteCRUD() {
             await noteApi.v1NotesIdDelete(deleteNoteId);
             setDeleteNoteId(null);
             setIsDeleteOpen(false);
-            fetchNotes();
+            fetchNotes(currentPage);
             toast({ title: "Success", description: "Note deleted successfully" });
         } catch (error) {
             toast({ title: "Error", description: "Failed to delete note", variant: "destructive" });
         }
     };
+
+    const totalPages = Math.ceil(totalNotes / perPage) || 1;
 
     return (
         <div className="space-y-6">
@@ -136,49 +151,48 @@ export function NoteCRUD() {
                                     <Plus className="mr-2 h-4 w-4" /> New Note
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-xl">
+                            <DialogContent className="max-w-2xl">
                                 <DialogHeader>
                                     <DialogTitle>Create New Note</DialogTitle>
-                                    <DialogDescription>
-                                        Select a model and fill in the fields.
-                                    </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
                                     <div className="space-y-2">
-                                        <Label>Anki Model</Label>
-                                        <select
-                                            className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            value={selectedModelId}
-                                            onChange={(e) => setSelectedModelId(e.target.value)}
-                                        >
+                                        <Label>Note Model</Label>
+                                        <div className="flex flex-wrap gap-2">
                                             {models.map(m => (
-                                                <option key={m.id} value={m.id}>{m.name}</option>
+                                                <Button
+                                                    key={m.id}
+                                                    variant={selectedModel?.id === m.id ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => setSelectedModel(m)}
+                                                >
+                                                    {m.name}
+                                                </Button>
                                             ))}
-                                        </select>
-                                    </div>
-
-                                    {getSelectedModel()?.fields?.map((field) => (
-                                        <div key={field.name} className="space-y-2">
-                                            <Label>{field.name}</Label>
-                                            <Input
-                                                value={fieldValues[field.name || ""] || ""}
-                                                onChange={(e) => handleFieldChange(field.name || "", e.target.value)}
-                                            />
                                         </div>
-                                    ))}
-
-                                    <div className="space-y-2">
-                                        <Label>Tags (space separated)</Label>
-                                        <Input
-                                            placeholder="tag1 tag2"
-                                            value={tags}
-                                            onChange={(e) => setTags(e.target.value)}
-                                        />
                                     </div>
-                                    <DialogFooter>
-                                        <Button onClick={createNote}>Create Note</Button>
-                                    </DialogFooter>
+
+                                    {selectedModel && (
+                                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                            {selectedModel.fields?.map((field, idx) => (
+                                                <div key={idx} className="space-y-2">
+                                                    <Label>{field.name}</Label>
+                                                    <Input
+                                                        value={fieldValues[field.name || ""] || ""}
+                                                        onChange={(e) => setFieldValues(prev => ({ ...prev, [field.name || ""]: e.target.value }))}
+                                                    />
+                                                </div>
+                                            ))}
+                                            <div className="space-y-2">
+                                                <Label>Tags</Label>
+                                                <TagInput selected={selectedTags} onChange={setSelectedTags} />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+                                <DialogFooter>
+                                    <Button onClick={createNote} disabled={!selectedModel}>Create Note</Button>
+                                </DialogFooter>
                             </DialogContent>
                         </Dialog>
                     </div>
@@ -187,8 +201,8 @@ export function NoteCRUD() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Fields (Partial)</TableHead>
+                                <TableHead className="w-24">ID</TableHead>
+                                <TableHead>Field Content</TableHead>
                                 <TableHead>Tags</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -196,9 +210,30 @@ export function NoteCRUD() {
                         <TableBody>
                             {notes.map((note) => (
                                 <TableRow key={note.id}>
-                                    <TableCell>{note.id}</TableCell>
-                                    <TableCell className="max-w-xs truncate">{note.fields?.replace(/\x1f/g, " | ")}</TableCell>
-                                    <TableCell>{note.tags}</TableCell>
+                                    <TableCell className="text-xs text-muted-foreground">{note.id}</TableCell>
+                                    <TableCell className="font-medium max-w-xs truncate">
+                                        {note.fields?.split("\u001f")[0]}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1">
+                                            {note.tags?.split(" ").filter(t => t.length > 0).map(tag => {
+                                                const color = stringToColor(tag);
+                                                return (
+                                                    <Badge
+                                                        key={tag}
+                                                        variant="secondary"
+                                                        style={{
+                                                            backgroundColor: `${color}20`,
+                                                            color: color,
+                                                            borderColor: `${color}40`
+                                                        }}
+                                                    >
+                                                        {tag}
+                                                    </Badge>
+                                                );
+                                            })}
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -207,8 +242,8 @@ export function NoteCRUD() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem disabled>
-                                                    <Pencil className="mr-2 h-4 w-4" /> Edit (Not Impl)
+                                                <DropdownMenuItem onClick={() => handleEditClick(note)}>
+                                                    <Pencil className="mr-2 h-4 w-4" /> Edit
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem className="text-red-600" onClick={() => note.id && handleDeleteClick(note.id)}>
                                                     <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -227,10 +262,48 @@ export function NoteCRUD() {
                             )}
                         </TableBody>
                     </Table>
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={totalNotes}
+                        perPage={perPage}
+                    />
                 </CardContent>
             </Card>
 
-            {/* Delete Confirmation Dialog */}
+            {/* Edit Dialog */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Note</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        {editFields.map((fieldValue, idx) => (
+                            <div key={idx} className="space-y-2">
+                                <Label>Field {idx + 1}</Label>
+                                <Input
+                                    value={fieldValue}
+                                    onChange={(e) => {
+                                        const newFields = [...editFields];
+                                        newFields[idx] = e.target.value;
+                                        setEditFields(newFields);
+                                    }}
+                                />
+                            </div>
+                        ))}
+                        <div className="space-y-2">
+                            <Label>Tags</Label>
+                            <TagInput selected={editTags} onChange={setEditTags} />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={updateNote}>Save Changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation */}
             <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
                 <DialogContent>
                     <DialogHeader>

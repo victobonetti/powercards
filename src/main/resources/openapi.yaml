@@ -37,15 +37,26 @@ paths:
   /v1/cards:
     get:
       summary: List all cards
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: perPage
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/PaginatedResponseCardResponse"
       tags:
       - Card Resource
     post:
@@ -131,15 +142,26 @@ paths:
   /v1/decks:
     get:
       summary: List all decks
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: perPage
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/DeckResponse"
+                $ref: "#/components/schemas/PaginatedResponseDeckResponse"
       tags:
       - Deck Resource
     post:
@@ -319,15 +341,26 @@ paths:
   /v1/notes:
     get:
       summary: List all notes
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: perPage
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/NoteResponse"
+                $ref: "#/components/schemas/PaginatedResponseNoteResponse"
       tags:
       - Note Resource
     post:
@@ -410,6 +443,53 @@ paths:
           description: Note not found
       tags:
       - Note Resource
+  /v1/tags:
+    get:
+      summary: List all tags
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tag"
+      tags:
+      - Tag Resource
+    post:
+      summary: Create a new tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tag"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      tags:
+      - Tag Resource
+  /v1/tags/{id}:
+    delete:
+      summary: Delete a tag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+      tags:
+      - Tag Resource
 components:
   schemas:
     AnkiFieldDto:
@@ -643,6 +723,51 @@ components:
           type: integer
           format: int32
         customData:
+          type: string
+    PaginatedResponseCardResponse:
+      type: object
+      properties:
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardResponse"
+    PaginatedResponseDeckResponse:
+      type: object
+      properties:
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeckResponse"
+    PaginatedResponseNoteResponse:
+      type: object
+      properties:
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/NoteResponse"
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+        nextPageUri:
+          type: string
+        lastPageUri:
+          type: string
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
           type: string
 servers:
 - url: http://localhost:8088

@@ -23,6 +23,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CardList } from "./CardList";
+import { PaginationControls } from "./ui/pagination-controls";
 
 interface DeckCRUDProps {
     highlightNew?: boolean;
@@ -30,6 +31,9 @@ interface DeckCRUDProps {
 
 export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const [decks, setDecks] = useState<DeckResponse[]>([]);
+    const [totalDecks, setTotalDecks] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [perPage] = useState(10);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     // Create State
@@ -48,10 +52,12 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const [selectedDeck, setSelectedDeck] = useState<{ id: number; name: string } | null>(null);
     const { toast } = useToast();
 
-    const fetchDecks = async () => {
+    const fetchDecks = async (page: number) => {
         try {
-            const response = await deckApi.v1DecksGet();
-            setDecks(response.data);
+            const response = await deckApi.v1DecksGet(page, perPage);
+            const paginatedData = response.data as any;
+            setDecks(paginatedData.data);
+            setTotalDecks(paginatedData.pagination.total);
         } catch (error) {
             toast({ title: "Error", description: "Failed to fetch decks", variant: "destructive" });
         }
@@ -60,7 +66,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     // Refetch when highlightNew changes (implies a recent upload)
     useEffect(() => {
         if (highlightNew) {
-            fetchDecks();
+            fetchDecks(currentPage);
         }
     }, [highlightNew]);
 
@@ -70,7 +76,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
             await deckApi.v1DecksPost({ name: newDeckName });
             setNewDeckName("");
             setIsCreateOpen(false);
-            fetchDecks();
+            fetchDecks(currentPage);
             toast({ title: "Success", description: "Deck created successfully" });
         } catch (error) {
             toast({ title: "Error", description: "Failed to create deck", variant: "destructive" });
@@ -87,37 +93,14 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const updateDeck = async () => {
         if (!editDeck || !editDeck.id) return;
         try {
-            // Check if API supports PUT/PATCH via v1DecksIdPut (or similar)
-            // Assuming the generated API has this or fallback to Post if not (usually Put)
-            // Checked api.ts before: v1DecksIdPut exists but takes ankiModelRequest? No wait, Decks usually simple.
-            // Let's check api.ts again or assume standard.
-            // Actually checking known api methods... 
-            // Wait, I recall seeing v1CardsIdPut, so likely v1DecksIdPut exists if generated.
-            // If not, I'll stick to a placeholder or best guess.
-            // Actually, let's assume it exists as `v1DecksIdPut`.
             await deckApi.v1DecksIdPut(editDeck.id, { name: editName });
-            // If this doesn't exist, I'll need to check api.ts again.
-            // EDIT: I checked api.ts earlier, it has `v1DecksPost`, `v1DecksGet`, `v1DecksIdDelete`.
-            // I did NOT clearly see `v1DecksIdPut`.
-            // I will assume for now it might NOT exist or checking it dynamically.
-            // If it errors, I will fix.
-            // Safest bet: check if it exists in the tool output from before.
-            // It wasn't abundantly clear. I'll comment it out if valid and implement properly if confirmed.
-            // Actually, usually standard CRUD.
-
-            // FOR NOW, to be safe and avoid compilation error if it doesn't exist:
-            // I will check if it exists in `deckApi` object.
-            // But actually, I'll try to find it.
-            // If not, I'll just skip update logic for now or implement it as "Delete + Create" (Bad practice).
-            // Let's assume correct implementation and fix if compile error.
             setEditDeck(null);
             setIsEditOpen(false);
-            fetchDecks();
+            fetchDecks(currentPage);
             toast({ title: "Success", description: "Deck updated successfully" });
         } catch (error) {
             console.error(error);
-            // Fallback if method doesn't exist or fails
-            toast({ title: "Error", description: "Failed to update deck (Method might not exist)", variant: "destructive" });
+            toast({ title: "Error", description: "Failed to update deck", variant: "destructive" });
         }
     };
 
@@ -136,7 +119,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
             await deckApi.v1DecksIdDelete(deleteDeckData.id);
             setDeleteDeckData(null);
             setIsDeleteOpen(false);
-            fetchDecks();
+            fetchDecks(currentPage);
             toast({ title: "Success", description: "Deck deleted successfully" });
         } catch (error) {
             toast({ title: "Error", description: "Failed to delete deck", variant: "destructive" });
@@ -144,8 +127,8 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     };
 
     useEffect(() => {
-        fetchDecks();
-    }, []);
+        fetchDecks(currentPage);
+    }, [currentPage]);
 
     if (selectedDeck) {
         return (
@@ -156,6 +139,8 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
             />
         );
     }
+
+    const totalPages = Math.ceil(totalDecks / perPage) || 1;
 
     return (
         <div className="space-y-6">
@@ -198,7 +183,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>ID</TableHead>
+                                <TableHead className="w-24">ID</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -210,8 +195,8 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                                     className="cursor-pointer hover:bg-muted/50"
                                     onClick={() => deck.id && setSelectedDeck({ id: deck.id, name: deck.name || "Untitled" })}
                                 >
-                                    <TableCell>{deck.id}</TableCell>
-                                    <TableCell>{deck.name}</TableCell>
+                                    <TableCell className="text-xs text-muted-foreground">{deck.id}</TableCell>
+                                    <TableCell className="font-medium">{deck.name}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -240,6 +225,13 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                             )}
                         </TableBody>
                     </Table>
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={totalDecks}
+                        perPage={perPage}
+                    />
                 </CardContent>
             </Card>
 
