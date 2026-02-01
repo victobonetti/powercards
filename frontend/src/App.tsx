@@ -49,21 +49,21 @@ function App() {
           <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
           <Route path="/upload" element={<Navigate to="/" replace />} />
           <Route path="/tags" element={
-            <div className="space-y-8 p-4">
+            <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
               <PageHeader
                 title="Tags"
-                description="Manage your collection tags."
+                description="Manage your collection tags. Click on a tag to view all notes with that tag."
               />
               <TagList />
             </div>
           } />
           <Route path="/decks" element={
-            <div className="h-[calc(100vh-4rem)] w-full">
+            <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
               <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
             </div>
           } />
           <Route path="/notes" element={
-            <div className="h-[calc(100vh-4rem)] w-full">
+            <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
               <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
             </div>
           } />
@@ -83,11 +83,10 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
   };
 
   return (
-    <div className="flex flex-col h-full gap-6 p-6 pb-0">
+    <div>
       <PageHeader
         title="My Decks"
         description="Manage your decks and notes here."
-        className="mb-0"
       >
         <div className="flex flex-col items-end gap-1">
           <span className="text-xs font-medium text-muted-foreground mr-1">View</span>

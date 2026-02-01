@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { deckApi } from "@/lib/api";
 import { DeckResponse } from "@/api/api";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +27,7 @@ import { ConfirmationDialog } from "./ui/confirmation-dialog";
 
 import { useDebounce } from "@/hooks/use-debounce";
 import { DataTable } from "./ui/data-table";
+import { PageHeader } from "./ui/page-header";
 
 interface DeckCRUDProps {
     highlightNew?: boolean;
@@ -190,14 +190,15 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const totalPages = Math.ceil(totalDecks / perPage) || 1;
 
     return (
-        <div className="space-y-8">
+        <div>
             <Card className={highlightNew ? "ring-2 ring-primary transition-all duration-500" : ""}>
                 <CardHeader className="p-8">
                     <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                            Decks
-                            {highlightNew && <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full animate-pulse">New Data</span>}
-                        </CardTitle>
+                        <PageHeader
+                            title="Decks"
+                            description="Search and manage all your decks."
+                            className="mb-0"
+                        />
                         <div className="flex items-center gap-2">
                             <Input
                                 placeholder="Search decks..."

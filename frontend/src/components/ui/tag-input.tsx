@@ -192,7 +192,7 @@ export function TagInput({ selected, onChange, placeholder = "Add tags...", disa
                                     <CommandItem
                                         key={tag.id}
                                         value={tag.name}
-                                        onSelect={(currentValue) => {
+                                        onSelect={(_currentValue) => {
                                             // cmdk might lowercase, but we disabled filtering so value matches
                                             if (tag.name) {
                                                 handleSelect(tag.name);

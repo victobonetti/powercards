@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { tagApi } from "@/lib/api";
 import { TagStats } from "@/api/api";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { stringToColor } from "@/lib/colorUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useNavigate } from "react-router-dom";
-import { DataTable, DataTableColumn } from "./ui/data-table";
+import { DataTable } from "./ui/data-table";
 
 export function TagList() {
     const [tags, setTags] = useState<TagStats[]>([]);
@@ -129,15 +130,13 @@ export function TagList() {
                                     return (
                                         <Badge
                                             variant="secondary"
+                                            className="px-2 py-0.5 text-xs"
                                             style={{
-                                                backgroundColor: `${color}20`,
+                                                backgroundColor: `${color}15`,
                                                 color: color,
-                                                borderColor: `${color}40`,
-                                                cursor: "pointer"
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (tag.name) handleTagClick(tag.name);
+                                                borderColor: `${color}30`,
+                                                borderWidth: "1px",
+                                                borderStyle: "solid",
                                             }}
                                         >
                                             {tag.name}
@@ -174,6 +173,10 @@ export function TagList() {
                         totalItems={totalTags}
                         perPage={perPage}
                         onPageChange={setCurrentPage}
+                        onRowClick={(tag) => {
+                            if (tag.name) handleTagClick(tag.name);
+                        }}
+                        rowClassName={() => "cursor-pointer hover:bg-muted/50"}
                         emptyMessage="No tags found."
                     />
                 </CardContent>

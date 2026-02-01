@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import { noteApi, modelApi } from "@/lib/api";
 import { useSearchParams } from "react-router-dom";
 import { NoteResponse, AnkiModelResponse } from "@/api/api";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "./ui/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Plus, ArrowUpDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { stringToColor } from "@/lib/colorUtils";
-import { PaginationControls } from "./ui/pagination-controls";
+import { DataTable } from "./ui/data-table";
 import { TagInput } from "./ui/tag-input";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 import { BulkTagDialog } from "./BulkTagDialog";
@@ -38,6 +37,7 @@ export function NoteCRUD() {
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [editingNote, setEditingNote] = useState<NoteResponse | null>(null);
+    const [loading, setLoading] = useState(false);
 
     // Search & Sort
     const [searchParams, setSearchParams] = useSearchParams();
@@ -86,6 +86,7 @@ export function NoteCRUD() {
     };
 
     const fetchNotes = async (page: number) => {
+        setLoading(true);
         try {
             const response = await noteApi.v1NotesGet(page, perPage, debouncedSearch, sort);
             const paginatedData = response.data as any;
@@ -93,6 +94,8 @@ export function NoteCRUD() {
             setTotalNotes(paginatedData.pagination.total);
         } catch (error) {
             toast({ title: "Error", description: "Failed to fetch notes", variant: "destructive" });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -208,7 +211,7 @@ export function NoteCRUD() {
     };
 
     return (
-        <div className="flex h-full flex-col overflow-hidden p-10">
+        <div className="flex h-full flex-col overflow-hidden">
             <div className="flex h-full overflow-hidden gap-6">
                 {/* Main List Area - Flexible width */}
                 <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${selectedIds.length === 1 && selectedIds[0] ? 'mr-0' : ''}`}>

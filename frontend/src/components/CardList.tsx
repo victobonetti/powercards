@@ -5,19 +5,10 @@ import { CardResponse } from "@/api/api";
 import { BulkMoveDialog } from "./BulkMoveDialog";
 import { BulkTagDialog } from "./BulkTagDialog";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "./ui/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { PaginationControls } from "./ui/pagination-controls";
 import { useToast } from "@/hooks/use-toast";
 
 import { Badge } from "@/components/ui/badge";
