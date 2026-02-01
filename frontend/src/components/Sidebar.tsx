@@ -31,7 +31,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
             onMouseLeave={() => !isPinned && setIsCollapsed(true)}
         >
             <div className="space-y-4 py-6 flex-1">
-                <div className={cn("px-4 py-2 flex items-center mb-4 select-none", isExpanded ? "justify-between" : "justify-center")}>
+                <div className={cn("px-4 py-2 flex items-start mb-4 select-none", isExpanded ? "justify-between" : "justify-center")}>
                     {isExpanded ? (
                         <div className="flex items-center gap-3 overflow-hidden">
                             <img src={logo} alt="PowerCards Logo" className="h-32 w-full object-contain" />
