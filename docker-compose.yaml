@@ -11,6 +11,27 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9090"
+  db:
+    image: postgres:15
+    container_name: powercards-db
+    environment:
+      POSTGRES_USER: powercards
+      POSTGRES_PASSWORD: powercards
+      POSTGRES_DB: powercards
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: powercards-adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
 
 volumes:
   minio_data:
+  postgres_data:
