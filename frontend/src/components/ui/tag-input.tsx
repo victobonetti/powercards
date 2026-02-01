@@ -124,17 +124,19 @@ export function TagInput({ selected, onChange, placeholder = "Add tags...", disa
                             }}
                         >
                             {tag}
-                            <button
-                                aria-label="Delete tag"
-                                className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
-                                onClick={() => handleUnselect(tag)}
-                            >
-                                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                            </button>
+                            {!disabled && (
+                                <button
+                                    aria-label="Delete tag"
+                                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onClick={() => handleUnselect(tag)}
+                                >
+                                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                </button>
+                            )}
                         </Badge>
                     );
                 })}

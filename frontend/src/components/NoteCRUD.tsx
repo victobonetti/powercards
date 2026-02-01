@@ -118,7 +118,7 @@ export function NoteCRUD() {
     useEffect(() => {
         fetchNotes(currentPage);
         fetchModels();
-    }, [currentPage, debouncedSearch, sort]);
+    }, [currentPage, debouncedSearch, sort, perPage]);
 
     // Sync search to URL
     useEffect(() => {

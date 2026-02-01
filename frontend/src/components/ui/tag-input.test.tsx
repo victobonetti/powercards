@@ -30,12 +30,20 @@ describe('TagInput', () => {
         });
     });
 
-    it('opens dropdown matches snapshot or basic interaction', async () => {
+    it('opens dropdown and allows interaction when not disabled', async () => {
         render(<TagInput selected={[]} onChange={() => { }} />);
         const button = screen.getByRole('combobox');
         fireEvent.click(button);
-        // Since we are using Radix UI Popover, testing exact rendering might need more setup or simple check if it doesn't crash
-        // For now, we verified the component renders
         expect(button).toBeInTheDocument();
+    });
+
+    it('does not show delete button when disabled', () => {
+        render(<TagInput selected={['Physics']} onChange={() => { }} disabled={true} />);
+        expect(screen.queryByLabelText('Delete tag')).not.toBeInTheDocument();
+    });
+
+    it('shows delete button when not disabled', () => {
+        render(<TagInput selected={['Physics']} onChange={() => { }} disabled={false} />);
+        expect(screen.getByLabelText('Delete tag')).toBeInTheDocument();
     });
 });

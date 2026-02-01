@@ -91,7 +91,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
 
     useEffect(() => {
         fetchCards(currentPage);
-    }, [deckId, currentPage, debouncedSearch, sort]);
+    }, [deckId, currentPage, debouncedSearch, sort, perPage]);
 
     // Sync search to URL
     useEffect(() => {
