@@ -16,16 +16,14 @@ public class NoteResourceTest {
         @BeforeEach
         @Transactional
         void setUp() {
-                // Card.deleteAll();
-                // Note.deleteAll();
-                /*
-                 * for (int i = 0; i < 15; i++) {
-                 * Note note = new Note();
-                 * note.flds = "Note " + i + (i % 2 == 0 ? " even" : " odd");
-                 * note.tags = "tag" + i;
-                 * note.persist();
-                 * }
-                 */
+                Card.deleteAll();
+                Note.deleteAll();
+                for (int i = 0; i < 15; i++) {
+                        Note note = new Note();
+                        note.flds = "Note " + i + (i % 2 == 0 ? " even" : " odd");
+                        note.tags = "tag" + i;
+                        note.persist();
+                }
         }
 
         @Test
@@ -81,14 +79,9 @@ public class NoteResourceTest {
         }
 
         @Test
-        @Transactional
         public void testUpdateNoteFields() {
-                // Create a note first
-                Note note = new Note();
-                note.flds = "Original Fields";
-                note.tags = "original";
-                note.persist();
-
+                // Use an existing note
+                Note note = Note.<Note>listAll().get(0);
                 Long noteId = note.id;
 
                 // Update flds
@@ -106,5 +99,38 @@ public class NoteResourceTest {
                                 .then()
                                 .statusCode(200)
                                 .body("fields", is("Updated Fields"));
+        }
+
+        @Test
+        public void testBulkTags() {
+                java.util.List<Note> notes = Note.listAll();
+                Note n1 = notes.get(1);
+                Note n2 = notes.get(2);
+
+                given()
+                                .contentType("application/json")
+                                .body("{\"noteIds\": [" + n1.id + ", " + n2.id + "], \"tags\": [\"bulk1\", \"bulk2\"]}")
+                                .when().post("/v1/notes/bulk/tags")
+                                .then()
+                                .statusCode(204);
+        }
+
+        @Test
+        public void testBulkDelete() {
+                java.util.List<Note> notes = Note.listAll();
+                Note n1 = notes.get(3);
+                Note n2 = notes.get(4);
+
+                given()
+                                .contentType("application/json")
+                                .body("{\"ids\": [" + n1.id + ", " + n2.id + "]}")
+                                .when().post("/v1/notes/bulk/delete")
+                                .then()
+                                .statusCode(204);
+
+                given()
+                                .when().get("/v1/notes/" + n1.id)
+                                .then()
+                                .statusCode(404);
         }
 }

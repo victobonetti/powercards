@@ -9,10 +9,9 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { HtmlInput } from "@/components/ui/html-input";
 import { noteApi, modelApi } from "@/lib/api";
-import { CardResponse, NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/api/api";
+import { NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
 import { splitAnkiFields, joinAnkiFields } from "@/lib/anki";
@@ -154,10 +153,10 @@ export function NoteDialog({ noteId, open, onOpenChange, onSaved, initialReadOnl
                         {model?.fields?.map((field: AnkiFieldDto, index: number) => (
                             <div key={index} className="grid gap-2">
                                 <Label htmlFor={`field-${index}`}>{field.name}</Label>
-                                <Textarea
+                                <HtmlInput
                                     id={`field-${index}`}
                                     value={fieldValues[index] || ""}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange(index, e.target.value)}
+                                    onChange={(value) => handleFieldChange(index, value)}
                                     className="min-h-[80px]"
                                     disabled={!isEditing}
                                 />

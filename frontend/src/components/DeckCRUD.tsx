@@ -247,6 +247,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                                     Name {sort === "name" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
                                     {sort === "-name" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                 </TableHead>
+                                <TableHead className="w-32 text-right">Cards</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -259,6 +260,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                                 >
                                     <TableCell className="text-xs text-muted-foreground">{deck.id}</TableCell>
                                     <TableCell className="font-medium">{deck.name}</TableCell>
+                                    <TableCell className="text-right">{deck.cardCount}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>

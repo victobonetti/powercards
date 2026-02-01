@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { noteApi, modelApi } from "@/lib/api";
+import { useSearchParams } from "react-router-dom";
 import { NoteResponse, AnkiModelResponse } from "@/api/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import { stringToColor } from "@/lib/colorUtils";
 import { PaginationControls } from "./ui/pagination-controls";
 import { TagInput } from "./ui/tag-input";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
+import { BulkTagDialog } from "./BulkTagDialog";
 import { useDebounce } from "@/hooks/use-debounce";
 import { NoteDialog } from "./NoteDialog";
 
@@ -35,14 +37,15 @@ export function NoteCRUD() {
     const [models, setModels] = useState<AnkiModelResponse[]>([]);
     const [totalNotes, setTotalNotes] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
-    const [perPage] = useState(10);
+    const [perPage, setPerPage] = useState(10);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [selectedModel, setSelectedModel] = useState<AnkiModelResponse | null>(null);
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
     // Search & Sort
-    const [search, setSearch] = useState("");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [search, setSearch] = useState(searchParams.get("search") || "");
     const debouncedSearch = useDebounce(search, 500);
     const [sort, setSort] = useState("id");
 
@@ -54,6 +57,23 @@ export function NoteCRUD() {
     // Delete State
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [deleteNoteId, setDeleteNoteId] = useState<number | null>(null);
+
+    // Bulk Actions State
+    // Bulk Actions State
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [isBulkTagOpen, setIsBulkTagOpen] = useState(false);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+
+    useEffect(() => {
+        if (!isSelectionMode) {
+            setSelectedIds([]);
+        }
+    }, [isSelectionMode]);
+
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [currentPage, debouncedSearch]);
 
     // Confirmation State
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -100,10 +120,14 @@ export function NoteCRUD() {
         fetchModels();
     }, [currentPage, debouncedSearch, sort]);
 
-    // Reset page on search change
+    // Sync search to URL
     useEffect(() => {
-        setCurrentPage(1);
-    }, [debouncedSearch]);
+        if (debouncedSearch) {
+            setSearchParams({ search: debouncedSearch });
+        } else {
+            setSearchParams({});
+        }
+    }, [debouncedSearch, setSearchParams]);
 
     const createNote = async () => {
         if (!selectedModel) return;
@@ -163,7 +187,44 @@ export function NoteCRUD() {
         }
     };
 
+    const handleBulkTag = async (tags: string[]) => {
+        if (selectedIds.length === 0) return;
+        try {
+            await noteApi.v1NotesBulkTagsPost({
+                noteIds: selectedIds,
+                tags: tags
+            });
+            toast({ title: "Success", description: "Tags added successfully" });
+            fetchNotes(currentPage);
+            setSelectedIds([]);
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to add tags", variant: "destructive" });
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+        try {
+            await noteApi.v1NotesBulkDeletePost({
+                ids: selectedIds
+            });
+            toast({ title: "Success", description: "Notes deleted successfully" });
+            fetchNotes(currentPage);
+            setSelectedIds([]);
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to delete notes", variant: "destructive" });
+        }
+    };
+
     const totalPages = Math.ceil(totalNotes / perPage) || 1;
+
+    const stripHtml = (html: string) => {
+        const tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
+    };
 
     return (
         <div className="space-y-6">
@@ -230,11 +291,59 @@ export function NoteCRUD() {
                             </Dialog>
                         </div>
                     </div>
+                    <div className="flex justify-end pt-2">
+                        <Button
+                            variant={isSelectionMode ? "secondary" : "outline"}
+                            onClick={() => setIsSelectionMode(!isSelectionMode)}
+                            size="sm"
+                        >
+                            {isSelectionMode ? "Cancel Selection" : "Select Notes"}
+                        </Button>
+                    </div>
                 </CardHeader>
+
+                {/* Bulk Actions Bar */}
+                {selectedIds.length > 0 && (
+                    <div className="px-6 py-2 bg-muted/40 border-b flex items-center justify-between backdrop-blur-sm">
+                        <div className="text-sm font-medium">
+                            {selectedIds.length} selected
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
+                                Add Tags
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                {isSelectionMode && (
+                                    <TableHead className="w-10">
+                                        <input
+                                            type="checkbox"
+                                            className="h-4 w-4 rounded border-gray-300"
+                                            checked={notes.length > 0 && selectedIds.length === notes.length}
+                                            ref={input => {
+                                                if (input) {
+                                                    input.indeterminate = selectedIds.length > 0 && selectedIds.length < notes.length;
+                                                }
+                                            }}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedIds(notes.map(n => n.id!));
+                                                } else {
+                                                    setSelectedIds([]);
+                                                }
+                                            }}
+                                        />
+                                    </TableHead>
+                                )}
                                 <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
                                     ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
                                     {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
@@ -253,13 +362,29 @@ export function NoteCRUD() {
                                     key={note.id}
                                     className="cursor-pointer hover:bg-muted/50"
                                     onClick={(e) => {
-                                        if ((e.target as HTMLElement).closest('button')) return;
+                                        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
                                         handleViewClick(note);
                                     }}
                                 >
-                                    <TableCell className="text-xs text-muted-foreground">{note.id}</TableCell>
-                                    <TableCell className="font-medium max-w-xs truncate">
-                                        {note.fields?.split("\u001f")[0]}
+                                    {isSelectionMode && (
+                                        <TableCell>
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 rounded border-gray-300"
+                                                checked={selectedIds.includes(note.id!)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={(e) => {
+                                                    const checked = e.target.checked;
+                                                    setSelectedIds(prev =>
+                                                        checked ? [...prev, note.id!] : prev.filter(id => id !== note.id)
+                                                    );
+                                                }}
+                                            />
+                                        </TableCell>
+                                    )}
+                                    <TableCell className="text-xs text-muted-foreground py-1 h-8">{note.id}</TableCell>
+                                    <TableCell className="font-medium max-w-xs truncate text-xs py-1 h-8">
+                                        {stripHtml(note.fields?.split("\u001f")[0] || "")}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
@@ -309,6 +434,10 @@ export function NoteCRUD() {
                         onPageChange={setCurrentPage}
                         totalItems={totalNotes}
                         perPage={perPage}
+                        onPerPageChange={(newPerPage) => {
+                            setPerPage(newPerPage);
+                            setCurrentPage(1); // Reset to first page
+                        }}
                     />
                 </CardContent>
             </Card>
@@ -338,6 +467,21 @@ export function NoteCRUD() {
                 title="Unsaved Changes"
                 description="You have unsaved changes. Are you sure you want to discard them?"
             />
-        </div>
+
+            <BulkTagDialog
+                open={isBulkTagOpen}
+                onOpenChange={setIsBulkTagOpen}
+                onConfirm={handleBulkTag}
+                itemCount={selectedIds.length}
+            />
+
+            <ConfirmationDialog
+                open={isBulkDeleteOpen}
+                onOpenChange={setIsBulkDeleteOpen}
+                onConfirm={handleBulkDelete}
+                title={`Delete ${selectedIds.length} Notes`}
+                description="Are you sure you want to delete the selected notes? This action cannot be undone."
+            />
+        </div >
     );
 }

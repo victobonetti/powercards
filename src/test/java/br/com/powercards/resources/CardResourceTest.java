@@ -13,11 +13,13 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import java.util.List;
 
 @QuarkusTest
 public class CardResourceTest {
 
         private Long deckId;
+        private Long targetDeckId;
         private Long noteId;
         private Long cardId;
 
@@ -59,7 +61,17 @@ public class CardResourceTest {
                 card3.note = note;
                 card3.ord = 2;
                 card3.due = 50L;
-                card3.persist();
+                Card c3 = new Card();
+                c3.deck = deck;
+                c3.note = note;
+                c3.ord = 2;
+                c3.due = 50L;
+                c3.persist();
+
+                Deck d2 = new Deck();
+                d2.name = "Target Deck";
+                d2.persist();
+                targetDeckId = d2.id;
         }
 
         @Test
@@ -169,5 +181,94 @@ public class CardResourceTest {
                                 .when().get("/v1/cards")
                                 .then()
                                 .statusCode(200);
+        }
+
+        @Test
+        public void testBulkDelete() {
+                // Create extra cards for deletion to avoid affecting other tests if running in
+                // parallel/same suite logic?
+                // Actually setUp runs before each test.
+
+                // Use existing cards
+                // We need to fetch them
+                List<Card> cards = Card.listAll();
+                // Filter out the 'cardId' one to avoid breaking other logic if reused?
+                // Just use index 1 and 2 (card2 and card3)
+                Card c1 = cards.get(1);
+                Card c2 = cards.get(2);
+
+                given()
+                                .contentType("application/json")
+                                .body("{\"ids\": [" + c1.id + ", " + c2.id + "]}")
+                                .when().post("/v1/cards/bulk/delete")
+                                .then()
+                                .statusCode(204);
+
+                given()
+                                .when().get("/v1/cards/" + c1.id)
+                                .then()
+                                .statusCode(404);
+        }
+
+        @Test
+        public void testBulkMove() {
+                // Use cardId (card1)
+                Long cId = this.cardId;
+
+                given()
+                                .contentType("application/json")
+                                .body("{\"cardIds\": [" + cId + "], \"targetDeckId\": " + targetDeckId + "}")
+                                .when().post("/v1/cards/bulk/move")
+                                .then()
+                                .statusCode(204);
+        }
+
+        @Test
+        public void testPartialBulkMove() {
+                // Verify initial state: 4 cards in deckId. TargetDeck has 0.
+
+                // Move ONLY card1 to targetDeckId
+                given()
+                                .contentType("application/json")
+                                .body("{\"cardIds\": [" + cardId + "], \"targetDeckId\": " + targetDeckId + "}")
+                                .when().post("/v1/cards/bulk/move")
+                                .then()
+                                .statusCode(204);
+
+                // Verify card1 is in targetDeck by listing target deck cards?
+                // Or verify by get card
+                given().when().get("/v1/cards/" + cardId)
+                                .then().body("deckId", is(targetDeckId.intValue()));
+
+                // Verify source deck decreased count
+                given().when().get("/v1/decks/" + deckId)
+                                .then()
+                                .statusCode(200)
+                                .body("cardCount", is(2));
+
+                // Verify target deck increased count
+                given().when().get("/v1/decks/" + targetDeckId)
+                                .then()
+                                .statusCode(200)
+                                .body("cardCount", is(1));
+        }
+
+        @Test
+        public void testCardListFilterByDeck() {
+                // List cards for deckId
+                given()
+                                .queryParam("deckId", deckId)
+                                .when().get("/v1/cards")
+                                .then()
+                                .statusCode(200)
+                                .body("data.size()", is(3));
+
+                // List cards for targetDeckId
+                given()
+                                .queryParam("deckId", targetDeckId)
+                                .when().get("/v1/cards")
+                                .then()
+                                .statusCode(200)
+                                .body("data.size()", is(0));
         }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { splitAnkiFields, joinAnkiFields, ANKI_FIELD_SEPARATOR } from "./anki";
 
 describe("Anki Helper", () => {

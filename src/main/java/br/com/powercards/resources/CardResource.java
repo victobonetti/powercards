@@ -7,6 +7,8 @@ import br.com.powercards.dto.CardRequest;
 import br.com.powercards.dto.CardResponse;
 import br.com.powercards.dto.PaginatedResponse;
 import br.com.powercards.dto.PaginationMeta;
+import br.com.powercards.dto.BulkDeleteRequest;
+import br.com.powercards.dto.BulkMoveRequest;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -25,6 +27,7 @@ public class CardResource {
     public PaginatedResponse<CardResponse> list(
             @QueryParam("page") @DefaultValue("1") int page,
             @QueryParam("perPage") @DefaultValue("20") int perPage,
+            @QueryParam("deckId") Long deckId,
             @QueryParam("search") String search,
             @QueryParam("sort") String sort,
             @Context UriInfo uriInfo) {
@@ -56,22 +59,26 @@ public class CardResource {
             }
         }
 
-        io.quarkus.hibernate.orm.panache.PanacheQuery<Card> query;
+        StringBuilder queryBuilder = new StringBuilder("select c from Card c left join fetch c.note n where 1=1");
+        java.util.Map<String, Object> params = new java.util.HashMap<>();
+
+        if (deckId != null) {
+            queryBuilder.append(" and c.deck.id = :deckId");
+            params.put("deckId", deckId);
+        }
+
         if (search != null && !search.isBlank()) {
-            // Check for "tag=" prefix
             if (search.toLowerCase().startsWith("tag=")) {
                 String tag = search.substring(4);
-                // Search cards by note's tag
-                query = Card.find("select c from Card c join c.note n where lower(n.tags) like ?1", sortObj,
-                        "%" + tag.toLowerCase() + "%");
+                queryBuilder.append(" and lower(n.tags) like :tag");
+                params.put("tag", "%" + tag.toLowerCase() + "%");
             } else {
-                // Search by note content (flds)
-                query = Card.find("select c from Card c join c.note n where lower(n.flds) like ?1", sortObj,
-                        "%" + search.toLowerCase() + "%");
+                queryBuilder.append(" and lower(n.flds) like :search");
+                params.put("search", "%" + search.toLowerCase() + "%");
             }
-        } else {
-            query = Card.find("select c from Card c left join fetch c.note", sortObj);
         }
+
+        io.quarkus.hibernate.orm.panache.PanacheQuery<Card> query = Card.find(queryBuilder.toString(), sortObj, params);
 
         long total = query.count();
         List<Card> cards = query.page(page - 1, perPage).list();
@@ -159,6 +166,30 @@ public class CardResource {
             throw new NotFoundException();
         }
         entity.delete();
+    }
+
+    @POST
+    @Path("/bulk/delete")
+    @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Bulk delete cards")
+    public void bulkDelete(BulkDeleteRequest request) {
+        if (request.ids() != null && !request.ids().isEmpty()) {
+            Card.delete("id in ?1", request.ids());
+        }
+    }
+
+    @POST
+    @Path("/bulk/move")
+    @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Bulk move cards to deck")
+    public void bulkMove(BulkMoveRequest request) {
+        if (request.cardIds() != null && !request.cardIds().isEmpty() && request.targetDeckId() != null) {
+            Deck deck = Deck.findById(request.targetDeckId());
+            if (deck == null) {
+                throw new NotFoundException("Target deck not found");
+            }
+            Card.update("deck = ?1 where id in ?2", deck, request.cardIds());
+        }
     }
 
     private void updateEntity(Card entity, CardRequest request) {

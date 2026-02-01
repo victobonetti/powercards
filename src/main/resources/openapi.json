@@ -53,6 +53,13 @@
       "get" : {
         "summary" : "List all cards",
         "parameters" : [ {
+          "name" : "deckId",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "schema" : {
@@ -110,6 +117,54 @@
         "responses" : {
           "201" : {
             "description" : "Card created"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "tags" : [ "Card Resource" ]
+      }
+    },
+    "/v1/cards/bulk/delete" : {
+      "post" : {
+        "summary" : "Bulk delete cards",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BulkDeleteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "tags" : [ "Card Resource" ]
+      }
+    },
+    "/v1/cards/bulk/move" : {
+      "post" : {
+        "summary" : "Bulk move cards to deck",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BulkMoveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
           },
           "400" : {
             "description" : "Bad Request"
@@ -575,6 +630,54 @@
         "tags" : [ "Note Resource" ]
       }
     },
+    "/v1/notes/bulk/delete" : {
+      "post" : {
+        "summary" : "Bulk delete notes",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BulkDeleteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "tags" : [ "Note Resource" ]
+      }
+    },
+    "/v1/notes/bulk/tags" : {
+      "post" : {
+        "summary" : "Bulk add tags to notes",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BulkTagRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "tags" : [ "Note Resource" ]
+      }
+    },
     "/v1/notes/{id}" : {
       "put" : {
         "summary" : "Update an existing note",
@@ -725,16 +828,36 @@
     "/v1/tags/stats" : {
       "get" : {
         "summary" : "List tags with stats",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1
+          }
+        }, {
+          "name" : "perPage",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        }, {
+          "name" : "search",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/TagStats"
-                  }
+                  "$ref" : "#/components/schemas/PaginatedResponseTagStats"
                 }
               }
             }
@@ -843,6 +966,52 @@
           "ordinal" : {
             "type" : "integer",
             "format" : "int32"
+          }
+        }
+      },
+      "BulkDeleteRequest" : {
+        "type" : "object",
+        "properties" : {
+          "ids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }
+      },
+      "BulkMoveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "cardIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "targetDeckId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "BulkTagRequest" : {
+        "type" : "object",
+        "properties" : {
+          "noteIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "tags" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -1023,6 +1192,10 @@
           },
           "name" : {
             "type" : "string"
+          },
+          "cardCount" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },
@@ -1145,6 +1318,20 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/NoteResponse"
+            }
+          }
+        }
+      },
+      "PaginatedResponseTagStats" : {
+        "type" : "object",
+        "properties" : {
+          "pagination" : {
+            "$ref" : "#/components/schemas/PaginationMeta"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TagStats"
             }
           }
         }

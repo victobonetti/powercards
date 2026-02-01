@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, Tag as TagIcon, ArrowUpDown } from "lucide-react";
+import { Trash2, Tag as TagIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
     Dialog,
@@ -16,68 +16,61 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { useDebounce } from "@/hooks/use-debounce";
+import { PaginationControls } from "./ui/pagination-controls";
+import { Badge } from "@/components/ui/badge";
+import { stringToColor } from "@/lib/colorUtils";
+import { useNavigate } from "react-router-dom";
 
 export function TagList() {
     const [tags, setTags] = useState<TagStats[]>([]);
-    const [filteredTags, setFilteredTags] = useState<TagStats[]>([]);
+    const [totalTags, setTotalTags] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [perPage] = useState(10);
+
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 300);
-    const [sort, setSort] = useState<"name" | "count">("name");
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    // Backend sort is currently fixed to name asc in the modified resource, but we can update if needed.
+    // For now, let's assume default sort.
 
     // Delete State
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [deleteTag, setDeleteTag] = useState<TagStats | null>(null);
 
     const { toast } = useToast();
+    const navigate = useNavigate();
 
-    // Fetch all tags stats (client-side filtering/sorting for now since list is usually smaller than cards)
-    const fetchTags = async () => {
+    const fetchTags = async (page: number) => {
         try {
-            const response = await tagApi.v1TagsStatsGet();
-            setTags(response.data);
+            // Updated to match generated client signature: (page, perPage, search)
+            const response = await tagApi.v1TagsStatsGet(page, perPage, debouncedSearch);
+
+            // The generated return type might be PaginatedResponseTagStats which has 'data' and 'meta' fields?
+            // Need to check the alignment with my Backend output.
+            // Backend returns PaginatedResponse<TagStats> which has fields 'meta' and 'data'.
+            // The generated client usually unwraps the response.data in axios?
+            // Wait, generated client returns AxiosPromise<PaginatedResponseTagStats>.
+            // So response.data is PaginatedResponseTagStats.
+
+            // Let's assume standard structure based on backend DTO.
+            const paginatedData = response.data;
+            // paginatedData should have .data (list) and .pagination (meta)
+            setTags(paginatedData.data || []);
+            setTotalTags(paginatedData.pagination?.total || 0);
         } catch (error) {
+            console.error(error);
             toast({ title: "Error", description: "Failed to fetch tags", variant: "destructive" });
         }
     };
 
     useEffect(() => {
-        fetchTags();
-    }, []);
+        fetchTags(currentPage);
+    }, [currentPage, debouncedSearch]);
 
+    // Reset page on search
     useEffect(() => {
-        let result = [...tags];
+        setCurrentPage(1);
+    }, [debouncedSearch]);
 
-        // Filter
-        if (debouncedSearch) {
-            const lowerSearch = debouncedSearch.toLowerCase();
-            result = result.filter(tag => tag.name?.toLowerCase().includes(lowerSearch));
-        }
-
-        // Sort
-        result.sort((a, b) => {
-            if (sort === "name") {
-                const nameA = a.name?.toLowerCase() || "";
-                const nameB = b.name?.toLowerCase() || "";
-                return sortDirection === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-            } else {
-                const countA = a.noteCount || 0;
-                const countB = b.noteCount || 0;
-                return sortDirection === "asc" ? countA - countB : countB - countA;
-            }
-        });
-
-        setFilteredTags(result);
-    }, [tags, debouncedSearch, sort, sortDirection]);
-
-    const toggleSort = (field: "name" | "count") => {
-        if (sort === field) {
-            setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-        } else {
-            setSort(field);
-            setSortDirection("asc");
-        }
-    };
 
     const handleDeleteClick = (tag: TagStats) => {
         setDeleteTag(tag);
@@ -89,14 +82,20 @@ export function TagList() {
 
         try {
             await tagApi.v1TagsIdDelete(deleteTag.id);
-            setTags(tags.filter(t => t.id !== deleteTag.id));
             setIsDeleteOpen(false);
             setDeleteTag(null);
+            fetchTags(currentPage);
             toast({ title: "Success", description: "Tag deleted successfully" });
         } catch (error) {
             toast({ title: "Error", description: "Failed to delete tag", variant: "destructive" });
         }
     };
+
+    const handleTagClick = (tagName: string) => {
+        navigate(`/notes?search=tag=${encodeURIComponent(tagName)}`);
+    };
+
+    const totalPages = Math.ceil(totalTags / perPage) || 1;
 
     return (
         <div className="space-y-6">
@@ -107,7 +106,7 @@ export function TagList() {
                             <TagIcon className="h-5 w-5" />
                             Tags
                             <span className="text-sm font-normal text-muted-foreground ml-2">
-                                ({filteredTags.length} tags)
+                                ({totalTags} tags)
                             </span>
                         </CardTitle>
                         <Input
@@ -122,41 +121,53 @@ export function TagList() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="cursor-pointer" onClick={() => toggleSort("name")}>
-                                    Name
-                                    {sort === "name" && <ArrowUpDown className={`ml-2 h-4 w-4 inline ${sortDirection === "desc" ? "rotate-180" : ""}`} />}
-                                </TableHead>
-                                <TableHead className="cursor-pointer w-32 text-right" onClick={() => toggleSort("count")}>
-                                    Notes
-                                    {sort === "count" && <ArrowUpDown className={`ml-2 h-4 w-4 inline ${sortDirection === "desc" ? "rotate-180" : ""}`} />}
-                                </TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead className="w-32 text-right">Notes</TableHead>
                                 <TableHead className="w-20 text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredTags.map((tag) => (
-                                <TableRow key={tag.id} className="hover:bg-muted/50">
-                                    <TableCell className="font-medium">
-                                        <span className="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
-                                            {tag.name}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {tag.noteCount}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                            onClick={() => handleDeleteClick(tag)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {filteredTags.length === 0 && (
+                            {tags.map((tag) => {
+                                const color = tag.name ? stringToColor(tag.name) : "#ccc";
+                                return (
+                                    <TableRow
+                                        key={tag.id}
+                                        className="hover:bg-muted/50 cursor-pointer"
+                                        onClick={(e) => {
+                                            if ((e.target as HTMLElement).closest('button')) return;
+                                            if (tag.name) handleTagClick(tag.name);
+                                        }}
+                                    >
+                                        <TableCell className="font-medium">
+                                            <Badge
+                                                variant="secondary"
+                                                style={{
+                                                    backgroundColor: `${color}20`,
+                                                    color: color,
+                                                    borderColor: `${color}40`,
+                                                    cursor: "pointer"
+                                                }}
+                                            >
+                                                {tag.name}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {tag.noteCount}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                onClick={() => handleDeleteClick(tag)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                            {tags.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={3} className="text-center text-muted-foreground h-24">
                                         No tags found.
@@ -165,6 +176,13 @@ export function TagList() {
                             )}
                         </TableBody>
                     </Table>
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={totalTags}
+                        perPage={perPage}
+                    />
                 </CardContent>
             </Card>
 

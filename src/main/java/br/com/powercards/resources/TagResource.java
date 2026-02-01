@@ -1,10 +1,15 @@
 package br.com.powercards.resources;
 
 import br.com.powercards.model.Tag;
+import br.com.powercards.dto.TagStats;
+import br.com.powercards.dto.PaginatedResponse;
+import br.com.powercards.dto.PaginationMeta;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import java.util.List;
 
 @Path("/v1/tags")
@@ -57,10 +62,68 @@ public class TagResource {
     @GET
     @Path("/stats")
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List tags with stats")
-    public List<br.com.powercards.dto.TagStats> listStats() {
-        return em.createQuery(
-                "SELECT new br.com.powercards.dto.TagStats(t.id, t.name, (SELECT count(n) FROM Note n WHERE n.tags LIKE concat('%', t.name, '%'))) FROM Tag t ORDER BY t.name",
-                br.com.powercards.dto.TagStats.class).getResultList();
+    public PaginatedResponse<TagStats> listStats(
+            @QueryParam("page") @DefaultValue("1") int page,
+            @QueryParam("perPage") @DefaultValue("20") int perPage,
+            @QueryParam("search") String search,
+            @Context UriInfo uriInfo) {
+
+        if (page < 1)
+            page = 1;
+        if (perPage < 1)
+            perPage = 20;
+
+        StringBuilder queryBuilder = new StringBuilder(
+                "SELECT new br.com.powercards.dto.TagStats(t.id, t.name, (SELECT count(n) FROM Note n WHERE n.tags LIKE concat('%', t.name, '%'))) FROM Tag t");
+        StringBuilder countBuilder = new StringBuilder("SELECT count(t) FROM Tag t");
+
+        if (search != null && !search.isBlank()) {
+            String where = " WHERE lower(t.name) LIKE :search";
+            queryBuilder.append(where);
+            countBuilder.append(where);
+        }
+
+        queryBuilder.append(" ORDER BY t.name");
+
+        // Panache HQL query
+        var hibQuery = em.createQuery(queryBuilder.toString(), TagStats.class);
+        var hibCountQuery = em.createQuery(countBuilder.toString(), Long.class);
+
+        if (search != null && !search.isBlank()) {
+            hibQuery.setParameter("search", "%" + search.toLowerCase() + "%");
+            hibCountQuery.setParameter("search", "%" + search.toLowerCase() + "%");
+        }
+
+        long total = hibCountQuery.getSingleResult();
+        List<TagStats> data = hibQuery
+                .setFirstResult((page - 1) * perPage)
+                .setMaxResults(perPage)
+                .getResultList();
+
+        long totalPages = (total + perPage - 1) / perPage;
+        if (totalPages == 0)
+            totalPages = 1;
+
+        String nextPageUri = null;
+        if (page < totalPages) {
+            var builder = uriInfo.getAbsolutePathBuilder()
+                    .queryParam("page", page + 1)
+                    .queryParam("perPage", perPage);
+            if (search != null)
+                builder.queryParam("search", search);
+            nextPageUri = builder.build().toString();
+        }
+
+        var lastBuilder = uriInfo.getAbsolutePathBuilder()
+                .queryParam("page", totalPages)
+                .queryParam("perPage", perPage);
+        if (search != null)
+            lastBuilder.queryParam("search", search);
+        String lastPageUri = lastBuilder.build().toString();
+
+        PaginationMeta meta = new PaginationMeta(total, page, nextPageUri,
+                lastPageUri);
+        return new PaginatedResponse<>(meta, data);
     }
 
     @DELETE

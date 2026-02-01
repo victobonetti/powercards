@@ -51,7 +51,7 @@ public class DeckResource {
         long total = query.count();
         List<Deck> decks = query.page(page - 1, perPage).list();
         List<DeckResponse> data = decks.stream()
-                .map(d -> new DeckResponse(d.id, d.name))
+                .map(d -> new DeckResponse(d.id, d.name, d.cards.size()))
                 .toList();
 
         long totalPages = (total + perPage - 1) / perPage;
@@ -93,7 +93,7 @@ public class DeckResource {
         if (deck == null) {
             throw new NotFoundException();
         }
-        return new DeckResponse(deck.id, deck.name);
+        return new DeckResponse(deck.id, deck.name, deck.cards.size());
     }
 
     @POST
@@ -105,7 +105,7 @@ public class DeckResource {
         deck.name = deckRequest.name();
         deck.persist();
         return Response.status(Response.Status.CREATED)
-                .entity(new DeckResponse(deck.id, deck.name))
+                .entity(new DeckResponse(deck.id, deck.name, 0))
                 .build();
     }
 
@@ -121,7 +121,7 @@ public class DeckResource {
             throw new NotFoundException();
         }
         entity.name = deckRequest.name();
-        return new DeckResponse(entity.id, entity.name);
+        return new DeckResponse(entity.id, entity.name, entity.cards.size());
     }
 
     @DELETE

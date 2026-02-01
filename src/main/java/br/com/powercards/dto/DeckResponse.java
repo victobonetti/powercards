@@ -1,4 +1,4 @@
 package br.com.powercards.dto;
 
-public record DeckResponse(Long id, String name) {
+public record DeckResponse(Long id, String name, long cardCount) {
 }

@@ -38,7 +38,7 @@ public class AnkiResource {
 
         anki.load(file);
         return Response.ok(anki.getDecks().stream()
-                .map(d -> new DeckResponse(d.id, d.name))
+                .map(d -> new DeckResponse(d.id, d.name, d.cards.size()))
                 .collect(java.util.stream.Collectors.toList())).build();
     }
 }

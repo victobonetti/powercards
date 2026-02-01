@@ -144,6 +144,57 @@ export interface AnkiTemplateDto {
 /**
  * 
  * @export
+ * @interface BulkDeleteRequest
+ */
+export interface BulkDeleteRequest {
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof BulkDeleteRequest
+     */
+    'ids'?: Array<number>;
+}
+/**
+ * 
+ * @export
+ * @interface BulkMoveRequest
+ */
+export interface BulkMoveRequest {
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof BulkMoveRequest
+     */
+    'cardIds'?: Array<number>;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkMoveRequest
+     */
+    'targetDeckId'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface BulkTagRequest
+ */
+export interface BulkTagRequest {
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof BulkTagRequest
+     */
+    'noteIds'?: Array<number>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkTagRequest
+     */
+    'tags'?: Array<string>;
+}
+/**
+ * 
+ * @export
  * @interface CardRequest
  */
 export interface CardRequest {
@@ -420,6 +471,12 @@ export interface DeckResponse {
      * @memberof DeckResponse
      */
     'name'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof DeckResponse
+     */
+    'cardCount'?: number;
 }
 /**
  * 
@@ -611,6 +668,25 @@ export interface PaginatedResponseNoteResponse {
      * @memberof PaginatedResponseNoteResponse
      */
     'data'?: Array<NoteResponse>;
+}
+/**
+ * 
+ * @export
+ * @interface PaginatedResponseTagStats
+ */
+export interface PaginatedResponseTagStats {
+    /**
+     * 
+     * @type {PaginationMeta}
+     * @memberof PaginatedResponseTagStats
+     */
+    'pagination'?: PaginationMeta;
+    /**
+     * 
+     * @type {Array<TagStats>}
+     * @memberof PaginatedResponseTagStats
+     */
+    'data'?: Array<TagStats>;
 }
 /**
  * 
@@ -1197,7 +1273,80 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
     return {
         /**
          * 
+         * @summary Bulk delete cards
+         * @param {BulkDeleteRequest} bulkDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1CardsBulkDeletePost: async (bulkDeleteRequest: BulkDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkDeleteRequest' is not null or undefined
+            assertParamExists('v1CardsBulkDeletePost', 'bulkDeleteRequest', bulkDeleteRequest)
+            const localVarPath = `/v1/cards/bulk/delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Bulk move cards to deck
+         * @param {BulkMoveRequest} bulkMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1CardsBulkMovePost: async (bulkMoveRequest: BulkMoveRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkMoveRequest' is not null or undefined
+            assertParamExists('v1CardsBulkMovePost', 'bulkMoveRequest', bulkMoveRequest)
+            const localVarPath = `/v1/cards/bulk/move`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkMoveRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary List all cards
+         * @param {number} [deckId] 
          * @param {number} [page] 
          * @param {number} [perPage] 
          * @param {string} [search] 
@@ -1205,7 +1354,7 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsGet: async (page?: number, perPage?: number, search?: string, sort?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1CardsGet: async (deckId?: number, page?: number, perPage?: number, search?: string, sort?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/v1/cards`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1217,6 +1366,10 @@ export const CardResourceApiAxiosParamCreator = function (configuration?: Config
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (deckId !== undefined) {
+                localVarQueryParameter['deckId'] = deckId;
+            }
 
             if (page !== undefined) {
                 localVarQueryParameter['page'] = page;
@@ -1401,7 +1554,34 @@ export const CardResourceApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Bulk delete cards
+         * @param {BulkDeleteRequest} bulkDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1CardsBulkDeletePost(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsBulkDeletePost(bulkDeleteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CardResourceApi.v1CardsBulkDeletePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Bulk move cards to deck
+         * @param {BulkMoveRequest} bulkMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1CardsBulkMovePost(bulkMoveRequest: BulkMoveRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsBulkMovePost(bulkMoveRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CardResourceApi.v1CardsBulkMovePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary List all cards
+         * @param {number} [deckId] 
          * @param {number} [page] 
          * @param {number} [perPage] 
          * @param {string} [search] 
@@ -1409,8 +1589,8 @@ export const CardResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1CardsGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseCardResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsGet(page, perPage, search, sort, options);
+        async v1CardsGet(deckId?: number, page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseCardResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1CardsGet(deckId, page, perPage, search, sort, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CardResourceApi.v1CardsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1480,7 +1660,28 @@ export const CardResourceApiFactory = function (configuration?: Configuration, b
     return {
         /**
          * 
+         * @summary Bulk delete cards
+         * @param {BulkDeleteRequest} bulkDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1CardsBulkDeletePost(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1CardsBulkDeletePost(bulkDeleteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Bulk move cards to deck
+         * @param {BulkMoveRequest} bulkMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1CardsBulkMovePost(bulkMoveRequest: BulkMoveRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1CardsBulkMovePost(bulkMoveRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary List all cards
+         * @param {number} [deckId] 
          * @param {number} [page] 
          * @param {number} [perPage] 
          * @param {string} [search] 
@@ -1488,8 +1689,8 @@ export const CardResourceApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1CardsGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseCardResponse> {
-            return localVarFp.v1CardsGet(page, perPage, search, sort, options).then((request) => request(axios, basePath));
+        v1CardsGet(deckId?: number, page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseCardResponse> {
+            return localVarFp.v1CardsGet(deckId, page, perPage, search, sort, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1544,7 +1745,32 @@ export const CardResourceApiFactory = function (configuration?: Configuration, b
 export class CardResourceApi extends BaseAPI {
     /**
      * 
+     * @summary Bulk delete cards
+     * @param {BulkDeleteRequest} bulkDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CardResourceApi
+     */
+    public v1CardsBulkDeletePost(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig) {
+        return CardResourceApiFp(this.configuration).v1CardsBulkDeletePost(bulkDeleteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Bulk move cards to deck
+     * @param {BulkMoveRequest} bulkMoveRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CardResourceApi
+     */
+    public v1CardsBulkMovePost(bulkMoveRequest: BulkMoveRequest, options?: RawAxiosRequestConfig) {
+        return CardResourceApiFp(this.configuration).v1CardsBulkMovePost(bulkMoveRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary List all cards
+     * @param {number} [deckId] 
      * @param {number} [page] 
      * @param {number} [perPage] 
      * @param {string} [search] 
@@ -1553,8 +1779,8 @@ export class CardResourceApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof CardResourceApi
      */
-    public v1CardsGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig) {
-        return CardResourceApiFp(this.configuration).v1CardsGet(page, perPage, search, sort, options).then((request) => request(this.axios, this.basePath));
+    public v1CardsGet(deckId?: number, page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig) {
+        return CardResourceApiFp(this.configuration).v1CardsGet(deckId, page, perPage, search, sort, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2037,6 +2263,78 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
     return {
         /**
          * 
+         * @summary Bulk delete notes
+         * @param {BulkDeleteRequest} bulkDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesBulkDeletePost: async (bulkDeleteRequest: BulkDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkDeleteRequest' is not null or undefined
+            assertParamExists('v1NotesBulkDeletePost', 'bulkDeleteRequest', bulkDeleteRequest)
+            const localVarPath = `/v1/notes/bulk/delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Bulk add tags to notes
+         * @param {BulkTagRequest} bulkTagRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesBulkTagsPost: async (bulkTagRequest: BulkTagRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkTagRequest' is not null or undefined
+            assertParamExists('v1NotesBulkTagsPost', 'bulkTagRequest', bulkTagRequest)
+            const localVarPath = `/v1/notes/bulk/tags`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkTagRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary List all notes
          * @param {number} [page] 
          * @param {number} [perPage] 
@@ -2241,6 +2539,32 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Bulk delete notes
+         * @param {BulkDeleteRequest} bulkDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1NotesBulkDeletePost(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesBulkDeletePost(bulkDeleteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesBulkDeletePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Bulk add tags to notes
+         * @param {BulkTagRequest} bulkTagRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1NotesBulkTagsPost(bulkTagRequest: BulkTagRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesBulkTagsPost(bulkTagRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesBulkTagsPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary List all notes
          * @param {number} [page] 
          * @param {number} [perPage] 
@@ -2320,6 +2644,26 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
     return {
         /**
          * 
+         * @summary Bulk delete notes
+         * @param {BulkDeleteRequest} bulkDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesBulkDeletePost(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1NotesBulkDeletePost(bulkDeleteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Bulk add tags to notes
+         * @param {BulkTagRequest} bulkTagRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesBulkTagsPost(bulkTagRequest: BulkTagRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1NotesBulkTagsPost(bulkTagRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary List all notes
          * @param {number} [page] 
          * @param {number} [perPage] 
@@ -2382,6 +2726,30 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
  * @extends {BaseAPI}
  */
 export class NoteResourceApi extends BaseAPI {
+    /**
+     * 
+     * @summary Bulk delete notes
+     * @param {BulkDeleteRequest} bulkDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NoteResourceApi
+     */
+    public v1NotesBulkDeletePost(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesBulkDeletePost(bulkDeleteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Bulk add tags to notes
+     * @param {BulkTagRequest} bulkTagRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NoteResourceApi
+     */
+    public v1NotesBulkTagsPost(bulkTagRequest: BulkTagRequest, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesBulkTagsPost(bulkTagRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @summary List all notes
@@ -2563,10 +2931,13 @@ export const TagResourceApiAxiosParamCreator = function (configuration?: Configu
         /**
          * 
          * @summary List tags with stats
+         * @param {number} [page] 
+         * @param {number} [perPage] 
+         * @param {string} [search] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1TagsStatsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1TagsStatsGet: async (page?: number, perPage?: number, search?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/v1/tags/stats`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2578,6 +2949,18 @@ export const TagResourceApiAxiosParamCreator = function (configuration?: Configu
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (perPage !== undefined) {
+                localVarQueryParameter['perPage'] = perPage;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
 
 
     
@@ -2642,11 +3025,14 @@ export const TagResourceApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary List tags with stats
+         * @param {number} [page] 
+         * @param {number} [perPage] 
+         * @param {string} [search] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1TagsStatsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TagStats>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1TagsStatsGet(options);
+        async v1TagsStatsGet(page?: number, perPage?: number, search?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseTagStats>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1TagsStatsGet(page, perPage, search, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['TagResourceApi.v1TagsStatsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2694,11 +3080,14 @@ export const TagResourceApiFactory = function (configuration?: Configuration, ba
         /**
          * 
          * @summary List tags with stats
+         * @param {number} [page] 
+         * @param {number} [perPage] 
+         * @param {string} [search] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1TagsStatsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<TagStats>> {
-            return localVarFp.v1TagsStatsGet(options).then((request) => request(axios, basePath));
+        v1TagsStatsGet(page?: number, perPage?: number, search?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseTagStats> {
+            return localVarFp.v1TagsStatsGet(page, perPage, search, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -2749,12 +3138,15 @@ export class TagResourceApi extends BaseAPI {
     /**
      * 
      * @summary List tags with stats
+     * @param {number} [page] 
+     * @param {number} [perPage] 
+     * @param {string} [search] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TagResourceApi
      */
-    public v1TagsStatsGet(options?: RawAxiosRequestConfig) {
-        return TagResourceApiFp(this.configuration).v1TagsStatsGet(options).then((request) => request(this.axios, this.basePath));
+    public v1TagsStatsGet(page?: number, perPage?: number, search?: string, options?: RawAxiosRequestConfig) {
+        return TagResourceApiFp(this.configuration).v1TagsStatsGet(page, perPage, search, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

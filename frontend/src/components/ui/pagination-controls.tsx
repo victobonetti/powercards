@@ -7,6 +7,7 @@ interface PaginationControlsProps {
     onPageChange: (page: number) => void;
     totalItems: number;
     perPage: number;
+    onPerPageChange?: (perPage: number) => void;
 }
 
 export function PaginationControls({
@@ -14,15 +15,34 @@ export function PaginationControls({
     totalPages,
     onPageChange,
     totalItems,
-    perPage
+    perPage,
+    onPerPageChange
 }: PaginationControlsProps) {
-    if (totalPages <= 1) return null;
+    if (totalItems === 0) return null;
 
     return (
         <div className="flex items-center justify-between px-2 py-4">
-            <div className="text-sm text-muted-foreground">
-                Showing {Math.min((currentPage - 1) * perPage + 1, totalItems)} to{" "}
-                {Math.min(currentPage * perPage, totalItems)} of {totalItems} entries
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                    <span>Rows per page</span>
+                    {onPerPageChange && (
+                        <select
+                            className="h-8 w-[70px] rounded-md border border-input bg-background px-2 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            value={perPage}
+                            onChange={(e) => onPerPageChange(Number(e.target.value))}
+                        >
+                            {[10, 25, 50, 100].map((pageSize) => (
+                                <option key={pageSize} value={pageSize}>
+                                    {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                </div>
+                <div>
+                    Showing {Math.min((currentPage - 1) * perPage + 1, totalItems)} to{" "}
+                    {Math.min(currentPage * perPage, totalItems)} of {totalItems} entries
+                </div>
             </div>
             <div className="flex items-center space-x-2">
                 <Button

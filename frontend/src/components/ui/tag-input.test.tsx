@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { TagInput } from './tag-input';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import * as api from '@/lib/api';
 
 // Mock the API
@@ -11,12 +11,6 @@ vi.mock('@/lib/api', () => ({
     }
 }));
 
-// Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-}));
 
 describe('TagInput', () => {
     beforeEach(() => {
