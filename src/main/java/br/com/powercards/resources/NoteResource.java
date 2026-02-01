@@ -21,6 +21,9 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class NoteResource {
 
+    @jakarta.inject.Inject
+    br.com.powercards.services.AnkiService ankiService;
+
     // Helper to ensure Tags exist
     private void syncTags(String tags) {
         if (tags != null && !tags.isBlank()) {
@@ -251,7 +254,7 @@ public class NoteResource {
                 note.mod,
                 note.usn,
                 note.tags,
-                note.flds,
+                ankiService.replaceMediaWithUrls(note.id, note.flds),
                 note.sfld,
                 note.csum,
                 note.flags,

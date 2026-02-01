@@ -56,3 +56,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+.brand-initials {
+  font-family: 'Caveat', cursive;
+  @apply text-2xl font-bold;
+}
+

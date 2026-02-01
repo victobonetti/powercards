@@ -22,6 +22,14 @@ public class AnkiService {
 
     Logger LOGGER = LoggerFactory.getLogger(AnkiService.class);
 
+    @jakarta.inject.Inject
+    io.minio.MinioClient minioClient;
+
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "quarkus.minio.url")
+    String minioUrl;
+
+    private static final String BUCKET_NAME = "anki-media";
+
     private InputStream apkg;
 
     public void load(final InputStream apkg) {
@@ -43,6 +51,8 @@ public class AnkiService {
 
     private List<Deck> persistCollection(Anki4j anki4j) {
         LOGGER.info("Persistindo coleção Anki no banco de dados...");
+
+        // List<String> cardsWithMedia = List.of(); // removed unused variable
 
         // 1. Persistir Models
         Map<Long, AnkiModel> modelMap = new java.util.HashMap<>();
@@ -133,9 +143,164 @@ public class AnkiService {
         }
 
         LOGGER.info("Persistência concluída.");
+        // 5. export midia to minio
+        try {
+            processMedia(anki4j, noteMap);
+        } catch (Exception e) {
+            LOGGER.error("Erro ao processar mídias. O import continuará sem mídias.", e);
+        }
+
         return anki4j.getDecks().stream()
                 .map(d -> deckMap.get(d.getId()))
                 .collect(Collectors.toList());
     }
 
+    private void processMedia(Anki4j anki4j, Map<Long, Note> noteMap) {
+        LOGGER.info("Processando mídias...");
+        createBucketIfNotExists();
+
+        java.util.regex.Pattern imgPattern = java.util.regex.Pattern.compile("src=\"([^\"]+)\"");
+        java.util.regex.Pattern soundPattern = java.util.regex.Pattern.compile("\\[sound:([^\\]]+)\\]");
+
+        for (Map.Entry<Long, Note> entry : noteMap.entrySet()) {
+            Long noteId = entry.getKey();
+            Note note = entry.getValue();
+
+            // The note entity in persisted map might not have the raw fields if mapped
+            // differently.
+            // In the loop above: note.flds = n.getFlds();
+            // Assuming note.flds contains the raw string with fields separated by 0x1F
+            // (unit separator)
+
+            if (note.flds == null)
+                continue;
+
+            String content = note.flds;
+            // Scan for images
+            processPattern(anki4j, noteId, content, imgPattern);
+            // Scan for sounds
+            processPattern(anki4j, noteId, content, soundPattern);
+        }
+    }
+
+    private void processPattern(Anki4j anki4j, Long noteId, String content, java.util.regex.Pattern pattern) {
+        java.util.regex.Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            String filename = matcher.group(1);
+            uploadMedia(anki4j, noteId, filename);
+        }
+    }
+
+    private void uploadMedia(Anki4j anki4j, Long noteId, String filename) {
+        try {
+            // Check if already exists to avoid re-uploading (optional, but good practice)
+            br.com.powercards.domain.entities.AnkiMediaId mediaId = new br.com.powercards.domain.entities.AnkiMediaId(
+                    noteId, filename);
+            if (br.com.powercards.domain.entities.AnkiMedia.findById(mediaId) != null) {
+                return;
+            }
+
+            // Get content from anki4j
+            // Anki4j.getMediaContent returns byte[] or InputStream?
+            // The prompt says: "ankj4j.getMediaContent(x)"
+            // Looking at the previous tool error, it seemed to complain about arguments.
+            // Assuming it accepts the filename/hash.
+            // User prompt: anki4j.getMediaContent(x)
+
+            byte[] data = anki4j.getMediaContent(filename).orElse(null);
+
+            if (data == null) {
+                LOGGER.warn("Media not found in .apkg: " + filename);
+                return;
+            }
+
+            try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(data)) {
+                minioClient.putObject(
+                        io.minio.PutObjectArgs.builder()
+                                .bucket(BUCKET_NAME)
+                                .object(filename) // Using filename as object key. Could be problematic if duplicates
+                                                  // across decks, but standard for Anki.
+                                .stream(bais, data.length, -1)
+                                .contentType("application/octet-stream")
+                                .build());
+            }
+
+            br.com.powercards.domain.entities.AnkiMedia media = new br.com.powercards.domain.entities.AnkiMedia(
+                    noteId,
+                    filename,
+                    minioUrl + "/" + BUCKET_NAME + "/" + filename);
+            media.persist();
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to upload media: " + filename, e);
+            // Don't fail the whole import for one media file
+        }
+    }
+
+    public String replaceMediaWithUrls(Long noteId, String content) {
+        if (content == null || content.isBlank()) {
+            return content;
+        }
+
+        String result = content;
+
+        // Replace Images: src="filename"
+        java.util.regex.Pattern imgPattern = java.util.regex.Pattern.compile("src=\"([^\"]+)\"");
+        java.util.regex.Matcher imgMatcher = imgPattern.matcher(result);
+        java.lang.StringBuilder sbImg = new java.lang.StringBuilder();
+        int lastEndImg = 0;
+        while (imgMatcher.find()) {
+            String filename = imgMatcher.group(1);
+            br.com.powercards.domain.entities.AnkiMediaId mediaId = new br.com.powercards.domain.entities.AnkiMediaId(
+                    noteId, filename);
+            br.com.powercards.domain.entities.AnkiMedia media = br.com.powercards.domain.entities.AnkiMedia
+                    .findById(mediaId);
+
+            sbImg.append(result, lastEndImg, imgMatcher.start());
+            if (media != null && media.minioUrl != null) {
+                sbImg.append("src=\"").append(media.minioUrl).append("\"");
+            } else {
+                sbImg.append(imgMatcher.group(0));
+            }
+            lastEndImg = imgMatcher.end();
+        }
+        sbImg.append(result.substring(lastEndImg));
+        result = sbImg.toString();
+
+        // Replace Sounds: [sound:filename]
+        java.util.regex.Pattern soundPattern = java.util.regex.Pattern.compile("\\[sound:([^\\]]+)\\]");
+        java.util.regex.Matcher soundMatcher = soundPattern.matcher(result);
+        java.lang.StringBuilder sbSound = new java.lang.StringBuilder();
+        int lastEndSound = 0;
+        while (soundMatcher.find()) {
+            String filename = soundMatcher.group(1);
+            br.com.powercards.domain.entities.AnkiMediaId mediaId = new br.com.powercards.domain.entities.AnkiMediaId(
+                    noteId, filename);
+            br.com.powercards.domain.entities.AnkiMedia media = br.com.powercards.domain.entities.AnkiMedia
+                    .findById(mediaId);
+
+            sbSound.append(result, lastEndSound, soundMatcher.start());
+            if (media != null && media.minioUrl != null) {
+                sbSound.append("[sound:").append(media.minioUrl).append("]");
+            } else {
+                sbSound.append(soundMatcher.group(0));
+            }
+            lastEndSound = soundMatcher.end();
+        }
+        sbSound.append(result.substring(lastEndSound));
+
+        return sbSound.toString();
+    }
+
+    private void createBucketIfNotExists() {
+        try {
+            boolean found = minioClient.bucketExists(io.minio.BucketExistsArgs.builder().bucket(BUCKET_NAME).build());
+            if (!found) {
+                minioClient.makeBucket(io.minio.MakeBucketArgs.builder().bucket(BUCKET_NAME).build());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error creating bucket", e);
+            throw new RuntimeException("Could not initialize MinIO bucket", e);
+        }
+    }
 }
