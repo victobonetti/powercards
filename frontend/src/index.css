@@ -10,7 +10,8 @@
     --card-foreground: 20 14% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 4%;
-    --primary: 24.6 95% 53.1%; /* Tangerine */
+    --primary: 24.6 95% 53.1%;
+    /* Tangerine */
     --primary-foreground: 60 9.1% 97.8%;
     --secondary: 60 4.8% 95.9%;
     --secondary-foreground: 24 9.8% 10%;
@@ -23,16 +24,19 @@
     --border: 20 5.9% 90%;
     --input: 20 5.9% 90%;
     --ring: 24.6 95% 53.1%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
+
   .dark {
-    --background: 24 44% 7%; /* #1a1008 - Dark Brown */
+    --background: 24 44% 7%;
+    /* #1a1008 - Dark Brown */
     --foreground: 60 9.1% 97.8%;
-    --card: 24 40% 10%; 
+    --card: 24 40% 10%;
     --card-foreground: 60 9.1% 97.8%;
     --popover: 24 44% 7%;
     --popover-foreground: 60 9.1% 97.8%;
-    --primary: 20.5 90.2% 48.2%; /* Tangerine */
+    --primary: 20.5 90.2% 48.2%;
+    /* Tangerine */
     --primary-foreground: 60 9.1% 97.8%;
     --secondary: 24 30% 15%;
     --secondary-foreground: 60 9.1% 97.8%;
@@ -52,13 +56,83 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-family: 'Source Serif 4', serif;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    background-blend-mode: overlay;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
   }
 }
+
+@layer base {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-fraunces {
+    font-family: 'Fraunces', serif !important;
+    font-weight: 700;
+  }
+
+  button,
+  [role="button"],
+  .button-font,
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+  }
+
+  /* Force Serif on Sidebar Elements */
+  aside,
+  aside button,
+  aside [role="button"],
+  nav,
+  nav a,
+  .nav-font,
+  .font-serif {
+    font-family: 'Source Serif 4', serif !important;
+    font-weight: 500;
+  }
+
+  table,
+  .card-content,
+  .table-font {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    /* Ensure normal weight for clarity */
+  }
+
+  /* Refined Button Aesthetic */
+  button,
+  [role="button"] {
+    position: relative;
+    /* Thin border override handled by specific components usually, but defining a base feel here */
+  }
+}
+
+@layer components {
+
+  /* Enhance shadcn buttons with texture and fade */
+  .btn-texture {
+    @apply border border-primary/20 bg-opacity-90 backdrop-blur-[2px] shadow-sm transition-all duration-200;
+  }
+
+  /* Apply to default button classes if needed, or specific variants */
+}
+
 
 .brand-initials {
   font-family: 'Caveat', cursive;
   @apply text-2xl font-bold;
 }
-

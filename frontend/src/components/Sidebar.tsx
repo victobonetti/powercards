@@ -56,7 +56,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     <Button
                         variant={currentView === "upload" ? "secondary" : "ghost"}
                         className={cn(
-                            "w-full justify-start transition-all duration-200",
+                            "w-full justify-start transition-all duration-200 font-serif",
                             currentView === "upload" ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
                             !isExpanded && "justify-center px-2"
                         )}
@@ -69,7 +69,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     <Button
                         variant={currentView === "decks" ? "secondary" : "ghost"}
                         className={cn(
-                            "w-full justify-start transition-all duration-200",
+                            "w-full justify-start transition-all duration-200 font-serif ",
                             currentView === "decks" ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
                             !isExpanded && "justify-center px-2"
                         )}
@@ -82,7 +82,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     <Button
                         variant={currentView === "tags" ? "secondary" : "ghost"}
                         className={cn(
-                            "w-full justify-start transition-all duration-200",
+                            "w-full justify-start transition-all duration-200 font-serif",
                             currentView === "tags" ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
                             !isExpanded && "justify-center px-2"
                         )}

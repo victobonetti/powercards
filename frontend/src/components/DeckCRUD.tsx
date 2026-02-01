@@ -259,7 +259,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                                     onClick={() => deck.id && setSelectedDeck({ id: deck.id, name: deck.name || "Untitled" })}
                                 >
                                     <TableCell className="text-xs text-muted-foreground">{deck.id}</TableCell>
-                                    <TableCell className="font-medium">{deck.name}</TableCell>
+                                    <TableCell>{deck.name}</TableCell>
                                     <TableCell className="text-right">{deck.cardCount}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>

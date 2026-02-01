@@ -5,6 +5,7 @@ import { NoteResponse, AnkiModelResponse } from "@/api/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "./ui/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Plus, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -214,8 +215,11 @@ export function NoteCRUD() {
                     <div className="w-full h-full flex flex-col">
                         <Card className="flex flex-col border shadow-sm flex-1 overflow-hidden">
                             <CardHeader className="p-8 pb-4 space-y-4 border-b">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-2xl font-bold tracking-tight">Notes</h2>
+                                <PageHeader
+                                    title="Notes"
+                                    description="Search and manage all notes in your collection."
+                                    className="mb-0"
+                                >
                                     <div className="flex items-center gap-2">
                                         <Input
                                             placeholder="Search content or tag=..."
@@ -282,7 +286,7 @@ export function NoteCRUD() {
                                             {isSelectionMode ? "Cancel" : "Select"}
                                         </Button>
                                     </div>
-                                </div>
+                                </PageHeader>
 
                                 {/* Bulk Actions Bar - Moved inside header area */}
                                 {selectedIds.length > 0 && (
@@ -366,7 +370,7 @@ export function NoteCRUD() {
                                                     </TableCell>
                                                 )}
                                                 <TableCell className="text-xs text-muted-foreground py-1 h-8">{note.id}</TableCell>
-                                                <TableCell className="font-medium max-w-xs truncate text-xs py-1 h-8">
+                                                <TableCell className="max-w-xs truncate text-xs py-1 h-8">
                                                     {stripHtml(note.fields?.split("\u001f")[0] || "")}
                                                 </TableCell>
                                                 <TableCell>

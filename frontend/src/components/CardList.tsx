@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "./ui/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PaginationControls } from "./ui/pagination-controls";
 import { useToast } from "@/hooks/use-toast";
@@ -189,12 +190,15 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                     <div className="w-full h-full flex flex-col">
                         <Card className="flex flex-col border shadow-sm flex-1 overflow-hidden">
                             <CardHeader className="p-8 pb-4 space-y-4 border-b">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
+                                <PageHeader
+                                    title={deckName}
+                                    description="Review and manage cards in this deck."
+                                    className="mb-0"
+                                >
+                                    <div className="flex items-center gap-2">
                                         <Button variant="ghost" size="icon" onClick={onBack}>
                                             <ArrowLeft className="h-4 w-4" />
                                         </Button>
-                                        <h2 className="text-2xl font-bold tracking-tight">{deckName} - Cards</h2>
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -212,7 +216,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                             {isSelectionMode ? "Cancel" : "Select"}
                                         </Button>
                                     </div>
-                                </div>
+                                </PageHeader>
 
                                 {/* Bulk Actions Bar */}
                                 {selectedIds.length > 0 && (

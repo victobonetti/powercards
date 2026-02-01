@@ -8,6 +8,7 @@ import { Layers, FileText } from "lucide-react";
 import { Layout } from "./components/Layout";
 import { UploadAnki } from "./components/UploadAnki";
 import { ThemeProvider } from "./components/theme-provider";
+import { PageHeader } from "./components/ui/page-header";
 
 function App() {
   const navigate = useNavigate();
@@ -49,8 +50,10 @@ function App() {
           <Route path="/upload" element={<Navigate to="/" replace />} />
           <Route path="/tags" element={
             <div className="space-y-8 p-4">
-              <h2 className="text-3xl font-bold tracking-tight">Tags</h2>
-              <p className="text-muted-foreground">Manage your collection tags.</p>
+              <PageHeader
+                title="Tags"
+                description="Manage your collection tags."
+              />
               <TagList />
             </div>
           } />
@@ -81,11 +84,11 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
 
   return (
     <div className="flex flex-col h-full gap-6 p-6 pb-0">
-      <div className="flex items-center justify-between flex-shrink-0">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">My Decks</h2>
-          <p className="text-muted-foreground">Manage your decks and notes here.</p>
-        </div>
+      <PageHeader
+        title="My Decks"
+        description="Manage your decks and notes here."
+        className="mb-0"
+      >
         <div className="flex flex-col items-end gap-1">
           <span className="text-xs font-medium text-muted-foreground mr-1">View</span>
           <div className="flex items-center bg-muted p-1 rounded-lg">
@@ -107,7 +110,7 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
             </Button>
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       <div className="flex-1 min-h-0">
         {activeTab === "decks" ? <DeckCRUD highlightNew={highlightNewDecks} /> : <NoteCRUD />}
