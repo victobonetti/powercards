@@ -174,7 +174,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
     };
 
     return (
-        <div className="flex h-full flex-col overflow-hidden p-10">
+        <div className="flex h-full flex-col overflow-hidden">
             <div className="flex h-full overflow-hidden gap-6">
                 {/* Main List Area */}
                 <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${editingCard ? 'mr-0' : ''}`}>
