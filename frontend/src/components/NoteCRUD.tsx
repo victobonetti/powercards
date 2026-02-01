@@ -61,6 +61,41 @@ export function NoteCRUD() {
         }
     }, [isSelectionMode]);
 
+    // Keyboard Navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Only navigate if a note is currently selected/editing
+            if (!editingNote) return;
+
+            // Do not navigate if user is typing in an input
+            const target = e.target as HTMLElement;
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable) {
+                return;
+            }
+
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+
+                const currentIndex = notes.findIndex(n => n.id === editingNote.id);
+                if (currentIndex === -1) return;
+
+                let newIndex = currentIndex;
+                if (e.key === 'ArrowDown') {
+                    newIndex = Math.min(notes.length - 1, currentIndex + 1);
+                } else {
+                    newIndex = Math.max(0, currentIndex - 1);
+                }
+
+                if (newIndex !== currentIndex) {
+                    setEditingNote(notes[newIndex]);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [editingNote, notes]);
+
     useEffect(() => {
         setSelectedIds([]);
     }, [currentPage, debouncedSearch]);

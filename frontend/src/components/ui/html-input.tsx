@@ -33,6 +33,10 @@ export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInpu
     // Track if we are currently editing to prevent external updates from messing with cursor
     const isEditingRef = useRef(false);
 
+    // Image Modal State
+    const [imageModalOpen, setImageModalOpen] = useState(false);
+    const [imageModalSrc, setImageModalSrc] = useState<string | null>(null);
+
     // Initial Sync and External Updates
     useEffect(() => {
         if (!isEditingRef.current) {
@@ -70,18 +74,43 @@ export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInpu
         isEditingRef.current = false;
     };
 
+    const handlePreviewClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'IMG') {
+            e.preventDefault();
+            const img = target as HTMLImageElement;
+            setImageModalSrc(img.src);
+            setImageModalOpen(true);
+        }
+    };
+
     // Render Preview (Read Only)
     if (disabled) {
         return (
-            <div
-                id={id ? `${id}-preview` : undefined}
-                className={cn(
-                    "min-h-[80px] w-full bg-muted/10 px-3 py-2 text-sm border rounded-md overflow-auto",
-                    "prose prose-sm dark:prose-invert max-w-none",
-                    className
-                )}
-                dangerouslySetInnerHTML={{ __html: value }}
-            />
+            <>
+                <div
+                    id={id ? `${id}-preview` : undefined}
+                    className={cn(
+                        "min-h-[80px] w-full bg-muted/10 px-3 py-2 text-sm border rounded-md overflow-auto",
+                        "prose prose-sm dark:prose-invert max-w-none",
+                        className
+                    )}
+                    dangerouslySetInnerHTML={{ __html: value }}
+                    onClick={handlePreviewClick}
+                />
+
+                <Dialog open={imageModalOpen} onOpenChange={setImageModalOpen}>
+                    <DialogContent className="max-w-4xl p-0 overflow-hidden bg-transparent border-none shadow-none flex justify-center items-center">
+                        {imageModalSrc && (
+                            <img
+                                src={imageModalSrc}
+                                alt="Expanded view"
+                                className="max-w-full max-h-[90vh] object-contain rounded-md"
+                            />
+                        )}
+                    </DialogContent>
+                </Dialog>
+            </>
         );
     }
 
