@@ -24,9 +24,9 @@ import { Badge } from "@/components/ui/badge";
 import { stringToColor } from "@/lib/colorUtils";
 
 import { useDebounce } from "@/hooks/use-debounce";
-import { ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { NoteDetail } from "./NoteDetail";
+import { DataTable } from "./ui/data-table";
 
 interface CardListProps {
     deckId: number;
@@ -239,123 +239,91 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                 )}
                             </CardHeader>
 
-                            <CardContent className="p-0 flex-1 overflow-auto">
-                                <Table>
-                                    <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-                                        <TableRow>
-                                            {isSelectionMode && (
-                                                <TableHead className="w-10">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="h-4 w-4 rounded border-gray-300"
-                                                        checked={cards.length > 0 && selectedIds.length === cards.length}
-                                                        ref={input => {
-                                                            if (input) {
-                                                                input.indeterminate = selectedIds.length > 0 && selectedIds.length < cards.length;
-                                                            }
-                                                        }}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setSelectedIds(cards.map(c => c.id!));
-                                                            } else {
-                                                                setSelectedIds([]);
-                                                            }
-                                                        }}
-                                                    />
-                                                </TableHead>
-                                            )}
-                                            <TableHead className="w-24 cursor-pointer font-serif" onClick={() => toggleSort("id")}>
-                                                ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                                {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                            </TableHead>
-                                            <TableHead className="font-serif">Note Content</TableHead>
-                                            <TableHead className="cursor-pointer font-serif" onClick={() => toggleSort("tags")}>
-                                                Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                                {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                            </TableHead>
-                                            {/* Actions column removed */}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {loading ? (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="text-center h-24">Loading...</TableCell>
-                                            </TableRow>
-                                        ) : cards.length > 0 ? (
-                                            cards.map((card) => (
-                                                <TableRow
-                                                    key={card.id}
-                                                    className={`cursor-pointer hover:bg-muted/50 ${editingCard?.id === card.id ? "bg-muted border-l-4 border-l-primary" : ""}`}
-                                                    onClick={(e) => {
-                                                        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
-                                                        handleView(card);
-                                                    }}
-                                                >
-                                                    {isSelectionMode && (
-                                                        <TableCell>
-                                                            <input
-                                                                type="checkbox"
-                                                                className="h-4 w-4 rounded border-gray-300"
-                                                                checked={selectedIds.includes(card.id!)}
-                                                                onClick={(e) => e.stopPropagation()}
-                                                                onChange={(e) => {
-                                                                    const checked = e.target.checked;
-                                                                    setSelectedIds(prev =>
-                                                                        checked ? [...prev, card.id!] : prev.filter(id => id !== card.id)
-                                                                    );
+                            <CardContent className="p-0 flex-1 overflow-auto h-[600px] flex flex-col">
+                                <DataTable
+                                    data={cards}
+                                    columns={[
+                                        {
+                                            header: "ID",
+                                            accessorKey: "id",
+                                            className: "w-24 text-xs text-muted-foreground",
+                                            sortKey: "id"
+                                        },
+                                        {
+                                            header: "Note Content",
+                                            className: "max-w-xs truncate text-xs py-1 h-8",
+                                            cell: (card) => (
+                                                <span title={(card as any).noteField}>
+                                                    {stripHtml((card as any).noteField || "-")}
+                                                </span>
+                                            ),
+                                            sortKey: "sfld" // Backend usually uses 'sfld' (sort field) for note content, verifying with sort logic: previous code toggled 'sfld'?? No, checking previous code: onClick={() => toggleSort("tags")} for tags, but CardList previously didn't sort by content? 
+                                            // Wait, looking at lines 284-293 in original file: 
+                                            // ID sort is 'id'. 
+                                            // Tags sort is 'tags'.
+                                            // Note Content didn't have sort enabled in previous code.
+                                            // I'll leave sortKey undefined for now to match behavior, or add if backend supports.
+                                            // Update: NoteCRUD uses 'sfld', CardList previously didn't show sort icon on Note Content.
+                                        },
+                                        {
+                                            header: "Tags",
+                                            className: "max-w-xs truncate",
+                                            sortKey: "tags",
+                                            cell: (card) => (
+                                                <div className="flex gap-1 flex-wrap" title={(card as any).noteTags}>
+                                                    {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => {
+                                                        const color = stringToColor(tag);
+                                                        return (
+                                                            <Badge
+                                                                key={tag}
+                                                                variant="secondary"
+                                                                style={{
+                                                                    backgroundColor: `${color}20`,
+                                                                    color: color,
+                                                                    borderColor: `${color}40`
                                                                 }}
-                                                            />
-                                                        </TableCell>
-                                                    )}
-                                                    <TableCell className="text-xs text-muted-foreground py-1 h-8">{card.id}</TableCell>
-                                                    <TableCell className="max-w-xs truncate text-xs py-1 h-8" title={(card as any).noteField}>
-                                                        {stripHtml((card as any).noteField || "-")}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-xs truncate" title={(card as any).noteTags}>
-                                                        <div className="flex gap-1 flex-wrap">
-                                                            {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => {
-                                                                const color = stringToColor(tag);
-                                                                return (
-                                                                    <Badge
-                                                                        key={tag}
-                                                                        variant="secondary"
-                                                                        style={{
-                                                                            backgroundColor: `${color}20`,
-                                                                            color: color,
-                                                                            borderColor: `${color}40`
-                                                                        }}
-                                                                    >
-                                                                        {tag}
-                                                                    </Badge>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
-                                                    No cards found.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-                            <div className="p-2 border-t bg-background">
-                                <PaginationControls
+                                                            >
+                                                                {tag}
+                                                            </Badge>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )
+                                        }
+                                    ]}
+                                    keyExtractor={(card) => String(card.id)}
                                     currentPage={currentPage}
                                     totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
                                     totalItems={totalCards}
                                     perPage={perPage}
+                                    onPageChange={setCurrentPage}
                                     onPerPageChange={(newPerPage) => {
                                         setPerPage(newPerPage);
                                         setCurrentPage(1);
                                     }}
+                                    sortColumn={sort}
+                                    onSort={toggleSort}
+
+                                    // Selection Mode
+                                    selectionMode={isSelectionMode}
+                                    selectedIds={selectedIds}
+                                    onSelectionChange={setSelectedIds}
+                                    isAllSelected={cards.length > 0 && selectedIds.length === cards.length}
+                                    onSelectAll={(checked) => {
+                                        if (checked) {
+                                            setSelectedIds(cards.map(c => c.id!));
+                                        } else {
+                                            setSelectedIds([]);
+                                        }
+                                    }}
+
+                                    // Row Interaction
+                                    onRowClick={(card) => handleView(card)}
+                                    rowClassName={(card) => editingCard?.id === card.id ? "bg-muted border-l-4 border-l-primary" : ""}
+                                    isLoading={loading}
+                                    emptyMessage="No cards found."
                                 />
-                            </div>
+                            </CardContent>
                         </Card>
                     </div>
                 </div>

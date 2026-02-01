@@ -16,10 +16,8 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { useDebounce } from "@/hooks/use-debounce";
-import { PaginationControls } from "./ui/pagination-controls";
-import { Badge } from "@/components/ui/badge";
-import { stringToColor } from "@/lib/colorUtils";
 import { useNavigate } from "react-router-dom";
+import { DataTable, DataTableColumn } from "./ui/data-table";
 
 export function TagList() {
     const [tags, setTags] = useState<TagStats[]>([]);
@@ -117,71 +115,66 @@ export function TagList() {
                         />
                     </div>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="font-serif">Name</TableHead>
-                                <TableHead className="w-32 text-right font-serif">Notes</TableHead>
-                                <TableHead className="w-20 text-right font-serif">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {tags.map((tag) => {
-                                const color = tag.name ? stringToColor(tag.name) : "#ccc";
-                                return (
-                                    <TableRow
-                                        key={tag.id}
-                                        className="hover:bg-muted/50 cursor-pointer"
+                <CardContent className="h-[600px] flex flex-col p-0">
+                    <DataTable
+                        data={tags}
+                        columns={[
+                            {
+                                header: "Name",
+                                accessorKey: "name",
+                                className: "font-medium",
+                                sortKey: undefined, // Backend sort not dynamic yet in TagList as per code
+                                cell: (tag) => {
+                                    const color = tag.name ? stringToColor(tag.name) : "#ccc";
+                                    return (
+                                        <Badge
+                                            variant="secondary"
+                                            style={{
+                                                backgroundColor: `${color}20`,
+                                                color: color,
+                                                borderColor: `${color}40`,
+                                                cursor: "pointer"
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (tag.name) handleTagClick(tag.name);
+                                            }}
+                                        >
+                                            {tag.name}
+                                        </Badge>
+                                    );
+                                }
+                            },
+                            {
+                                header: "Notes",
+                                accessorKey: "noteCount",
+                                className: "text-right w-32",
+                            },
+                            {
+                                header: "Actions",
+                                className: "text-right w-20",
+                                cell: (tag) => (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                         onClick={(e) => {
-                                            if ((e.target as HTMLElement).closest('button')) return;
-                                            if (tag.name) handleTagClick(tag.name);
+                                            e.stopPropagation();
+                                            handleDeleteClick(tag);
                                         }}
                                     >
-                                        <TableCell className="font-medium">
-                                            <Badge
-                                                variant="secondary"
-                                                style={{
-                                                    backgroundColor: `${color}20`,
-                                                    color: color,
-                                                    borderColor: `${color}40`,
-                                                    cursor: "pointer"
-                                                }}
-                                            >
-                                                {tag.name}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {tag.noteCount}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                onClick={() => handleDeleteClick(tag)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                            {tags.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-center text-muted-foreground h-24">
-                                        No tags found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                    <PaginationControls
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )
+                            }
+                        ]}
+                        keyExtractor={(tag) => String(tag.id)}
                         currentPage={currentPage}
                         totalPages={totalPages}
-                        onPageChange={setCurrentPage}
                         totalItems={totalTags}
                         perPage={perPage}
+                        onPageChange={setCurrentPage}
+                        emptyMessage="No tags found."
                     />
                 </CardContent>
             </Card>

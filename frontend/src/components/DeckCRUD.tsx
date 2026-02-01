@@ -24,11 +24,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CardList } from "./CardList";
 
-import { PaginationControls } from "./ui/pagination-controls";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 
 import { useDebounce } from "@/hooks/use-debounce";
-import { ArrowUpDown } from "lucide-react";
+import { DataTable } from "./ui/data-table";
 
 interface DeckCRUDProps {
     highlightNew?: boolean;
@@ -235,66 +234,59 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-24 cursor-pointer font-serif" onClick={() => toggleSort("id")}>
-                                    ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                </TableHead>
-                                <TableHead className="cursor-pointer font-serif" onClick={() => toggleSort("name")}>
-                                    Name {sort === "name" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-name" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                </TableHead>
-                                <TableHead className="w-32 text-right font-serif">Cards</TableHead>
-                                <TableHead className="text-right font-serif">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {decks.map((deck) => (
-                                <TableRow
-                                    key={deck.id}
-                                    className="cursor-pointer hover:bg-muted/50"
-                                    onClick={() => deck.id && setSelectedDeck({ id: deck.id, name: deck.name || "Untitled" })}
-                                >
-                                    <TableCell className="text-xs text-muted-foreground">{deck.id}</TableCell>
-                                    <TableCell>{deck.name}</TableCell>
-                                    <TableCell className="text-right">{deck.cardCount}</TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                                <DropdownMenuItem onClick={(e) => handleEditClick(deck, e)}>
-                                                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-600" onClick={(e) => handleDeleteClick(deck, e)}>
-                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {decks.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-center text-muted-foreground h-24">
-                                        No decks found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                    <PaginationControls
+                <CardContent className="h-[600px] flex flex-col p-0">
+                    <DataTable
+                        data={decks}
+                        columns={[
+                            {
+                                header: "ID",
+                                accessorKey: "id",
+                                className: "w-24 text-xs text-muted-foreground",
+                                sortKey: "id"
+                            },
+                            {
+                                header: "Name",
+                                accessorKey: "name",
+                                sortKey: "name"
+                            },
+                            {
+                                header: "Cards",
+                                accessorKey: "cardCount",
+                                className: "text-right w-32",
+                            },
+                            {
+                                header: "Actions",
+                                className: "text-right",
+                                cell: (deck) => (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                            <DropdownMenuItem onClick={(e) => handleEditClick(deck, e)}>
+                                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="text-red-600" onClick={(e) => handleDeleteClick(deck, e)}>
+                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )
+                            }
+                        ]}
+                        keyExtractor={(deck) => String(deck.id)}
                         currentPage={currentPage}
                         totalPages={totalPages}
-                        onPageChange={setCurrentPage}
                         totalItems={totalDecks}
                         perPage={perPage}
+                        onPageChange={setCurrentPage}
+                        sortColumn={sort}
+                        onSort={toggleSort}
+                        emptyMessage="No decks found."
+                        onRowClick={(deck) => deck.id && setSelectedDeck({ id: deck.id, name: deck.name || "Untitled" })}
+                        rowClassName={() => "cursor-pointer hover:bg-muted/50"}
                     />
                 </CardContent>
             </Card>
