@@ -13,7 +13,6 @@ services:
     command: server /data --console-address ":9090"
   db:
     image: postgres:15
-    container_name: powercards-db
     environment:
       POSTGRES_USER: powercards
       POSTGRES_PASSWORD: powercards
@@ -25,7 +24,6 @@ services:
 
   adminer:
     image: adminer
-    container_name: powercards-adminer
     restart: always
     ports:
       - "8080:8080"

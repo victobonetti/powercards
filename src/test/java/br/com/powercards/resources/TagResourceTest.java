@@ -74,9 +74,9 @@ public class TagResourceTest {
                 .when().get("/v1/tags/stats")
                 .then()
                 .statusCode(200)
-                .body("find { it.name == 'urgent' }.noteCount", is(2))
-                .body("find { it.name == 'important' }.noteCount", is(1))
-                .body("find { it.name == 'waiting' }.noteCount", is(0));
+                .body("data.find { it.name == 'urgent' }.noteCount", is(2))
+                .body("data.find { it.name == 'important' }.noteCount", is(1))
+                .body("data.find { it.name == 'waiting' }.noteCount", is(0));
     }
 
     @Test

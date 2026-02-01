@@ -31,14 +31,18 @@ public class AnkiResource {
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "File uploaded successfully")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "400", description = "No file provided")
     public Response upload(@RestForm("file") InputStream file) {
+        logger.info("Recebendo requisição de upload de arquivo .apkg...");
         if (file == null) {
-            logger.warn("Não foi encontrado arquivo .apk");
+            logger.warn("Arquivo .apkg não fornecido na requisição.");
             return Response.status(400).build();
         }
 
         anki.load(file);
-        return Response.ok(anki.getDecks().stream()
+        Response response = Response.ok(anki.getDecks().stream()
                 .map(d -> new DeckResponse(d.id, d.name, d.cards.size()))
                 .collect(java.util.stream.Collectors.toList())).build();
+
+        logger.info("Upload e processamento do arquivo .apkg finalizados com sucesso.");
+        return response;
     }
 }

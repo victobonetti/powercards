@@ -22,6 +22,9 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class CardResource {
 
+    @jakarta.inject.Inject
+    br.com.powercards.services.AnkiService ankiService;
+
     @GET
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all cards")
     public PaginatedResponse<CardResponse> list(
@@ -225,6 +228,10 @@ public class CardResource {
     }
 
     private CardResponse toResponse(Card card) {
+        String noteField = card.note != null && card.note.flds != null ? card.note.flds.split("\u001f")[0] : "";
+        if (card.note != null) {
+            noteField = ankiService.replaceMediaWithUrls(card.note.id, noteField);
+        }
         return new CardResponse(
                 card.id,
                 card.note != null ? card.note.id : null,
@@ -244,7 +251,7 @@ public class CardResource {
                 card.odid,
                 card.flags,
                 card.data,
-                card.note != null && card.note.flds != null ? card.note.flds.split("\u001f")[0] : "",
+                noteField,
                 card.note != null ? card.note.tags : "");
     }
 }

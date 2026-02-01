@@ -45,7 +45,7 @@ public class AnkiServiceTest {
     @Test
     public void testReplaceAudio() {
         String content = "Listen to this: [sound:audio1.mp3] end.";
-        String expected = "Listen to this: [sound:http://minio/bucket/audio1.mp3] end.";
+        String expected = "Listen to this: <audio controls src=\"http://minio/bucket/audio1.mp3\"></audio> end.";
         String result = ankiService.replaceMediaWithUrls(NOTE_ID, content);
         assertEquals(expected, result);
     }
@@ -53,7 +53,7 @@ public class AnkiServiceTest {
     @Test
     public void testReplaceMixed() {
         String content = "Image <img src=\"image1.jpg\"> and Sound [sound:audio1.mp3]";
-        String expected = "Image <img src=\"http://minio/bucket/image1.jpg\"> and Sound [sound:http://minio/bucket/audio1.mp3]";
+        String expected = "Image <img src=\"http://minio/bucket/image1.jpg\"> and Sound <audio controls src=\"http://minio/bucket/audio1.mp3\"></audio>";
         String result = ankiService.replaceMediaWithUrls(NOTE_ID, content);
         assertEquals(expected, result);
     }
