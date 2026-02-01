@@ -37,7 +37,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const [decks, setDecks] = useState<DeckResponse[]>([]);
     const [totalDecks, setTotalDecks] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
-    const [perPage] = useState(10);
+    const [perPage] = useState(25);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     // Search & Sort

@@ -31,7 +31,7 @@ export function NoteCRUD() {
     const [models, setModels] = useState<AnkiModelResponse[]>([]);
     const [totalNotes, setTotalNotes] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
-    const [perPage, setPerPage] = useState(10);
+    const [perPage, setPerPage] = useState(25);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [selectedModel, setSelectedModel] = useState<AnkiModelResponse | null>(null);
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});

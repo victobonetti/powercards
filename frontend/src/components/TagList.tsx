@@ -24,7 +24,7 @@ export function TagList() {
     const [tags, setTags] = useState<TagStats[]>([]);
     const [totalTags, setTotalTags] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
-    const [perPage] = useState(10);
+    const [perPage] = useState(25);
 
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 300);
