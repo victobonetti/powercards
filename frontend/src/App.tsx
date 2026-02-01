@@ -48,19 +48,19 @@ function App() {
           <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
           <Route path="/upload" element={<Navigate to="/" replace />} />
           <Route path="/tags" element={
-            <div className="space-y-6">
+            <div className="space-y-8 p-4">
               <h2 className="text-3xl font-bold tracking-tight">Tags</h2>
               <p className="text-muted-foreground">Manage your collection tags.</p>
               <TagList />
             </div>
           } />
           <Route path="/decks" element={
-            <div className="space-y-6">
+            <div className="h-[calc(100vh-4rem)] w-full">
               <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
             </div>
           } />
           <Route path="/notes" element={
-            <div className="space-y-6">
+            <div className="h-[calc(100vh-4rem)] w-full">
               <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
             </div>
           } />
@@ -80,8 +80,8 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
   };
 
   return (
-    <>
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full gap-6 p-6 pb-0">
+      <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">My Decks</h2>
           <p className="text-muted-foreground">Manage your decks and notes here.</p>
@@ -109,10 +109,10 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
         </div>
       </div>
 
-      <div className="border rounded-lg p-6 bg-card">
+      <div className="flex-1 min-h-0">
         {activeTab === "decks" ? <DeckCRUD highlightNew={highlightNewDecks} /> : <NoteCRUD />}
       </div>
-    </>
+    </div>
   );
 }
 

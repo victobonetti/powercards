@@ -21,7 +21,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
     return (
         <div
             className={cn(
-                "pb-12 border-r min-h-screen bg-card transition-all duration-300 ease-in-out z-50 flex flex-col",
+                "pb-12 border-r h-full bg-card transition-all duration-300 ease-in-out z-50 flex flex-col",
                 isExpanded ? "w-64" : "w-16",
                 className
             )}

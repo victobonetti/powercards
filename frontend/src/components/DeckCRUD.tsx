@@ -191,9 +191,9 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const totalPages = Math.ceil(totalDecks / perPage) || 1;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <Card className={highlightNew ? "ring-2 ring-primary transition-all duration-500" : ""}>
-                <CardHeader>
+                <CardHeader className="p-8">
                     <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-2">
                             Decks

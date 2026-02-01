@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PaginationControls } from "./ui/pagination-controls";
 import { useToast } from "@/hooks/use-toast";
 
@@ -182,209 +182,213 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
     };
 
     return (
-        <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-            {/* Main List Area */}
-            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${editingCard ? 'mr-0' : ''}`}>
-                <div className="p-6 pb-0 space-y-4">
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={onBack}>
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                        <h2 className="text-3xl font-bold tracking-tight">{deckName} - Cards</h2>
-                    </div>
+        <div className="flex h-full flex-col overflow-hidden p-10">
+            <div className="flex h-full overflow-hidden gap-6">
+                {/* Main List Area */}
+                <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${editingCard ? 'mr-0' : ''}`}>
+                    <div className="w-full h-full flex flex-col">
+                        <Card className="flex flex-col border shadow-sm flex-1 overflow-hidden">
+                            <CardHeader className="p-8 pb-4 space-y-4 border-b">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <Button variant="ghost" size="icon" onClick={onBack}>
+                                            <ArrowLeft className="h-4 w-4" />
+                                        </Button>
+                                        <h2 className="text-2xl font-bold tracking-tight">{deckName} - Cards</h2>
+                                    </div>
 
-                    <div className="flex justify-between items-center">
-                        <Input
-                            placeholder="Search note content or tag=..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-64"
-                        />
-                        <Button
-                            variant={isSelectionMode ? "secondary" : "outline"}
-                            onClick={() => setIsSelectionMode(!isSelectionMode)}
-                            size="sm"
-                        >
-                            {isSelectionMode ? "Cancel Selection" : "Select Cards"}
-                        </Button>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            placeholder="Search note content or tag=..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            className="w-64"
+                                        />
+                                        <Button
+                                            variant={isSelectionMode ? "secondary" : "outline"}
+                                            onClick={() => setIsSelectionMode(!isSelectionMode)}
+                                            size="sm"
+                                        >
+                                            {isSelectionMode ? "Cancel" : "Select"}
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Bulk Actions Bar */}
+                                {selectedIds.length > 0 && (
+                                    <div className="py-2 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                                        <div className="text-sm font-medium">
+                                            {selectedIds.length} selected
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button size="sm" variant="outline" onClick={() => setIsBulkMoveOpen(true)}>
+                                                Move to Deck
+                                            </Button>
+                                            <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
+                                                Add Tags
+                                            </Button>
+                                            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardHeader>
+
+                            <CardContent className="p-0 flex-1 overflow-auto">
+                                <Table>
+                                    <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                                        <TableRow>
+                                            {isSelectionMode && (
+                                                <TableHead className="w-10">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="h-4 w-4 rounded border-gray-300"
+                                                        checked={cards.length > 0 && selectedIds.length === cards.length}
+                                                        ref={input => {
+                                                            if (input) {
+                                                                input.indeterminate = selectedIds.length > 0 && selectedIds.length < cards.length;
+                                                            }
+                                                        }}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedIds(cards.map(c => c.id!));
+                                                            } else {
+                                                                setSelectedIds([]);
+                                                            }
+                                                        }}
+                                                    />
+                                                </TableHead>
+                                            )}
+                                            <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
+                                                ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                                {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                            </TableHead>
+                                            <TableHead>Note Content</TableHead>
+                                            <TableHead className="cursor-pointer" onClick={() => toggleSort("tags")}>
+                                                Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                                {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                            </TableHead>
+                                            {/* Actions column removed */}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {loading ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="text-center h-24">Loading...</TableCell>
+                                            </TableRow>
+                                        ) : cards.length > 0 ? (
+                                            cards.map((card) => (
+                                                <TableRow
+                                                    key={card.id}
+                                                    className={`cursor-pointer hover:bg-muted/50 ${editingCard?.id === card.id ? "bg-muted border-l-4 border-l-primary" : ""}`}
+                                                    onClick={(e) => {
+                                                        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
+                                                        handleView(card);
+                                                    }}
+                                                >
+                                                    {isSelectionMode && (
+                                                        <TableCell>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="h-4 w-4 rounded border-gray-300"
+                                                                checked={selectedIds.includes(card.id!)}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                onChange={(e) => {
+                                                                    const checked = e.target.checked;
+                                                                    setSelectedIds(prev =>
+                                                                        checked ? [...prev, card.id!] : prev.filter(id => id !== card.id)
+                                                                    );
+                                                                }}
+                                                            />
+                                                        </TableCell>
+                                                    )}
+                                                    <TableCell className="text-xs text-muted-foreground py-1 h-8">{card.id}</TableCell>
+                                                    <TableCell className="max-w-xs truncate text-xs py-1 h-8" title={(card as any).noteField}>
+                                                        {stripHtml((card as any).noteField || "-")}
+                                                    </TableCell>
+                                                    <TableCell className="max-w-xs truncate" title={(card as any).noteTags}>
+                                                        <div className="flex gap-1 flex-wrap">
+                                                            {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => {
+                                                                const color = stringToColor(tag);
+                                                                return (
+                                                                    <Badge
+                                                                        key={tag}
+                                                                        variant="secondary"
+                                                                        style={{
+                                                                            backgroundColor: `${color}20`,
+                                                                            color: color,
+                                                                            borderColor: `${color}40`
+                                                                        }}
+                                                                    >
+                                                                        {tag}
+                                                                    </Badge>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
+                                                    No cards found.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                            <div className="p-2 border-t bg-background">
+                                <PaginationControls
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                    totalItems={totalCards}
+                                    perPage={perPage}
+                                    onPerPageChange={(newPerPage) => {
+                                        setPerPage(newPerPage);
+                                        setCurrentPage(1);
+                                    }}
+                                />
+                            </div>
+                        </Card>
                     </div>
                 </div>
 
-                {/* Bulk Actions Bar */}
-                {selectedIds.length > 0 && (
-                    <div className="px-6 py-2 bg-muted/40 border-b flex items-center justify-between backdrop-blur-sm mx-6 mt-4 rounded-md border">
-                        <div className="text-sm font-medium">
-                            {selectedIds.length} selected
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" onClick={() => setIsBulkMoveOpen(true)}>
-                                Move to Deck
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
-                                Add Tags
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
-                                Delete
-                            </Button>
-                        </div>
+                {/* Side Panel for Detail View */}
+                {editingCard && (
+                    <div className="w-[450px] min-w-[400px] border-l bg-background shadow-xl z-20 transition-all duration-300 animate-in slide-in-from-right">
+                        <NoteDetail
+                            noteId={editingCard.noteId || null}
+                            onSaved={handleSaved}
+                            onClose={() => setEditingCard(null)}
+                        />
                     </div>
                 )}
 
-                <div className="flex-1 overflow-auto p-6 pt-2">
-                    <Card className="h-full flex flex-col border shadow-sm">
-                        <CardContent className="p-0 flex-1 overflow-auto">
-                            <Table>
-                                <TableHeader className="sticky top-0 bg-background z-10">
-                                    <TableRow>
-                                        {isSelectionMode && (
-                                            <TableHead className="w-10">
-                                                <input
-                                                    type="checkbox"
-                                                    className="h-4 w-4 rounded border-gray-300"
-                                                    checked={cards.length > 0 && selectedIds.length === cards.length}
-                                                    ref={input => {
-                                                        if (input) {
-                                                            input.indeterminate = selectedIds.length > 0 && selectedIds.length < cards.length;
-                                                        }
-                                                    }}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setSelectedIds(cards.map(c => c.id!));
-                                                        } else {
-                                                            setSelectedIds([]);
-                                                        }
-                                                    }}
-                                                />
-                                            </TableHead>
-                                        )}
-                                        <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
-                                            ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                            {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                        </TableHead>
-                                        <TableHead>Note Content</TableHead>
-                                        <TableHead className="cursor-pointer" onClick={() => toggleSort("tags")}>
-                                            Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                            {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                        </TableHead>
-                                        {/* Actions column removed */}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {loading ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="text-center h-24">Loading...</TableCell>
-                                        </TableRow>
-                                    ) : cards.length > 0 ? (
-                                        cards.map((card) => (
-                                            <TableRow
-                                                key={card.id}
-                                                className={`cursor-pointer hover:bg-muted/50 ${editingCard?.id === card.id ? "bg-muted border-l-4 border-l-primary" : ""}`}
-                                                onClick={(e) => {
-                                                    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
-                                                    handleView(card);
-                                                }}
-                                            >
-                                                {isSelectionMode && (
-                                                    <TableCell>
-                                                        <input
-                                                            type="checkbox"
-                                                            className="h-4 w-4 rounded border-gray-300"
-                                                            checked={selectedIds.includes(card.id!)}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            onChange={(e) => {
-                                                                const checked = e.target.checked;
-                                                                setSelectedIds(prev =>
-                                                                    checked ? [...prev, card.id!] : prev.filter(id => id !== card.id)
-                                                                );
-                                                            }}
-                                                        />
-                                                    </TableCell>
-                                                )}
-                                                <TableCell className="text-xs text-muted-foreground py-1 h-8">{card.id}</TableCell>
-                                                <TableCell className="max-w-xs truncate text-xs py-1 h-8" title={(card as any).noteField}>
-                                                    {stripHtml((card as any).noteField || "-")}
-                                                </TableCell>
-                                                <TableCell className="max-w-xs truncate" title={(card as any).noteTags}>
-                                                    <div className="flex gap-1 flex-wrap">
-                                                        {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => {
-                                                            const color = stringToColor(tag);
-                                                            return (
-                                                                <Badge
-                                                                    key={tag}
-                                                                    variant="secondary"
-                                                                    style={{
-                                                                        backgroundColor: `${color}20`,
-                                                                        color: color,
-                                                                        borderColor: `${color}40`
-                                                                    }}
-                                                                >
-                                                                    {tag}
-                                                                </Badge>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
-                                                No cards found.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                        <div className="p-2 border-t">
-                            <PaginationControls
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                                totalItems={totalCards}
-                                perPage={perPage}
-                                onPerPageChange={(newPerPage) => {
-                                    setPerPage(newPerPage);
-                                    setCurrentPage(1);
-                                }}
-                            />
-                        </div>
-                    </Card>
-                </div>
+                <BulkMoveDialog
+                    open={isBulkMoveOpen}
+                    onOpenChange={setIsBulkMoveOpen}
+                    onConfirm={handleBulkMove}
+                    itemCount={selectedIds.length}
+                />
+
+                <BulkTagDialog
+                    open={isBulkTagOpen}
+                    onOpenChange={setIsBulkTagOpen}
+                    onConfirm={handleBulkTag}
+                    itemCount={selectedIds.length}
+                />
+
+                <ConfirmationDialog
+                    open={isBulkDeleteOpen}
+                    onOpenChange={setIsBulkDeleteOpen}
+                    onConfirm={handleBulkDelete}
+                    title={`Delete ${selectedIds.length} Cards`}
+                    description="Are you sure you want to delete the selected cards? This action cannot be undone."
+                />
             </div>
-
-            {/* Side Panel for Detail View */}
-            {editingCard && (
-                <div className="w-[450px] min-w-[400px] border-l bg-background shadow-xl z-20 transition-all duration-300 animate-in slide-in-from-right">
-                    <NoteDetail
-                        noteId={editingCard.noteId || null}
-                        onSaved={handleSaved}
-                        onClose={() => setEditingCard(null)}
-                    />
-                </div>
-            )}
-
-            <BulkMoveDialog
-                open={isBulkMoveOpen}
-                onOpenChange={setIsBulkMoveOpen}
-                onConfirm={handleBulkMove}
-                itemCount={selectedIds.length}
-            />
-
-            <BulkTagDialog
-                open={isBulkTagOpen}
-                onOpenChange={setIsBulkTagOpen}
-                onConfirm={handleBulkTag}
-                itemCount={selectedIds.length}
-            />
-
-            <ConfirmationDialog
-                open={isBulkDeleteOpen}
-                onOpenChange={setIsBulkDeleteOpen}
-                onConfirm={handleBulkDelete}
-                title={`Delete ${selectedIds.length} Cards`}
-                description="Are you sure you want to delete the selected cards? This action cannot be undone."
-            />
         </div>
     );
 }

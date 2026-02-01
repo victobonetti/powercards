@@ -177,6 +177,7 @@ public class NoteResource {
         if (entity == null) {
             throw new NotFoundException();
         }
+        br.com.powercards.model.Card.delete("note.id = ?1", id);
         entity.delete();
         deleteOrphanTags();
     }
@@ -212,6 +213,8 @@ public class NoteResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Bulk delete notes")
     public void bulkDelete(BulkDeleteRequest request) {
         if (request.ids() != null && !request.ids().isEmpty()) {
+            // Delete associated cards first to satisfy Foreign Key constraints
+            br.com.powercards.model.Card.delete("note.id in ?1", request.ids());
             Note.delete("id in ?1", request.ids());
             deleteOrphanTags();
         }
