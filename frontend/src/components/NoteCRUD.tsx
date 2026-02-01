@@ -5,17 +5,17 @@ import { NoteResponse, AnkiModelResponse } from "@/api/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Plus, MoreVertical, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-    DialogFooter,
 } from "@/components/ui/dialog";
 import {
     DropdownMenu,
@@ -30,7 +30,7 @@ import { TagInput } from "./ui/tag-input";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 import { BulkTagDialog } from "./BulkTagDialog";
 import { useDebounce } from "@/hooks/use-debounce";
-import { NoteDialog } from "./NoteDialog";
+import { NoteDetail } from "./NoteDetail";
 
 export function NoteCRUD() {
     const [notes, setNotes] = useState<NoteResponse[]>([]);
@@ -42,6 +42,7 @@ export function NoteCRUD() {
     const [selectedModel, setSelectedModel] = useState<AnkiModelResponse | null>(null);
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [editingNote, setEditingNote] = useState<NoteResponse | null>(null);
 
     // Search & Sort
     const [searchParams, setSearchParams] = useSearchParams();
@@ -49,16 +50,10 @@ export function NoteCRUD() {
     const debouncedSearch = useDebounce(search, 500);
     const [sort, setSort] = useState("id");
 
-    // Edit State (reusing NoteDialog)
-    const [isEditOpen, setIsEditOpen] = useState(false);
-    const [editingNote, setEditingNote] = useState<NoteResponse | null>(null);
-    const [isReadOnly, setIsReadOnly] = useState(false);
-
     // Delete State
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [deleteNoteId, setDeleteNoteId] = useState<number | null>(null);
 
-    // Bulk Actions State
     // Bulk Actions State
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -149,16 +144,8 @@ export function NoteCRUD() {
         }
     };
 
-    const handleEditClick = (note: NoteResponse) => {
-        setEditingNote(note);
-        setIsReadOnly(false);
-        setIsEditOpen(true);
-    };
-
     const handleViewClick = (note: NoteResponse) => {
         setEditingNote(note);
-        setIsReadOnly(true);
-        setIsEditOpen(true);
     };
 
     const handleDeleteClick = (id: number) => {
@@ -227,11 +214,14 @@ export function NoteCRUD() {
     };
 
     return (
-        <div className="space-y-6">
-            <Card>
-                <CardHeader>
+        <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+            {/* Main List Area - Flexible width */}
+            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${selectedIds.length === 1 && selectedIds[0] ? 'mr-0' : ''}`}> {/* If single select, we might want to shrink? Actually split screen is triggered by clicking ROW, not checkbox selection. Let's stick to separate state for Detail View selectedNoteId */}
+
+                {/* Reusing existing header logic but slightly customized for split layout if needed */}
+                <div className="p-6 pb-0 space-y-4">
                     <div className="flex items-center justify-between">
-                        <CardTitle>Notes</CardTitle>
+                        <h2 className="text-3xl font-bold tracking-tight">Notes</h2>
                         <div className="flex items-center gap-2">
                             <Input
                                 placeholder="Search content or tag=..."
@@ -245,6 +235,7 @@ export function NoteCRUD() {
                                         <Plus className="mr-2 h-4 w-4" /> New Note
                                     </Button>
                                 </DialogTrigger>
+                                {/* ... Create Dialog Content kept as is ... */}
                                 <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
                                     <DialogHeader>
                                         <DialogTitle>Create New Note</DialogTitle>
@@ -300,11 +291,11 @@ export function NoteCRUD() {
                             {isSelectionMode ? "Cancel Selection" : "Select Notes"}
                         </Button>
                     </div>
-                </CardHeader>
+                </div>
 
                 {/* Bulk Actions Bar */}
                 {selectedIds.length > 0 && (
-                    <div className="px-6 py-2 bg-muted/40 border-b flex items-center justify-between backdrop-blur-sm">
+                    <div className="px-6 py-2 bg-muted/40 border-b flex items-center justify-between backdrop-blur-sm mx-6 mt-4 rounded-md border">
                         <div className="text-sm font-medium">
                             {selectedIds.length} selected
                         </div>
@@ -319,136 +310,145 @@ export function NoteCRUD() {
                     </div>
                 )}
 
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                {isSelectionMode && (
-                                    <TableHead className="w-10">
-                                        <input
-                                            type="checkbox"
-                                            className="h-4 w-4 rounded border-gray-300"
-                                            checked={notes.length > 0 && selectedIds.length === notes.length}
-                                            ref={input => {
-                                                if (input) {
-                                                    input.indeterminate = selectedIds.length > 0 && selectedIds.length < notes.length;
-                                                }
+                <div className="flex-1 overflow-auto p-6 pt-2">
+                    <Card className="h-full flex flex-col border shadow-sm">
+                        <CardContent className="p-0 flex-1 overflow-auto">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-background z-10">
+                                    <TableRow>
+                                        {isSelectionMode && (
+                                            <TableHead className="w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    className="h-4 w-4 rounded border-gray-300"
+                                                    checked={notes.length > 0 && selectedIds.length === notes.length}
+                                                    ref={input => {
+                                                        if (input) {
+                                                            input.indeterminate = selectedIds.length > 0 && selectedIds.length < notes.length;
+                                                        }
+                                                    }}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedIds(notes.map(n => n.id!));
+                                                        } else {
+                                                            setSelectedIds([]);
+                                                        }
+                                                    }}
+                                                />
+                                            </TableHead>
+                                        )}
+                                        <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
+                                            ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                            {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                        </TableHead>
+                                        <TableHead className="cursor-pointer" onClick={() => toggleSort("sfld")}>
+                                            Field Content {sort === "sfld" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                            {sort === "-sfld" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                        </TableHead>
+                                        <TableHead>Tags</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {notes.map((note) => (
+                                        <TableRow
+                                            key={note.id}
+                                            className={`cursor-pointer hover:bg-muted/50 ${editingNote?.id === note.id ? "bg-muted border-l-4 border-l-primary" : ""}`}
+                                            onClick={(e) => {
+                                                if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
+                                                handleViewClick(note);
                                             }}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedIds(notes.map(n => n.id!));
-                                                } else {
-                                                    setSelectedIds([]);
-                                                }
-                                            }}
-                                        />
-                                    </TableHead>
-                                )}
-                                <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
-                                    ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                </TableHead>
-                                <TableHead className="cursor-pointer" onClick={() => toggleSort("sfld")}>
-                                    Field Content {sort === "sfld" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-sfld" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                </TableHead>
-                                <TableHead>Tags</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {notes.map((note) => (
-                                <TableRow
-                                    key={note.id}
-                                    className="cursor-pointer hover:bg-muted/50"
-                                    onClick={(e) => {
-                                        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
-                                        handleViewClick(note);
-                                    }}
-                                >
-                                    {isSelectionMode && (
-                                        <TableCell>
-                                            <input
-                                                type="checkbox"
-                                                className="h-4 w-4 rounded border-gray-300"
-                                                checked={selectedIds.includes(note.id!)}
-                                                onClick={(e) => e.stopPropagation()}
-                                                onChange={(e) => {
-                                                    const checked = e.target.checked;
-                                                    setSelectedIds(prev =>
-                                                        checked ? [...prev, note.id!] : prev.filter(id => id !== note.id)
-                                                    );
-                                                }}
-                                            />
-                                        </TableCell>
-                                    )}
-                                    <TableCell className="text-xs text-muted-foreground py-1 h-8">{note.id}</TableCell>
-                                    <TableCell className="font-medium max-w-xs truncate text-xs py-1 h-8">
-                                        {stripHtml(note.fields?.split("\u001f")[0] || "")}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-wrap gap-1">
-                                            {note.tags?.split(" ").filter(t => t.length > 0).map(tag => {
-                                                const color = stringToColor(tag);
-                                                return (
-                                                    <Badge
-                                                        key={tag}
-                                                        variant="secondary"
-                                                        style={{
-                                                            backgroundColor: `${color}20`,
-                                                            color: color,
-                                                            borderColor: `${color}40`
+                                        >
+                                            {isSelectionMode && (
+                                                <TableCell>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="h-4 w-4 rounded border-gray-300"
+                                                        checked={selectedIds.includes(note.id!)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onChange={(e) => {
+                                                            const checked = e.target.checked;
+                                                            setSelectedIds(prev =>
+                                                                checked ? [...prev, note.id!] : prev.filter(id => id !== note.id)
+                                                            );
                                                         }}
-                                                    >
-                                                        {tag}
-                                                    </Badge>
-                                                );
-                                            })}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => handleEditClick(note)}>
-                                                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDeleteClick(note.id!)} className="text-red-600">
-                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                    <PaginationControls
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                        totalItems={totalNotes}
-                        perPage={perPage}
-                        onPerPageChange={(newPerPage) => {
-                            setPerPage(newPerPage);
-                            setCurrentPage(1); // Reset to first page
-                        }}
-                    />
-                </CardContent>
-            </Card>
+                                                    />
+                                                </TableCell>
+                                            )}
+                                            <TableCell className="text-xs text-muted-foreground py-1 h-8">{note.id}</TableCell>
+                                            <TableCell className="font-medium max-w-xs truncate text-xs py-1 h-8">
+                                                {stripHtml(note.fields?.split("\u001f")[0] || "")}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {note.tags?.split(" ").filter(t => t.length > 0).map(tag => {
+                                                        const color = stringToColor(tag);
+                                                        return (
+                                                            <Badge
+                                                                key={tag}
+                                                                variant="secondary"
+                                                                style={{
+                                                                    backgroundColor: `${color}20`,
+                                                                    color: color,
+                                                                    borderColor: `${color}40`
+                                                                }}
+                                                            >
+                                                                {tag}
+                                                            </Badge>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleViewClick(note)}>
+                                                            <Pencil className="mr-2 h-4 w-4" /> Open
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleDeleteClick(note.id!)} className="text-red-600">
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                        <div className="p-2 border-t">
+                            <PaginationControls
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                totalItems={totalNotes}
+                                perPage={perPage}
+                                onPerPageChange={(newPerPage) => {
+                                    setPerPage(newPerPage);
+                                    setCurrentPage(1);
+                                }}
+                            />
+                        </div>
+                    </Card>
+                </div>
+            </div>
 
-            <NoteDialog
-                noteId={editingNote?.id || null}
-                open={isEditOpen}
-                onOpenChange={(open) => setIsEditOpen(open)}
-                onSaved={() => fetchNotes(currentPage)}
-                initialReadOnly={isReadOnly}
-            />
+            {/* Side Panel for Detail View */}
+            {editingNote && (
+                <div className="w-[450px] min-w-[400px] border-l bg-background shadow-xl z-20 transition-all duration-300 animate-in slide-in-from-right">
+                    <NoteDetail
+                        noteId={editingNote.id || null}
+                        onSaved={() => fetchNotes(currentPage)}
+                        onClose={() => setEditingNote(null)}
+                    />
+                </div>
+            )}
 
             <ConfirmationDialog
                 open={isDeleteOpen}
@@ -467,7 +467,6 @@ export function NoteCRUD() {
                 title="Unsaved Changes"
                 description="You have unsaved changes. Are you sure you want to discard them?"
             />
-
             <BulkTagDialog
                 open={isBulkTagOpen}
                 onOpenChange={setIsBulkTagOpen}

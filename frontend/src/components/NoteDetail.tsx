@@ -1,13 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { HtmlInput } from "@/components/ui/html-input";
 import { noteApi, modelApi } from "@/lib/api";
@@ -15,25 +7,24 @@ import { NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
 import { splitAnkiFields, joinAnkiFields } from "@/lib/anki";
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2, Pencil, X, Save } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-interface NoteDialogProps {
-    noteId: number | null; // Can come from Card or Note
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
+interface NoteDetailProps {
+    noteId: number | null;
     onSaved: () => void;
-    initialReadOnly?: boolean;
+    onClose: () => void;
+    className?: string;
 }
 
-export function NoteDialog({ noteId, open, onOpenChange, onSaved, initialReadOnly = false }: NoteDialogProps) {
+export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailProps) {
     const [tags, setTags] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingDetails, setFetchingDetails] = useState(false);
 
-    // Edit Mode State
-    // If initialReadOnly is true, we start in view mode (isEditing=false).
-    // If initialReadOnly is false, we start in edit mode (isEditing=true).
-    const [isEditing, setIsEditing] = useState(!initialReadOnly);
+    // Default to read-only when opening directly in side panel
+    const [isEditing, setIsEditing] = useState(false);
 
     // Model Aware State
     const [model, setModel] = useState<AnkiModelResponse | null>(null);
@@ -42,24 +33,23 @@ export function NoteDialog({ noteId, open, onOpenChange, onSaved, initialReadOnl
 
     const { toast } = useToast();
 
-    // Reset editing state when dialog opens/closes
+    // Reset state when noteId changes
     useEffect(() => {
-        if (open) {
-            setIsEditing(!initialReadOnly);
-        }
-    }, [open, initialReadOnly]);
-
-    useEffect(() => {
-        if (noteId && open) {
+        if (noteId) {
+            setIsEditing(false); // Always start in view mode
             fetchNoteDetails(noteId);
         } else {
-            // Reset state
-            setModel(null);
-            setFieldValues([]);
-            setNote(null);
-            setTags([]);
+            resetState();
         }
-    }, [noteId, open]);
+    }, [noteId]);
+
+    const resetState = () => {
+        setModel(null);
+        setFieldValues([]);
+        setNote(null);
+        setTags([]);
+        setIsEditing(false);
+    };
 
     const fetchNoteDetails = async (id: number) => {
         setFetchingDetails(true);
@@ -113,7 +103,7 @@ export function NoteDialog({ noteId, open, onOpenChange, onSaved, initialReadOnl
             });
 
             toast({ title: "Success", description: "Note updated successfully" });
-            onOpenChange(false);
+            setIsEditing(false);
             onSaved();
         } catch (error) {
             console.error("Failed to update note", error);
@@ -123,41 +113,55 @@ export function NoteDialog({ noteId, open, onOpenChange, onSaved, initialReadOnl
         }
     };
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>
-                        {isEditing ? "Edit Note" : "View Note"}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {isEditing ? "Edit the note fields and tags." : "View note details."}
-                    </DialogDescription>
-                </DialogHeader>
+    if (!noteId) return null;
 
+    return (
+        <Card className={cn("h-full flex flex-col border-l rounded-none shadow-none", className)}>
+            <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b space-y-0">
+                <CardTitle className="text-lg font-medium">
+                    {isEditing ? "Edit Note" : "Note Details"}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                    {!isEditing && !fetchingDetails && (
+                        <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} title="Edit Note">
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                    )}
+                    {isEditing && (
+                        <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={loading}>
+                                Cancel
+                            </Button>
+                            <Button size="sm" onClick={handleSave} disabled={loading}>
+                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+                                Save
+                            </Button>
+                        </div>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={onClose} title="Close">
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+            </CardHeader>
+
+            <CardContent className="flex-1 overflow-y-auto p-6">
                 {fetchingDetails ? (
                     <div className="flex justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : (
-                    <div className="grid gap-4 py-4">
-                        {/* View Mode Actions */}
-                        {!isEditing && (
-                            <div className="flex justify-end">
-                                <Button size="sm" onClick={() => setIsEditing(true)}>
-                                    <Pencil className="mr-2 h-4 w-4" /> Enable Editing
-                                </Button>
-                            </div>
-                        )}
-
+                    <div className="grid gap-6">
                         {model?.fields?.map((field: AnkiFieldDto, index: number) => (
                             <div key={index} className="grid gap-2">
-                                <Label htmlFor={`field-${index}`}>{field.name}</Label>
+                                <Label htmlFor={`field-${index}`} className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">
+                                    {field.name}
+                                </Label>
                                 <HtmlInput
                                     id={`field-${index}`}
                                     value={fieldValues[index] || ""}
                                     onChange={(value) => handleFieldChange(index, value)}
-                                    className="min-h-[80px]"
+                                    // Use a slightly larger or different background to distinguish visual read-only mode if needed
+                                    className={cn("min-h-[80px]", !isEditing && "bg-muted/10 border-transparent px-0")}
                                     disabled={!isEditing}
                                 />
                             </div>
@@ -169,34 +173,18 @@ export function NoteDialog({ noteId, open, onOpenChange, onSaved, initialReadOnl
                             </div>
                         )}
 
-                        <div className="grid gap-2">
-                            <Label>Tags</Label>
+                        <div className="grid gap-2 pt-4 border-t">
+                            <Label className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">Tags</Label>
                             <TagInput
                                 selected={tags}
                                 onChange={setTags}
                                 placeholder={isEditing ? "Add tags..." : "No tags"}
                                 disabled={!isEditing}
                             />
-                            {isEditing && (
-                                <p className="text-xs text-muted-foreground">
-                                    Type and select to create tags.
-                                </p>
-                            )}
                         </div>
                     </div>
                 )}
-
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-                        Close
-                    </Button>
-                    {isEditing && (
-                        <Button onClick={handleSave} disabled={loading || fetchingDetails}>
-                            {loading ? "Saving..." : "Save Changes"}
-                        </Button>
-                    )}
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+            </CardContent>
+        </Card>
     );
 }

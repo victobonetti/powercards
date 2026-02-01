@@ -21,6 +21,10 @@ vi.mock('@/lib/api', () => ({
 }));
 
 // Mock child components to simplify testing logic
+vi.mock('./NoteDetail', () => ({
+    NoteDetail: () => <div data-testid="note-detail">Note Detail View</div>
+}));
+
 vi.mock('./BulkMoveDialog', () => ({
     BulkMoveDialog: ({ open, onConfirm }: any) => open ? <div data-testid="bulk-move-dialog"><button onClick={() => onConfirm(2)}>Confirm Move</button></div> : null
 }));
@@ -128,5 +132,15 @@ describe('CardList Bulk Actions', () => {
                 targetDeckId: 2
             });
         });
+    });
+
+    it('opens detail view on row click', async () => {
+        renderComponent();
+        await waitFor(() => screen.findByText('Front 1'));
+
+        // Click the row 
+        fireEvent.click(screen.getByText('Front 1'));
+
+        expect(await screen.findByTestId('note-detail')).toBeInTheDocument();
     });
 });

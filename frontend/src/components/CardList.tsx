@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MoreVertical, Pencil } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { PaginationControls } from "./ui/pagination-controls";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -30,7 +30,7 @@ import { stringToColor } from "@/lib/colorUtils";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { NoteDialog } from "./NoteDialog";
+import { NoteDetail } from "./NoteDetail";
 
 interface CardListProps {
     deckId: number;
@@ -113,16 +113,13 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
 
 
     const [editingCard, setEditingCard] = useState<CardResponse | null>(null);
-    const [isReadOnly, setIsReadOnly] = useState(false);
 
     const handleEdit = (card: CardResponse) => {
         setEditingCard(card);
-        setIsReadOnly(false);
     };
 
     const handleView = (card: CardResponse) => {
         setEditingCard(card);
-        setIsReadOnly(true);
     };
 
     const handleSaved = () => {
@@ -194,193 +191,202 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={onBack}>
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <h2 className="text-3xl font-bold tracking-tight">{deckName} - Cards</h2>
-            </div>
-            <div className="flex justify-end">
-                <Button
-                    variant={isSelectionMode ? "secondary" : "outline"}
-                    onClick={() => setIsSelectionMode(!isSelectionMode)}
-                >
-                    {isSelectionMode ? "Cancel Selection" : "Select Cards"}
-                </Button>
-            </div>
-
-            {/* Bulk Actions Bar */}
-            {selectedIds.length > 0 && (
-                <div className="bg-muted/40 border rounded-lg p-2 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm">
-                    <div className="px-4 text-sm font-medium">
-                        {selectedIds.length} selected
+        <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+            {/* Main List Area */}
+            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${editingCard ? 'mr-0' : ''}`}>
+                <div className="p-6 pb-0 space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" onClick={onBack}>
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <h2 className="text-3xl font-bold tracking-tight">{deckName} - Cards</h2>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" onClick={() => setIsBulkMoveOpen(true)}>
-                            Move to Deck
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
-                            Add Tags
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
-                            Delete
-                        </Button>
-                    </div>
-                </div>
-            )}
 
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle>Card List</CardTitle>
+                    <div className="flex justify-between items-center">
                         <Input
                             placeholder="Search note content or tag=..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-64"
                         />
+                        <Button
+                            variant={isSelectionMode ? "secondary" : "outline"}
+                            onClick={() => setIsSelectionMode(!isSelectionMode)}
+                            size="sm"
+                        >
+                            {isSelectionMode ? "Cancel Selection" : "Select Cards"}
+                        </Button>
                     </div>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                {isSelectionMode && (
-                                    <TableHead className="w-10">
-                                        <input
-                                            type="checkbox"
-                                            className="h-4 w-4 rounded border-gray-300"
-                                            checked={cards.length > 0 && selectedIds.length === cards.length}
-                                            ref={input => {
-                                                if (input) {
-                                                    input.indeterminate = selectedIds.length > 0 && selectedIds.length < cards.length;
-                                                }
-                                            }}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedIds(cards.map(c => c.id!));
-                                                } else {
-                                                    setSelectedIds([]);
-                                                }
-                                            }}
-                                        />
-                                    </TableHead>
-                                )}
-                                <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
-                                    ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                </TableHead>
-                                <TableHead>Note Content</TableHead>
-                                <TableHead className="cursor-pointer" onClick={() => toggleSort("tags")}>
-                                    Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                                    {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
-                                </TableHead>
-                                <TableHead className="w-[100px] text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center h-24">Loading...</TableCell>
-                                </TableRow>
-                            ) : cards.length > 0 ? (
-                                cards.map((card) => (
-                                    <TableRow
-                                        key={card.id}
-                                        className={`cursor-pointer hover:bg-muted/50 ${selectedIds.includes(card.id!) ? "bg-muted" : ""}`}
-                                        onClick={(e) => {
-                                            if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
-                                            handleView(card);
-                                        }}
-                                    >
+                </div>
+
+                {/* Bulk Actions Bar */}
+                {selectedIds.length > 0 && (
+                    <div className="px-6 py-2 bg-muted/40 border-b flex items-center justify-between backdrop-blur-sm mx-6 mt-4 rounded-md border">
+                        <div className="text-sm font-medium">
+                            {selectedIds.length} selected
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" onClick={() => setIsBulkMoveOpen(true)}>
+                                Move to Deck
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
+                                Add Tags
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex-1 overflow-auto p-6 pt-2">
+                    <Card className="h-full flex flex-col border shadow-sm">
+                        <CardContent className="p-0 flex-1 overflow-auto">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-background z-10">
+                                    <TableRow>
                                         {isSelectionMode && (
-                                            <TableCell>
+                                            <TableHead className="w-10">
                                                 <input
                                                     type="checkbox"
                                                     className="h-4 w-4 rounded border-gray-300"
-                                                    checked={selectedIds.includes(card.id!)}
-                                                    onClick={(e) => e.stopPropagation()}
+                                                    checked={cards.length > 0 && selectedIds.length === cards.length}
+                                                    ref={input => {
+                                                        if (input) {
+                                                            input.indeterminate = selectedIds.length > 0 && selectedIds.length < cards.length;
+                                                        }
+                                                    }}
                                                     onChange={(e) => {
-                                                        const checked = e.target.checked;
-                                                        setSelectedIds(prev =>
-                                                            checked ? [...prev, card.id!] : prev.filter(id => id !== card.id)
-                                                        );
+                                                        if (e.target.checked) {
+                                                            setSelectedIds(cards.map(c => c.id!));
+                                                        } else {
+                                                            setSelectedIds([]);
+                                                        }
                                                     }}
                                                 />
-                                            </TableCell>
+                                            </TableHead>
                                         )}
-                                        <TableCell className="text-xs text-muted-foreground py-1 h-8">{card.id}</TableCell>
-                                        <TableCell className="max-w-xs truncate text-xs py-1 h-8" title={(card as any).noteField}>
-                                            {stripHtml((card as any).noteField || "-")}
-                                        </TableCell>
-                                        <TableCell className="max-w-xs truncate" title={(card as any).noteTags}>
-                                            <div className="flex gap-1 flex-wrap">
-                                                {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => {
-                                                    const color = stringToColor(tag);
-                                                    return (
-                                                        <Badge
-                                                            key={tag}
-                                                            variant="secondary"
-                                                            style={{
-                                                                backgroundColor: `${color}20`,
-                                                                color: color,
-                                                                borderColor: `${color}40`
-                                                            }}
-                                                        >
-                                                            {tag}
-                                                        </Badge>
-                                                    );
-                                                })}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreVertical className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleEdit(card)}>
-                                                        <Pencil className="mr-2 h-4 w-4" /> Edit
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                                        <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
+                                            ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                            {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                        </TableHead>
+                                        <TableHead>Note Content</TableHead>
+                                        <TableHead className="cursor-pointer" onClick={() => toggleSort("tags")}>
+                                            Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                                            {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
+                                        </TableHead>
+                                        <TableHead className="w-[100px] text-right">Actions</TableHead>
                                     </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
-                                        No cards found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                    <PaginationControls
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                        totalItems={totalCards}
-                        perPage={perPage}
-                        onPerPageChange={(newPerPage) => {
-                            setPerPage(newPerPage);
-                            setCurrentPage(1);
-                        }}
-                    />
-                </CardContent>
-            </Card>
+                                </TableHeader>
+                                <TableBody>
+                                    {loading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="text-center h-24">Loading...</TableCell>
+                                        </TableRow>
+                                    ) : cards.length > 0 ? (
+                                        cards.map((card) => (
+                                            <TableRow
+                                                key={card.id}
+                                                className={`cursor-pointer hover:bg-muted/50 ${editingCard?.id === card.id ? "bg-muted border-l-4 border-l-primary" : ""}`}
+                                                onClick={(e) => {
+                                                    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
+                                                    handleView(card);
+                                                }}
+                                            >
+                                                {isSelectionMode && (
+                                                    <TableCell>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="h-4 w-4 rounded border-gray-300"
+                                                            checked={selectedIds.includes(card.id!)}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onChange={(e) => {
+                                                                const checked = e.target.checked;
+                                                                setSelectedIds(prev =>
+                                                                    checked ? [...prev, card.id!] : prev.filter(id => id !== card.id)
+                                                                );
+                                                            }}
+                                                        />
+                                                    </TableCell>
+                                                )}
+                                                <TableCell className="text-xs text-muted-foreground py-1 h-8">{card.id}</TableCell>
+                                                <TableCell className="max-w-xs truncate text-xs py-1 h-8" title={(card as any).noteField}>
+                                                    {stripHtml((card as any).noteField || "-")}
+                                                </TableCell>
+                                                <TableCell className="max-w-xs truncate" title={(card as any).noteTags}>
+                                                    <div className="flex gap-1 flex-wrap">
+                                                        {((card as any).noteTags || "").split(" ").filter(Boolean).map((tag: string) => {
+                                                            const color = stringToColor(tag);
+                                                            return (
+                                                                <Badge
+                                                                    key={tag}
+                                                                    variant="secondary"
+                                                                    style={{
+                                                                        backgroundColor: `${color}20`,
+                                                                        color: color,
+                                                                        borderColor: `${color}40`
+                                                                    }}
+                                                                >
+                                                                    {tag}
+                                                                </Badge>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => handleEdit(card)}>
+                                                                <Pencil className="mr-2 h-4 w-4" /> Open
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                                                No cards found.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                        <div className="p-2 border-t">
+                            <PaginationControls
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                totalItems={totalCards}
+                                perPage={perPage}
+                                onPerPageChange={(newPerPage) => {
+                                    setPerPage(newPerPage);
+                                    setCurrentPage(1);
+                                }}
+                            />
+                        </div>
+                    </Card>
+                </div>
+            </div>
 
-            <NoteDialog
-                noteId={editingCard?.noteId || null}
-                open={!!editingCard}
-                onOpenChange={(open) => !open && setEditingCard(null)}
-                onSaved={handleSaved}
-                initialReadOnly={isReadOnly}
-            />
+            {/* Side Panel for Detail View */}
+            {editingCard && (
+                <div className="w-[450px] min-w-[400px] border-l bg-background shadow-xl z-20 transition-all duration-300 animate-in slide-in-from-right">
+                    <NoteDetail
+                        noteId={editingCard.noteId || null}
+                        onSaved={handleSaved}
+                        onClose={() => setEditingCard(null)}
+                    />
+                </div>
+            )}
 
             <BulkMoveDialog
                 open={isBulkMoveOpen}

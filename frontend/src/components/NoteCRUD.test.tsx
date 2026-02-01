@@ -29,8 +29,8 @@ vi.mock('./ui/confirmation-dialog', () => ({
 vi.mock('./ui/tag-input', () => ({
     TagInput: ({ onChange }: any) => <input data-testid="tag-input" onChange={(e) => onChange([e.target.value])} />
 }));
-vi.mock('./NoteDialog', () => ({
-    NoteDialog: () => <div data-testid="note-dialog">Note Dialog</div>
+vi.mock('./NoteDetail', () => ({
+    NoteDetail: () => <div data-testid="note-detail">Note Detail View</div>
 }));
 
 
@@ -128,5 +128,15 @@ describe('NoteCRUD Bulk Actions', () => {
                 tags: ["tag1"]
             });
         });
+    });
+
+    it('opens detail view on row click', async () => {
+        renderComponent();
+        await waitFor(() => screen.findByText('Front 1'));
+
+        // Click the row (not the checkbox)
+        fireEvent.click(screen.getByText('Front 1'));
+
+        expect(await screen.findByTestId('note-detail')).toBeInTheDocument();
     });
 });
