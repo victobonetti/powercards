@@ -78,8 +78,10 @@ public class AnkiResourceTest {
                                                         + decksJson + "', '" + modelsJson
                                                         + "', 0, 0, 0, 11, 0, 0, 0, '{}', '{}', '{}')");
 
+                        long uniqueId = System.currentTimeMillis();
                         stmt.execute(
-                                        "INSERT INTO notes (id, guid, flds, mid) VALUES (10, 'guid1', 'Front"
+                                        "INSERT INTO notes (id, guid, flds, mid) VALUES (10, 'guid" + uniqueId
+                                                        + "', 'Front"
                                                         + (char) 31 + "Back', 1)");
                         stmt.execute("INSERT INTO cards (id, nid, did, ord) VALUES (1000, 10, 100, 0)");
                 }
@@ -102,11 +104,12 @@ public class AnkiResourceTest {
                                 .post("/v1/anki/upload")
                                 .then()
                                 .statusCode(200)
-                                .body("size()", greaterThanOrEqualTo(1))
+                                .body("decks.size()", greaterThanOrEqualTo(1))
+                                .body("importedNotes", greaterThanOrEqualTo(1))
                                 .extract();
 
-                Integer deckId = response.path("[1].id");
-                String deckName = response.path("[1].name");
+                Integer deckId = response.path("decks[0].id");
+                String deckName = response.path("decks[0].name");
 
                 // Verify Deck CRUD
                 given()
@@ -114,24 +117,43 @@ public class AnkiResourceTest {
                                 .then()
                                 .statusCode(200)
                                 .body("name", is(deckName));
+        }
 
-                // Verify other elements exist by name or by listing
+        @Test
+        public void testDuplicateAndForceUpload() {
+                // 1. First Upload
                 given()
-                                .when().get("/v1/models")
+                                .multiPart("file", apkgFile)
+                                .when()
+                                .post("/v1/anki/upload")
                                 .then()
                                 .statusCode(200)
-                                .body("name[0]", is("Basic"));
+                                .body("importedNotes", is(1))
+                                .body("skippedNotes", is(0));
 
+                // 2. Duplicate Upload (Force = false by default or explicit)
                 given()
-                                .when().get("/v1/notes")
+                                .multiPart("file", apkgFile)
+                                .multiPart("force", "false")
+                                .when()
+                                .post("/v1/anki/upload")
                                 .then()
                                 .statusCode(200)
-                                .body("size()", greaterThanOrEqualTo(1));
+                                .body("importedNotes", is(0))
+                                .body("updatedNotes", is(0))
+                                .body("skippedNotes", is(1))
+                                .body("status", is("SKIPPED"));
 
+                // 3. Force Upload
                 given()
-                                .when().get("/v1/cards")
+                                .multiPart("file", apkgFile)
+                                .multiPart("force", "true")
+                                .when()
+                                .post("/v1/anki/upload")
                                 .then()
                                 .statusCode(200)
-                                .body("size()", greaterThanOrEqualTo(1));
+                                .body("importedNotes", is(0))
+                                .body("updatedNotes", is(1))
+                                .body("skippedNotes", is(0));
         }
 }

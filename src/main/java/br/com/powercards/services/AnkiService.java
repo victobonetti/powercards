@@ -43,40 +43,50 @@ public class AnkiService {
     }
 
     @Transactional
-    public List<Deck> getDecks() {
+    public br.com.powercards.dto.ImportResponse getDecks(boolean force) {
         Objects.requireNonNull(apkg, "Arquivo .apkg não foi carregado.");
 
         LOGGER.info("Iniciando leitura do arquivo .apkg...");
         try (Anki4j anki4j = Anki4j.read(apkg)) {
             LOGGER.info("Arquivo .apkg lido com sucesso. Iniciando persistência...");
-            return persistCollection(anki4j);
+            return persistCollection(anki4j, force);
         } catch (Exception e) {
             LOGGER.warn("Falha ao processar arquivo Anki: {}", e.getMessage());
             throw new InternalServerErrorException(e);
         }
     }
 
-    private List<Deck> persistCollection(Anki4j anki4j) {
+    private br.com.powercards.dto.ImportResponse persistCollection(Anki4j anki4j, boolean force) {
         LOGGER.info("Persistindo coleção Anki no banco de dados...");
+
+        int importedNotes = 0;
+        int updatedNotes = 0;
+        int skippedNotes = 0;
 
         // 1. Persistir Models
         Map<Long, AnkiModel> modelMap = new java.util.HashMap<>();
         for (com.anki4j.model.Model m : anki4j.getModels()) {
-            AnkiModel model = new AnkiModel();
-            model.name = m.getName();
-            model.css = m.getCss();
-            if (m.getFlds() != null) {
-                model.fields = m.getFlds().stream()
-                        .map(f -> new br.com.powercards.model.AnkiField(f.getName(), f.getOrd(), model))
-                        .collect(Collectors.toList());
+            // Check if model exists by name
+            AnkiModel model = AnkiModel.find("name", m.getName()).firstResult();
+            if (model == null) {
+                model = new AnkiModel();
+                model.name = m.getName();
+                model.css = m.getCss();
+                if (m.getFlds() != null) {
+                    final AnkiModel finalModel = model;
+                    model.fields = m.getFlds().stream()
+                            .map(f -> new br.com.powercards.model.AnkiField(f.getName(), f.getOrd(), finalModel))
+                            .collect(Collectors.toList());
+                }
+                if (m.getTmpls() != null) {
+                    final AnkiModel finalModel = model;
+                    model.templates = m.getTmpls().stream()
+                            .map(t -> new br.com.powercards.model.AnkiTemplate(t.getName(), t.getQfmt(),
+                                    t.getAfmt(), t.getOrd(), finalModel))
+                            .collect(Collectors.toList());
+                }
+                model.persist();
             }
-            if (m.getTmpls() != null) {
-                model.templates = m.getTmpls().stream()
-                        .map(t -> new br.com.powercards.model.AnkiTemplate(t.getName(), t.getQfmt(),
-                                t.getAfmt(), t.getOrd(), model))
-                        .collect(Collectors.toList());
-            }
-            model.persist();
             modelMap.put(m.getId(), model);
         }
         LOGGER.info("Persistidos {} modelos de nota.", modelMap.size());
@@ -84,9 +94,12 @@ public class AnkiService {
         // 2. Persistir Decks
         Map<Long, Deck> deckMap = new java.util.HashMap<>();
         for (com.anki4j.model.Deck d : anki4j.getDecks()) {
-            Deck deck = new Deck();
-            deck.name = d.getName();
-            deck.persist();
+            Deck deck = Deck.find("name", d.getName()).firstResult();
+            if (deck == null) {
+                deck = new Deck();
+                deck.name = d.getName();
+                deck.persist();
+            }
             deckMap.put(d.getId(), deck);
         }
         LOGGER.info("Persistidos {} decks.", deckMap.size());
@@ -94,20 +107,45 @@ public class AnkiService {
         // 3. Persistir Notes
         Map<Long, Note> noteMap = new java.util.HashMap<>();
         for (com.anki4j.model.Note n : anki4j.getNotes()) {
-            Note note = new Note();
-            note.guid = n.getGuid();
-            note.model = modelMap.get(n.getMid());
-            note.mod = n.getMod();
-            note.usn = n.getUsn();
-            note.tags = n.getTags();
-            note.flds = n.getFlds();
-            note.sfld = n.getSfld();
-            note.csum = n.getCsum();
-            note.flags = n.getFlags();
-            note.data = n.getData();
-            note.persist();
+            Note note = Note.find("guid", n.getGuid()).firstResult();
+
+            if (note != null) {
+                if (force) {
+                    // Update existing note
+                    note.model = modelMap.get(n.getMid());
+                    note.mod = n.getMod();
+                    note.usn = n.getUsn();
+                    note.tags = n.getTags();
+                    note.flds = n.getFlds();
+                    note.sfld = n.getSfld();
+                    note.csum = n.getCsum();
+                    note.flags = n.getFlags();
+                    note.data = n.getData();
+                    // We don't change the ID or GUID
+                    updatedNotes++;
+                } else {
+                    skippedNotes++;
+                    continue; // Skip this note and its cards
+                }
+            } else {
+                note = new Note();
+                note.guid = n.getGuid();
+                note.model = modelMap.get(n.getMid());
+                note.mod = n.getMod();
+                note.usn = n.getUsn();
+                note.tags = n.getTags();
+                note.flds = n.getFlds();
+                note.sfld = n.getSfld();
+                note.csum = n.getCsum();
+                note.flags = n.getFlags();
+                note.data = n.getData();
+                note.persist();
+                importedNotes++;
+            }
+
             noteMap.put(n.getId(), note);
 
+            // Tags processing...
             if (note.tags != null && !note.tags.isBlank()) {
                 java.util.Arrays.stream(note.tags.trim().split("\\s+"))
                         .filter(tag -> !tag.isBlank())
@@ -124,31 +162,75 @@ public class AnkiService {
                         });
             }
         }
-        LOGGER.info("Persistidas {} notas.", noteMap.size());
+        LOGGER.info("Processamento de notas: Importadas={}, Atualizadas={}, Ignoradas={}", importedNotes, updatedNotes,
+                skippedNotes);
 
         // 4. Persistir Cards
+        // We only persist cards for notes that are in noteMap (i.e., imported or
+        // updated)
+        int processedCards = 0;
         for (com.anki4j.model.Card c : anki4j.getCards()) {
-            Card card = new Card();
-            card.note = noteMap.get(c.getNid());
-            card.deck = deckMap.get(c.getDid());
-            card.ord = c.getOrd();
-            card.mod = c.getMod();
-            card.usn = c.getUsn();
-            card.type = c.getType();
-            card.queue = c.getQueue();
-            card.due = c.getDue();
-            card.ivl = c.getIvl();
-            card.factor = c.getFactor();
-            card.reps = c.getReps();
-            card.lapses = c.getLapses();
-            card.left = c.getLeft();
-            card.odue = c.getOdue();
-            card.odid = c.getOdid();
-            card.flags = c.getFlags();
-            card.data = c.getData();
-            card.persist();
+            Note note = noteMap.get(c.getNid());
+            if (note == null)
+                continue; // Skip cards for skipped notes
+
+            // Check if card exists for this note and ord?
+            // Since we might be updating, we should check if the card already exists.
+            // Simplified check: If note was updated, we might want to update cards too.
+            // For now, let's try to find existing card by note and ord.
+
+            // Assuming we don't need deep card deduplication if note is new.
+            // If note is updated, we might have existing cards.
+            Card card = null;
+            // We can find by Note ID + Ordinal, but Jpa/Panache makes relationship nav
+            // slightly complex in loop.
+            // Let's iterate only if necessary.
+
+            // Simplification: If note was skipped, we skipped loop.
+            // If note was new, card is new.
+            // If note was updated, check if card exists.
+
+            boolean isNewCard = false;
+            if (importedNotes > 0 && updatedNotes == 0) { // All new
+                isNewCard = true;
+            } else {
+                // Check existence
+                // Note: Ideally we should use a composite key or query, but filtering by Note
+                // object in Panache is okay.
+                // Using stream on note.cards might be lazy loaded.
+
+                // Let's use a query
+                card = Card.find("note.id = ?1 and ord = ?2", note.id, c.getOrd()).firstResult();
+            }
+
+            if (card == null) {
+                card = new Card();
+                isNewCard = true;
+            }
+
+            if (isNewCard || force) {
+                card.note = note;
+                card.deck = deckMap.get(c.getDid());
+                card.ord = c.getOrd();
+                card.mod = c.getMod();
+                card.usn = c.getUsn();
+                card.type = c.getType();
+                card.queue = c.getQueue();
+                card.due = c.getDue();
+                card.ivl = c.getIvl();
+                card.factor = c.getFactor();
+                card.reps = c.getReps();
+                card.lapses = c.getLapses();
+                card.left = c.getLeft();
+                card.odue = c.getOdue();
+                card.odid = c.getOdid();
+                card.flags = c.getFlags();
+                card.data = c.getData();
+                card.persist();
+                processedCards++;
+            }
         }
-        LOGGER.info("Persistidos {} cartões.", anki4j.getCards().size());
+        LOGGER.info("Processados {} cartões.", processedCards);
 
         // Ensure all notes are flushed to the database so their IDs are available for
         // media processing
@@ -162,9 +244,17 @@ public class AnkiService {
             LOGGER.warn("Erro ao processar mídias. O import continuará sem mídias: {}", e.getMessage());
         }
 
-        return anki4j.getDecks().stream()
+        List<br.com.powercards.dto.DeckResponse> deckResponses = anki4j.getDecks().stream()
                 .map(d -> deckMap.get(d.getId()))
+                .filter(Objects::nonNull)
+                .map(d -> new br.com.powercards.dto.DeckResponse(d.id, d.name, d.cards.size()))
                 .collect(Collectors.toList());
+
+        String status = (skippedNotes > 0) ? (importedNotes > 0 || updatedNotes > 0 ? "PARTIAL" : "SKIPPED")
+                : "SUCCESS";
+
+        return new br.com.powercards.dto.ImportResponse(deckResponses, importedNotes, updatedNotes, skippedNotes,
+                status);
     }
 
     private void processMedia(Anki4j anki4j, Map<Long, Note> noteMap) {

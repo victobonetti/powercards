@@ -23,6 +23,8 @@ paths:
                 file:
                   type: string
                   format: binary
+                force:
+                  type: boolean
         required: true
       responses:
         "200":

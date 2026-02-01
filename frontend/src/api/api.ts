@@ -1162,10 +1162,11 @@ export const AnkiResourceApiAxiosParamCreator = function (configuration?: Config
          * Uploads an .apkg file and returns the loaded decks.
          * @summary Upload Anki package
          * @param {File} [file] 
+         * @param {boolean} [force] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1AnkiUploadPost: async (file?: File, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1AnkiUploadPost: async (file?: File, force?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/v1/anki/upload`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1182,6 +1183,10 @@ export const AnkiResourceApiAxiosParamCreator = function (configuration?: Config
 
             if (file !== undefined) { 
                 localVarFormParams.append('file', file as any);
+            }
+    
+            if (force !== undefined) { 
+                localVarFormParams.append('force', String(force) as any);
             }
     
     
@@ -1211,11 +1216,12 @@ export const AnkiResourceApiFp = function(configuration?: Configuration) {
          * Uploads an .apkg file and returns the loaded decks.
          * @summary Upload Anki package
          * @param {File} [file] 
+         * @param {boolean} [force] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1AnkiUploadPost(file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AnkiUploadPost(file, options);
+        async v1AnkiUploadPost(file?: File, force?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AnkiUploadPost(file, force, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AnkiResourceApi.v1AnkiUploadPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1234,11 +1240,12 @@ export const AnkiResourceApiFactory = function (configuration?: Configuration, b
          * Uploads an .apkg file and returns the loaded decks.
          * @summary Upload Anki package
          * @param {File} [file] 
+         * @param {boolean} [force] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1AnkiUploadPost(file?: File, options?: RawAxiosRequestConfig): AxiosPromise<any> {
-            return localVarFp.v1AnkiUploadPost(file, options).then((request) => request(axios, basePath));
+        v1AnkiUploadPost(file?: File, force?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AnkiUploadPost(file, force, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1254,12 +1261,13 @@ export class AnkiResourceApi extends BaseAPI {
      * Uploads an .apkg file and returns the loaded decks.
      * @summary Upload Anki package
      * @param {File} [file] 
+     * @param {boolean} [force] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AnkiResourceApi
      */
-    public v1AnkiUploadPost(file?: File, options?: RawAxiosRequestConfig) {
-        return AnkiResourceApiFp(this.configuration).v1AnkiUploadPost(file, options).then((request) => request(this.axios, this.basePath));
+    public v1AnkiUploadPost(file?: File, force?: boolean, options?: RawAxiosRequestConfig) {
+        return AnkiResourceApiFp(this.configuration).v1AnkiUploadPost(file, force, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

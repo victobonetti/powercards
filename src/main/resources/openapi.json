@@ -26,6 +26,9 @@
                   "file" : {
                     "type" : "string",
                     "format" : "binary"
+                  },
+                  "force" : {
+                    "type" : "boolean"
                   }
                 }
               }
