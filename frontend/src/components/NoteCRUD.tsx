@@ -368,7 +368,7 @@ export function NoteCRUD() {
                                     onSort={toggleSort}
 
                                     // Selection Mode
-                                    selectionMode={true}
+                                    selectionMode={isSelectionMode}
                                     selectedIds={selectedIds}
                                     onSelectionChange={setSelectedIds}
                                     isAllSelected={notes.length > 0 && selectedIds.length === notes.length}

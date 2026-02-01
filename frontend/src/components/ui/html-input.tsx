@@ -2,9 +2,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Code, Type } from "lucide-react";
+import { Code, Type, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { htmlToMarkdown, markdownToHtml } from "@/lib/markdown";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface HtmlInputProps {
     value: string;
@@ -80,6 +88,75 @@ export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInpu
     return (
         <div className={cn("relative border rounded-md group", className)}>
             <div className="absolute top-1 right-1 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {mode === 'markdown' && (
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 bg-background/50 hover:bg-background border shadow-sm"
+                                title="Markdown Help"
+                            >
+                                <HelpCircle className="h-3 w-3" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Markdown Guide</DialogTitle>
+                                <DialogDescription>
+                                    You can use standard Markdown to format your text.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-2 text-sm">
+                                <div className="grid grid-cols-2 gap-2 border-b pb-2 font-medium text-muted-foreground">
+                                    <div>Markdown</div>
+                                    <div>Result</div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded"># Header 1</code>
+                                    <h1 className="text-xl font-bold">Header 1</h1>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded">## Header 2</code>
+                                    <h2 className="text-lg font-bold">Header 2</h2>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded">### Header 3</code>
+                                    <h3 className="text-base font-bold">Header 3</h3>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded">**Bold**</code>
+                                    <strong>Bold</strong>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded">_Italic_</code>
+                                    <em>Italic</em>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded">- List item</code>
+                                    <ul className="list-disc list-inside"><li>List item</li></ul>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded">1. Item</code>
+                                    <ol className="list-decimal list-inside"><li>Item</li></ol>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded">&gt; Quote</code>
+                                    <blockquote className="border-l-2 pl-2 italic">Quote</blockquote>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 items-center">
+                                    <code className="bg-muted px-1 rounded">`Code`</code>
+                                    <code className="bg-muted px-1 rounded">Code</code>
+                                </div>
+                                <div className="col-span-2 pt-2 border-t mt-2 text-xs text-muted-foreground">
+                                    <strong>Note:</strong> You can switch to "Raw HTML" mode using the <Code className="inline h-3 w-3" /> icon for advanced editing.
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                )}
+
                 <Button
                     type="button"
                     variant="ghost"
@@ -101,7 +178,7 @@ export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInpu
                     "min-h-[80px] border-0 focus-visible:ring-0 resize-y",
                     mode === 'html' ? "font-mono text-xs" : "text-sm"
                 )}
-                placeholder={mode === 'markdown' ? "Type here... Use **bold** for bold, __italic__ for italic." : "Enter HTML here..."}
+                placeholder={mode === 'markdown' ? "Type here... (Markdown supported)" : "Enter HTML here..."}
             />
         </div>
     );
