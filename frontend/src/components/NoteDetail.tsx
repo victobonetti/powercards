@@ -129,7 +129,17 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                     )}
                     {isEditing && (
                         <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={loading}>
+                            <Button variant="ghost" size="sm" onClick={() => {
+                                // Revert changes
+                                if (note) {
+                                    const currentFields = splitAnkiFields(note.fields || "");
+                                    setFieldValues(currentFields);
+
+                                    const tagString = note.tags || "";
+                                    setTags(tagString.split(" ").filter(Boolean));
+                                }
+                                setIsEditing(false);
+                            }} disabled={loading}>
                                 Cancel
                             </Button>
                             <Button size="sm" onClick={handleSave} disabled={loading}>
