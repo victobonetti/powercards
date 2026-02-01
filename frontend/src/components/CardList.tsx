@@ -264,12 +264,12 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                                     />
                                                 </TableHead>
                                             )}
-                                            <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
+                                            <TableHead className="w-24 cursor-pointer font-serif" onClick={() => toggleSort("id")}>
                                                 ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
                                                 {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                             </TableHead>
-                                            <TableHead>Note Content</TableHead>
-                                            <TableHead className="cursor-pointer" onClick={() => toggleSort("tags")}>
+                                            <TableHead className="font-serif">Note Content</TableHead>
+                                            <TableHead className="cursor-pointer font-serif" onClick={() => toggleSort("tags")}>
                                                 Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
                                                 {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                             </TableHead>

@@ -239,16 +239,16 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-24 cursor-pointer" onClick={() => toggleSort("id")}>
+                                <TableHead className="w-24 cursor-pointer font-serif" onClick={() => toggleSort("id")}>
                                     ID {sort === "id" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
                                     {sort === "-id" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                 </TableHead>
-                                <TableHead className="cursor-pointer" onClick={() => toggleSort("name")}>
+                                <TableHead className="cursor-pointer font-serif" onClick={() => toggleSort("name")}>
                                     Name {sort === "name" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
                                     {sort === "-name" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                 </TableHead>
-                                <TableHead className="w-32 text-right">Cards</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="w-32 text-right font-serif">Cards</TableHead>
+                                <TableHead className="text-right font-serif">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

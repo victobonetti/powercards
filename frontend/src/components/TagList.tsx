@@ -121,9 +121,9 @@ export function TagList() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead className="w-32 text-right">Notes</TableHead>
-                                <TableHead className="w-20 text-right">Actions</TableHead>
+                                <TableHead className="font-serif">Name</TableHead>
+                                <TableHead className="w-32 text-right font-serif">Notes</TableHead>
+                                <TableHead className="w-20 text-right font-serif">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

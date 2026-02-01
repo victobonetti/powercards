@@ -12,6 +12,33 @@ interface SidebarProps {
     className?: string;
 }
 
+
+interface SidebarButtonProps {
+    icon: React.ElementType;
+    label: string;
+    isActive: boolean;
+    isExpanded: boolean;
+    onClick: () => void;
+}
+
+function SidebarButton({ icon: Icon, label, isActive, isExpanded, onClick }: SidebarButtonProps) {
+    return (
+        <Button
+            variant={isActive ? "secondary" : "ghost"}
+            className={cn(
+                "w-full justify-start transition-all duration-200 font-serif",
+                isActive ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
+                !isExpanded && "justify-center px-2"
+            )}
+            onClick={onClick}
+            title={!isExpanded ? label : undefined}
+        >
+            <Icon className={cn("h-4 w-4 shrink-0", isExpanded && "mr-3")} />
+            {isExpanded && <span className="font-medium">{label}</span>}
+        </Button>
+    )
+}
+
 export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
     const { theme, setTheme } = useTheme();
     const [isCollapsed, setIsCollapsed] = useState(true);
@@ -53,45 +80,27 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                 </div>
 
                 <div className="space-y-1 px-2">
-                    <Button
-                        variant={currentView === "upload" ? "secondary" : "ghost"}
-                        className={cn(
-                            "w-full justify-start transition-all duration-200 font-serif",
-                            currentView === "upload" ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
-                            !isExpanded && "justify-center px-2"
-                        )}
+                    <SidebarButton
+                        icon={Upload}
+                        label="Upload Anki"
+                        isActive={currentView === "upload"}
+                        isExpanded={isExpanded}
                         onClick={() => onNavigate("upload")}
-                        title={!isExpanded ? "Upload Anki" : undefined}
-                    >
-                        <Upload className={cn("h-4 w-4 shrink-0", isExpanded && "mr-3")} />
-                        {isExpanded && <span className="font-medium">Upload Anki</span>}
-                    </Button>
-                    <Button
-                        variant={currentView === "decks" ? "secondary" : "ghost"}
-                        className={cn(
-                            "w-full justify-start transition-all duration-200 font-serif ",
-                            currentView === "decks" ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
-                            !isExpanded && "justify-center px-2"
-                        )}
+                    />
+                    <SidebarButton
+                        icon={Layers}
+                        label="My Decks"
+                        isActive={currentView === "decks"}
+                        isExpanded={isExpanded}
                         onClick={() => onNavigate("decks")}
-                        title={!isExpanded ? "My Decks" : undefined}
-                    >
-                        <Layers className={cn("h-4 w-4 shrink-0", isExpanded && "mr-3")} />
-                        {isExpanded && <span className="font-medium">My Decks</span>}
-                    </Button>
-                    <Button
-                        variant={currentView === "tags" ? "secondary" : "ghost"}
-                        className={cn(
-                            "w-full justify-start transition-all duration-200 font-serif",
-                            currentView === "tags" ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
-                            !isExpanded && "justify-center px-2"
-                        )}
+                    />
+                    <SidebarButton
+                        icon={Tag}
+                        label="Tags"
+                        isActive={currentView === "tags"}
+                        isExpanded={isExpanded}
                         onClick={() => onNavigate("tags")}
-                        title={!isExpanded ? "Tags" : undefined}
-                    >
-                        <Tag className={cn("h-4 w-4 shrink-0", isExpanded && "mr-3")} />
-                        {isExpanded && <span className="font-medium">Tags</span>}
-                    </Button>
+                    />
                 </div>
             </div>
 
