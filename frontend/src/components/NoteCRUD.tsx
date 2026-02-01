@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, MoreVertical, Pencil, Trash2, ArrowUpDown } from "lucide-react";
+import { Plus, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,12 +17,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { stringToColor } from "@/lib/colorUtils";
 import { PaginationControls } from "./ui/pagination-controls";
@@ -148,11 +142,10 @@ export function NoteCRUD() {
         setEditingNote(note);
     };
 
-    const handleDeleteClick = (id: number) => {
-        setDeleteNoteId(id);
-        setIsDeleteOpen(true);
-    };
-
+    /**
+     * Delete functionality moved to Bulk Actions or potentially Detail View.
+     * Single row delete via actions menu is removed per user request.
+     */
     const confirmDelete = async () => {
         if (!deleteNoteId) return;
         try {
@@ -346,7 +339,7 @@ export function NoteCRUD() {
                                             {sort === "-sfld" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                         </TableHead>
                                         <TableHead>Tags</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                        {/* Actions column removed */}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -398,24 +391,6 @@ export function NoteCRUD() {
                                                         );
                                                     })}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreVertical className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleViewClick(note)}>
-                                                            <Pencil className="mr-2 h-4 w-4" /> Open
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleDeleteClick(note.id!)} className="text-red-600">
-                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     ))}

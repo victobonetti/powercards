@@ -14,16 +14,11 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MoreVertical, Pencil } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PaginationControls } from "./ui/pagination-controls";
 import { useToast } from "@/hooks/use-toast";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Badge } from "@/components/ui/badge";
 import { stringToColor } from "@/lib/colorUtils";
 
@@ -113,10 +108,6 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
 
 
     const [editingCard, setEditingCard] = useState<CardResponse | null>(null);
-
-    const handleEdit = (card: CardResponse) => {
-        setEditingCard(card);
-    };
 
     const handleView = (card: CardResponse) => {
         setEditingCard(card);
@@ -275,13 +266,13 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                             Tags {sort === "tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
                                             {sort === "-tags" && <ArrowUpDown className="ml-2 h-4 w-4 inline rotate-180" />}
                                         </TableHead>
-                                        <TableHead className="w-[100px] text-right">Actions</TableHead>
+                                        {/* Actions column removed */}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {loading ? (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="text-center h-24">Loading...</TableCell>
+                                            <TableCell colSpan={4} className="text-center h-24">Loading...</TableCell>
                                         </TableRow>
                                     ) : cards.length > 0 ? (
                                         cards.map((card) => (
@@ -333,26 +324,11 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                                         })}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                <span className="sr-only">Open menu</span>
-                                                                <MoreVertical className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => handleEdit(card)}>
-                                                                <Pencil className="mr-2 h-4 w-4" /> Open
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </TableCell>
                                             </TableRow>
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                                            <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
                                                 No cards found.
                                             </TableCell>
                                         </TableRow>
