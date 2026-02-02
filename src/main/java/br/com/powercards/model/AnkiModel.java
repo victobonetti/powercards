@@ -2,12 +2,18 @@ package br.com.powercards.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "anki_models")
+@Filter(name = "workspaceFilter", condition = "workspace_id = :workspaceId")
 public class AnkiModel extends PanacheEntityBase {
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "workspace_id")
+    public Workspace workspace;
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "anki_models_seq")

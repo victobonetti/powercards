@@ -30,6 +30,9 @@ public class AnkiService {
     @jakarta.inject.Inject
     io.minio.MinioClient minioClient;
 
+    @jakarta.inject.Inject
+    br.com.powercards.security.WorkspaceContext workspaceContext;
+
     @org.eclipse.microprofile.config.inject.ConfigProperty(name = "quarkus.minio.url")
     String minioUrl;
 
@@ -56,8 +59,20 @@ public class AnkiService {
         }
     }
 
+    @jakarta.inject.Inject
+    jakarta.persistence.EntityManager entityManager;
+
     private br.com.powercards.dto.ImportResponse persistCollection(Anki4j anki4j, boolean force) {
         LOGGER.info("Persistindo coleção Anki no banco de dados...");
+
+        br.com.powercards.model.Workspace currentWorkspace = workspaceContext.getWorkspace();
+        if (currentWorkspace == null) {
+            throw new jakarta.ws.rs.BadRequestException("Invalid or missing Workspace ID");
+        }
+
+        // Ensure filter is enabled for the transaction
+        entityManager.unwrap(org.hibernate.Session.class).enableFilter("workspaceFilter").setParameter("workspaceId",
+                currentWorkspace.id);
 
         int importedNotes = 0;
         int updatedNotes = 0;
@@ -70,6 +85,7 @@ public class AnkiService {
             AnkiModel model = AnkiModel.find("name", m.getName()).firstResult();
             if (model == null) {
                 model = new AnkiModel();
+                model.workspace = currentWorkspace;
                 model.name = m.getName();
                 model.css = m.getCss();
                 if (m.getFlds() != null) {
@@ -97,6 +113,7 @@ public class AnkiService {
             Deck deck = Deck.find("name", d.getName()).firstResult();
             if (deck == null) {
                 deck = new Deck();
+                deck.workspace = currentWorkspace;
                 deck.name = d.getName();
                 deck.persist();
             }
@@ -129,6 +146,7 @@ public class AnkiService {
                 }
             } else {
                 note = new Note();
+                note.workspace = currentWorkspace;
                 note.guid = n.getGuid();
                 note.model = modelMap.get(n.getMid());
                 note.mod = n.getMod();
@@ -156,6 +174,7 @@ public class AnkiService {
                                     .firstResultOptional()
                                     .orElseGet(() -> {
                                         br.com.powercards.model.Tag newTag = new br.com.powercards.model.Tag(tagName);
+                                        newTag.workspace = currentWorkspace;
                                         newTag.persist();
                                         return newTag;
                                     });

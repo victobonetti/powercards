@@ -10,6 +10,8 @@ import { UploadAnki } from "./components/UploadAnki";
 import { ThemeProvider } from "./components/theme-provider";
 import { PageHeader } from "./components/ui/page-header";
 
+import { WorkspaceProvider } from "./context/WorkspaceContext";
+
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,31 +46,33 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Layout currentView={currentView} onNavigate={handleNavigate}>
-        <Routes>
-          <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
-          <Route path="/upload" element={<Navigate to="/" replace />} />
-          <Route path="/tags" element={
-            <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-              <PageHeader
-                title="Tags"
-                description="Manage your collection tags. Click on a tag to view all notes with that tag."
-              />
-              <TagList />
-            </div>
-          } />
-          <Route path="/decks" element={
-            <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-              <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
-            </div>
-          } />
-          <Route path="/notes" element={
-            <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-              <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
-            </div>
-          } />
-        </Routes>
-      </Layout>
+      <WorkspaceProvider>
+        <Layout currentView={currentView} onNavigate={handleNavigate}>
+          <Routes>
+            <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
+            <Route path="/upload" element={<Navigate to="/" replace />} />
+            <Route path="/tags" element={
+              <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                <PageHeader
+                  title="Tags"
+                  description="Manage your collection tags. Click on a tag to view all notes with that tag."
+                />
+                <TagList />
+              </div>
+            } />
+            <Route path="/decks" element={
+              <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
+              </div>
+            } />
+            <Route path="/notes" element={
+              <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
+              </div>
+            } />
+          </Routes>
+        </Layout>
+      </WorkspaceProvider>
     </ThemeProvider >
   );
 }

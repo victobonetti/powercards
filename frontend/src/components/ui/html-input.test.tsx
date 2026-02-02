@@ -61,7 +61,7 @@ describe("HtmlInput", () => {
 
         // In preview, &nbsp; is rendered as a non-breaking space (char code 160)
         // getByText might match "foo bar" if it normalizes spaces, but let's check.
-        const preview = screen.getByText((content, element) => {
+        const preview = screen.getByText((_, element) => {
             return element?.innerHTML === "foo&nbsp;bar";
         });
         expect(preview).toBeInTheDocument();

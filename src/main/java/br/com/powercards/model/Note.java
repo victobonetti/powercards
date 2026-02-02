@@ -2,10 +2,16 @@ package br.com.powercards.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 
 @Entity
 @Table(name = "notes")
+@Filter(name = "workspaceFilter", condition = "workspace_id = :workspaceId")
 public class Note extends PanacheEntityBase {
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "workspace_id")
+    public Workspace workspace;
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "notes_seq")

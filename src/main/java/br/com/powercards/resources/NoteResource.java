@@ -24,6 +24,9 @@ public class NoteResource {
     @jakarta.inject.Inject
     br.com.powercards.services.AnkiService ankiService;
 
+    @jakarta.inject.Inject
+    br.com.powercards.security.WorkspaceContext workspaceContext;
+
     // Helper to ensure Tags exist
     private void syncTags(String tags) {
         if (tags != null && !tags.isBlank()) {
@@ -36,6 +39,7 @@ public class NoteResource {
                                 .firstResultOptional()
                                 .orElseGet(() -> {
                                     br.com.powercards.model.Tag newTag = new br.com.powercards.model.Tag(tagName);
+                                    newTag.workspace = workspaceContext.getWorkspace();
                                     newTag.persist();
                                     return newTag;
                                 });
@@ -127,12 +131,29 @@ public class NoteResource {
         return toResponse(note);
     }
 
+    @jakarta.inject.Inject
+    jakarta.persistence.EntityManager entityManager;
+
+    private void ensureFilter() {
+        br.com.powercards.model.Workspace currentWorkspace = workspaceContext.getWorkspace();
+        if (currentWorkspace != null) {
+            entityManager.unwrap(org.hibernate.Session.class).enableFilter("workspaceFilter")
+                    .setParameter("workspaceId", currentWorkspace.id);
+        }
+    }
+
     @POST
     @Transactional
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Create a new note")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201", description = "Note created")
     public Response create(NoteRequest noteRequest) {
+        ensureFilter();
+        br.com.powercards.model.Workspace currentWorkspace = workspaceContext.getWorkspace();
+        if (currentWorkspace == null) {
+            throw new BadRequestException("Invalid or missing Workspace ID");
+        }
         Note note = new Note();
+        note.workspace = currentWorkspace;
         note.tags = noteRequest.tags();
         note.flds = noteRequest.fields();
         note.data = noteRequest.customData();
@@ -152,6 +173,7 @@ public class NoteResource {
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Note updated")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
     public NoteResponse update(@PathParam("id") Long id, NoteRequest noteRequest) {
+        ensureFilter();
         Note entity = Note.findById(id);
         if (entity == null) {
             throw new NotFoundException();
@@ -176,6 +198,7 @@ public class NoteResource {
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "204", description = "Note deleted")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
     public void delete(@PathParam("id") Long id) {
+        ensureFilter();
         Note entity = Note.findById(id);
         if (entity == null) {
             throw new NotFoundException();
@@ -200,6 +223,17 @@ public class NoteResource {
         // DELETE FROM Tag t WHERE NOT EXISTS (SELECT 1 FROM Note n WHERE n.tags LIKE
         // concat('%', t.name, '%'))
 
+        // IMPORTANT: Orphan cleanup needs to be aware of workspace?
+        // Yes, if we delete a tag because no note uses it in THIS workspace.
+        // The filter is enabled on the session, so `Tag` (entity delete) and `Note`
+        // select should be filtered.
+        // But native query might bypass?
+        // JPQL: DELETE FROM Tag t ... respects entity mapping?
+        // Tag entity has @Filter.
+        // Does "DELETE FROM Tag t" apply filter? Hibernate usually supports it on HQL
+        // delete.
+        // But the subquery `FROM Note n`?
+
         try {
             // Creating native query or HQL for bulk delete
             Note.getEntityManager().createQuery(
@@ -215,6 +249,7 @@ public class NoteResource {
     @Transactional
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Bulk delete notes")
     public void bulkDelete(BulkDeleteRequest request) {
+        ensureFilter();
         if (request.ids() != null && !request.ids().isEmpty()) {
             // Delete associated cards first to satisfy Foreign Key constraints
             br.com.powercards.model.Card.delete("note.id in ?1", request.ids());
@@ -228,6 +263,7 @@ public class NoteResource {
     @Transactional
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Bulk add tags to notes")
     public void bulkTags(BulkTagRequest request) {
+        ensureFilter();
         if (request.noteIds() != null && !request.noteIds().isEmpty() && request.tags() != null
                 && !request.tags().isEmpty()) {
             List<Note> notes = Note.list("id in ?1", request.noteIds());

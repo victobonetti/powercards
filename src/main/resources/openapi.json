@@ -888,6 +888,73 @@
         },
         "tags" : [ "Tag Resource" ]
       }
+    },
+    "/v1/workspaces" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/WorkspaceResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary" : "List",
+        "tags" : [ "Workspace Resource" ]
+      },
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WorkspaceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Create",
+        "tags" : [ "Workspace Resource" ]
+      }
+    },
+    "/v1/workspaces/{id}" : {
+      "delete" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Delete",
+        "tags" : [ "Workspace Resource" ]
+      }
     }
   },
   "components" : {
@@ -1361,6 +1428,9 @@
       "Tag" : {
         "type" : "object",
         "properties" : {
+          "workspace" : {
+            "$ref" : "#/components/schemas/Workspace"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -1383,6 +1453,37 @@
           "noteCount" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "Workspace" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "WorkspaceRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "WorkspaceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
           }
         }
       }

@@ -2,9 +2,11 @@ package br.com.powercards.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 
 @Entity
 @Table(name = "cards")
+@Filter(name = "workspaceFilter", condition = "did IN (SELECT d.id FROM decks d WHERE d.workspace_id = :workspaceId)")
 public class Card extends PanacheEntityBase {
 
     @Id

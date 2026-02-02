@@ -4,8 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useState } from "react";
-import axios from "axios";
-import { BASE_PATH } from "@/api/base";
+import { axiosInstance } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ImportResponse } from "@/api/custom-types";
 
@@ -49,7 +48,7 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
         formData.append("force", force.toString());
 
         try {
-            const response = await axios.post<ImportResponse>(`${BASE_PATH}/v1/anki/upload`, formData, {
+            const response = await axiosInstance.post<ImportResponse>(`/v1/anki/upload`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },

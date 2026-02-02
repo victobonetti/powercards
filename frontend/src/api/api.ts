@@ -727,6 +727,12 @@ export interface PaginationMeta {
 export interface Tag {
     /**
      * 
+     * @type {Workspace}
+     * @memberof Tag
+     */
+    'workspace'?: Workspace;
+    /**
+     * 
      * @type {number}
      * @memberof Tag
      */
@@ -762,6 +768,57 @@ export interface TagStats {
      * @memberof TagStats
      */
     'noteCount'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface Workspace
+ */
+export interface Workspace {
+    /**
+     * 
+     * @type {number}
+     * @memberof Workspace
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Workspace
+     */
+    'name'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface WorkspaceRequest
+ */
+export interface WorkspaceRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof WorkspaceRequest
+     */
+    'name'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface WorkspaceResponse
+ */
+export interface WorkspaceResponse {
+    /**
+     * 
+     * @type {string}
+     * @memberof WorkspaceResponse
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WorkspaceResponse
+     */
+    'name'?: string;
 }
 
 /**
@@ -3155,6 +3212,247 @@ export class TagResourceApi extends BaseAPI {
      */
     public v1TagsStatsGet(page?: number, perPage?: number, search?: string, options?: RawAxiosRequestConfig) {
         return TagResourceApiFp(this.configuration).v1TagsStatsGet(page, perPage, search, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * WorkspaceResourceApi - axios parameter creator
+ * @export
+ */
+export const WorkspaceResourceApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary List
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1WorkspacesGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/workspaces`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Delete
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1WorkspacesIdDelete: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('v1WorkspacesIdDelete', 'id', id)
+            const localVarPath = `/v1/workspaces/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create
+         * @param {WorkspaceRequest} workspaceRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1WorkspacesPost: async (workspaceRequest: WorkspaceRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'workspaceRequest' is not null or undefined
+            assertParamExists('v1WorkspacesPost', 'workspaceRequest', workspaceRequest)
+            const localVarPath = `/v1/workspaces`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(workspaceRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * WorkspaceResourceApi - functional programming interface
+ * @export
+ */
+export const WorkspaceResourceApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = WorkspaceResourceApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary List
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1WorkspacesGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<WorkspaceResponse>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1WorkspacesGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['WorkspaceResourceApi.v1WorkspacesGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Delete
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1WorkspacesIdDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1WorkspacesIdDelete(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['WorkspaceResourceApi.v1WorkspacesIdDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create
+         * @param {WorkspaceRequest} workspaceRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1WorkspacesPost(workspaceRequest: WorkspaceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1WorkspacesPost(workspaceRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['WorkspaceResourceApi.v1WorkspacesPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * WorkspaceResourceApi - factory interface
+ * @export
+ */
+export const WorkspaceResourceApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = WorkspaceResourceApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary List
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1WorkspacesGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<WorkspaceResponse>> {
+            return localVarFp.v1WorkspacesGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Delete
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1WorkspacesIdDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1WorkspacesIdDelete(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create
+         * @param {WorkspaceRequest} workspaceRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1WorkspacesPost(workspaceRequest: WorkspaceRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1WorkspacesPost(workspaceRequest, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * WorkspaceResourceApi - object-oriented interface
+ * @export
+ * @class WorkspaceResourceApi
+ * @extends {BaseAPI}
+ */
+export class WorkspaceResourceApi extends BaseAPI {
+    /**
+     * 
+     * @summary List
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof WorkspaceResourceApi
+     */
+    public v1WorkspacesGet(options?: RawAxiosRequestConfig) {
+        return WorkspaceResourceApiFp(this.configuration).v1WorkspacesGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Delete
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof WorkspaceResourceApi
+     */
+    public v1WorkspacesIdDelete(id: string, options?: RawAxiosRequestConfig) {
+        return WorkspaceResourceApiFp(this.configuration).v1WorkspacesIdDelete(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create
+     * @param {WorkspaceRequest} workspaceRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof WorkspaceResourceApi
+     */
+    public v1WorkspacesPost(workspaceRequest: WorkspaceRequest, options?: RawAxiosRequestConfig) {
+        return WorkspaceResourceApiFp(this.configuration).v1WorkspacesPost(workspaceRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

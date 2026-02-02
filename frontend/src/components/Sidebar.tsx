@@ -5,6 +5,7 @@ import { useTheme } from "./theme-provider";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import logo_collapsed from "@/assets/logo_collapsed.png"
+import { WorkspaceSelector } from "./WorkspaceSelector";
 
 interface SidebarProps {
     currentView: "upload" | "decks" | "tags";
@@ -104,12 +105,22 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                 </div>
             </div>
 
-            <div className={cn("p-4 border-t bg-muted/20", !isExpanded && "flex justify-center")}>
+            <div className={cn("p-4 border-t bg-muted/20 flex flex-col gap-4", !isExpanded && "items-center")}>
+                {isExpanded ? (
+                    <div className="w-full">
+                        <WorkspaceSelector />
+                    </div>
+                ) : (
+                    <Button variant="ghost" size="icon" title="Workspaces" disabled>
+                        <span className="font-bold text-xs">WS</span>
+                    </Button>
+                )}
+
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="rounded-full"
+                    className="rounded-full self-center"
                     title="Toggle theme"
                 >
                     <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

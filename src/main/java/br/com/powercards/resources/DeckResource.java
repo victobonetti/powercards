@@ -18,6 +18,9 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class DeckResource {
 
+    @jakarta.inject.Inject
+    br.com.powercards.security.WorkspaceContext workspaceContext;
+
     @GET
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all decks")
     public PaginatedResponse<DeckResponse> list(
@@ -101,7 +104,12 @@ public class DeckResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Create a new deck")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201", description = "Deck created")
     public Response create(DeckRequest deckRequest) {
+        br.com.powercards.model.Workspace currentWorkspace = workspaceContext.getWorkspace();
+        if (currentWorkspace == null) {
+            throw new BadRequestException("Invalid or missing Workspace ID");
+        }
         Deck deck = new Deck();
+        deck.workspace = currentWorkspace;
         deck.name = deckRequest.name();
         deck.persist();
         return Response.status(Response.Status.CREATED)

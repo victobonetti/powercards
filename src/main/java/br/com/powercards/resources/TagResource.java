@@ -20,6 +20,9 @@ public class TagResource {
     @jakarta.inject.Inject
     jakarta.persistence.EntityManager em;
 
+    @jakarta.inject.Inject
+    br.com.powercards.security.WorkspaceContext workspaceContext;
+
     @GET
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List tags")
     public List<Tag> list(@QueryParam("search") String search) {
@@ -39,7 +42,17 @@ public class TagResource {
             return Response.status(Response.Status.BAD_REQUEST).entity("Tag name is required").build();
         }
 
+        br.com.powercards.model.Workspace currentWorkspace = workspaceContext.getWorkspace();
+        if (currentWorkspace == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid or missing Workspace ID").build();
+        }
+
         String trimmedName = tag.name.trim();
+
+        // Ensure filter is enabled (defensive programming)
+        org.hibernate.Session session = em.unwrap(org.hibernate.Session.class);
+        session.enableFilter("workspaceFilter").setParameter("workspaceId", currentWorkspace.id);
+
         Tag existing = Tag.find("name", trimmedName).firstResult();
         if (existing != null) {
             return Response.ok(existing).build();
@@ -47,6 +60,7 @@ public class TagResource {
 
         try {
             tag.name = trimmedName;
+            tag.workspace = currentWorkspace;
             tag.persistAndFlush();
             return Response.status(Response.Status.CREATED).entity(tag).build();
         } catch (Exception e) {
