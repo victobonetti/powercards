@@ -1,4 +1,4 @@
-import { Layers, Upload, Moon, Sun, Pin, Tag } from "lucide-react";
+import { Layers, Upload, Moon, Sun, Pin, Tag, HelpCircle } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useTheme } from "./theme-provider";
@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import logo_collapsed from "@/assets/logo_collapsed.png"
 import { WorkspaceSelector } from "./WorkspaceSelector";
+import { HelpModal } from "./HelpModal";
 
 interface SidebarProps {
     currentView: "upload" | "decks" | "tags";
@@ -44,6 +45,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
     const { theme, setTheme } = useTheme();
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isPinned, setIsPinned] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
 
     // Derived state: effectively expanded if pinned or not collapsed (hovered)
     const isExpanded = isPinned || !isCollapsed;
@@ -105,29 +107,45 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                 </div>
             </div>
 
-            <div className={cn("p-4 border-t bg-muted/20 flex flex-col gap-4", !isExpanded && "items-center")}>
-                {isExpanded ? (
-                    <div className="w-full">
-                        <WorkspaceSelector />
-                    </div>
-                ) : (
-                    <Button variant="ghost" size="icon" title="Workspaces" disabled>
-                        <span className="font-bold text-xs">WS</span>
-                    </Button>
-                )}
-
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="rounded-full"
-                    title="Toggle theme"
-                >
-                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span className="sr-only">Toggle theme</span>
+            <div className="p-2 w-full">
+            {isExpanded ? (
+                <div className="w-full flex justify-center">
+                    <WorkspaceSelector />
+                </div>
+            ) : (
+                <Button className="w-full" variant="ghost" size="icon" title="Workspaces" disabled>
+                    <span className="font-bold text-xs w-full self-center">WS</span>
                 </Button>
+            )}
             </div>
+
+            <div className={cn("p-4 border-t bg-muted/20 flex flex-col gap-4", !isExpanded && "items-center")}>
+
+                <div className="flex items-center justify-center gap-2 w-full">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowHelp(true)}
+                        className="rounded-full"
+                        title="Help & Walkthrough"
+                    >
+                        <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                        className="rounded-full"
+                        title="Toggle theme"
+                    >
+                        <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                        <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                        <span className="sr-only">Toggle theme</span>
+                    </Button>
+                </div>
+            </div>
+            <HelpModal open={showHelp} onOpenChange={setShowHelp} />
         </div>
     );
 }
