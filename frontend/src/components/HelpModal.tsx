@@ -1,14 +1,15 @@
-import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Upload, Layers, Edit3, ArrowRight, ArrowLeft } from "lucide-react";
 
-interface HelpModalProps {
+export interface HelpModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    currentStep: number;
+    onStepChange: (step: number) => void;
 }
 
-const steps = [
+export const steps = [
     {
         title: "Welcome to PowerCards",
         description: "Your advanced Anki deck manager. Let's get you started with a quick tour of the main features.",
@@ -31,21 +32,20 @@ const steps = [
     }
 ];
 
-export function HelpModal({ open, onOpenChange }: HelpModalProps) {
-    const [currentStep, setCurrentStep] = useState(0);
+export function HelpModal({ open, onOpenChange, currentStep, onStepChange }: HelpModalProps) {
 
     const handleNext = () => {
         if (currentStep < steps.length - 1) {
-            setCurrentStep(currentStep + 1);
+            onStepChange(currentStep + 1);
         } else {
             onOpenChange(false);
-            setTimeout(() => setCurrentStep(0), 300); // Reset after close
+            setTimeout(() => onStepChange(0), 300); // Reset after close
         }
     };
 
     const handlePrevious = () => {
         if (currentStep > 0) {
-            setCurrentStep(currentStep - 1);
+            onStepChange(currentStep - 1);
         }
     };
 
