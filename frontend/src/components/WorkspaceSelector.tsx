@@ -68,7 +68,8 @@ export function WorkspaceSelector() {
     };
 
     return (
-        <>
+        <div className="font-serif">
+            <label className="text-sm font-medium text-muted-foreground p-1" htmlFor="workspace-select">Workspaces</label>
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
@@ -182,6 +183,6 @@ export function WorkspaceSelector() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </>
+        </div>
     );
 }
