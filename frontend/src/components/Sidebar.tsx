@@ -1,4 +1,4 @@
-import { Layers, Upload, Moon, Sun, Pin, Tag, HelpCircle, Sparkles } from "lucide-react";
+import { Layers, Upload, Moon, Sun, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useTheme } from "./theme-provider";
@@ -7,6 +7,7 @@ import logo from "@/assets/logo.png";
 import logo_collapsed from "@/assets/logo_collapsed.png"
 import { WorkspaceSelector } from "./WorkspaceSelector";
 import { HelpModal } from "./HelpModal";
+import { useFlashcardFactory } from "@/context/FlashcardFactoryContext";
 
 interface SidebarProps {
     currentView: "upload" | "decks" | "tags" | "factory";
@@ -21,22 +22,25 @@ interface SidebarButtonProps {
     isActive: boolean;
     isExpanded: boolean;
     onClick: () => void;
+    className?: string;
+    labelClassName?: string;
 }
 
-function SidebarButton({ icon: Icon, label, isActive, isExpanded, onClick }: SidebarButtonProps) {
+function SidebarButton({ icon: Icon, label, isActive, isExpanded, onClick, className, labelClassName }: SidebarButtonProps) {
     return (
         <Button
             variant={isActive ? "secondary" : "ghost"}
             className={cn(
                 "w-full justify-start transition-all duration-200 font-serif",
                 isActive ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
-                !isExpanded && "justify-center px-2"
+                !isExpanded && "justify-center px-2",
+                className
             )}
             onClick={onClick}
             title={!isExpanded ? label : undefined}
         >
             <Icon className={cn("h-4 w-4 shrink-0", isExpanded && "mr-3")} />
-            {isExpanded && <span className="font-medium">{label}</span>}
+            {isExpanded && <span className={cn("font-medium", labelClassName)}>{label}</span>}
         </Button>
     )
 }
@@ -47,6 +51,8 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
     const [isPinned, setIsPinned] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
     const [helpStep, setHelpStep] = useState(0);
+
+    const { isProcessing, notificationChatIds } = useFlashcardFactory();
 
     // Derived state: effectively expanded if pinned or not collapsed (hovered)
     const isExpanded = isPinned || !isCollapsed;
@@ -74,6 +80,39 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
         if (!isSpotlightMode) return "";
         return "opacity-20 grayscale transition-all duration-300";
     };
+
+    // Determine Flashcard Factory Icon and State
+    let FactoryIcon = Sparkles;
+    let factoryButtonClass = "";
+
+    if (isProcessing) {
+        FactoryIcon = Loader2; // Loading state
+        // Add spin animation class to the icon in pure CSS or via utility if possible, 
+        // but lucide Loader2 usually needs 'animate-spin' which we can pass via Icon className in SidebarButton?
+        // SidebarButton sets className on Icon. We might need to handle it.
+        // Actually SidebarButton does: `className={cn("h-4 w-4 shrink-0", isExpanded && "mr-3")}`
+        // We can't easily add animate-spin unless we modify SidebarButton or wrap the Icon.
+        // Let's modify SidebarButton slightly or wrap Icon.
+    } else if (notificationChatIds.size > 0 && currentView !== "factory") {
+        FactoryIcon = Bell; // Notification state
+        factoryButtonClass = "text-blue-500 dark:text-blue-400"; // Highlight color
+    }
+
+    // Wrapper for Loader to animate + Notification Dot
+    const AnimatedFactoryIcon = (props: any) => {
+        const hasNotification = notificationChatIds.size > 0 && currentView !== "factory";
+        return (
+            <div className="relative flex items-center justify-center overflow-visible">
+                <FactoryIcon {...props} className={cn(props.className, isProcessing && "animate-spin")} />
+                {hasNotification && !isProcessing && (
+                    <span className="absolute -top-1.5 -right-1 flex h-3 w-3 z-50">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-background"></span>
+                    </span>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div
@@ -138,11 +177,13 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     </div>
                     <div className={cn("transition-all duration-300", getItemClass(3))}>
                         <SidebarButton
-                            icon={Sparkles}
-                            label="Flashcard Factory"
+                            icon={AnimatedFactoryIcon}
+                            label={isProcessing ? "Thinking..." : (notificationChatIds.size > 0 && currentView !== "factory" ? "Response Ready" : "Flashcard Factory")}
+                            labelClassName={notificationChatIds.size > 0 && currentView !== "factory" ? "font-bold" : ""}
                             isActive={currentView === "factory"}
                             isExpanded={isExpanded}
                             onClick={() => onNavigate("factory")}
+                            className={factoryButtonClass}
                         />
                     </div>
                 </div>

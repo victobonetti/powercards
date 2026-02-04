@@ -12,6 +12,8 @@ import { ThemeProvider } from "./components/theme-provider";
 import { PageHeader } from "./components/ui/page-header";
 
 import { WorkspaceProvider, useWorkspace } from "./context/WorkspaceContext"; // Ensure useWorkspace is exported and imported
+import { FlashcardFactoryProvider } from "./context/FlashcardFactoryContext";
+import { Toaster } from "./components/ui/toaster";
 import { WorkspaceCreateDialog } from "./components/WorkspaceCreateDialog";
 
 function App() {
@@ -66,34 +68,37 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <WorkspaceProvider>
-        <ForceWorkspaceWrapper>
-          <Layout currentView={currentView} onNavigate={handleNavigate}>
-            <Routes>
-              <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
-              <Route path="/upload" element={<Navigate to="/" replace />} />
-              <Route path="/tags" element={
-                <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                  <PageHeader
-                    title="Tags"
-                    description="Manage your collection tags. Click on a tag to view all notes with that tag."
-                  />
-                  <TagList />
-                </div>
-              } />
-              <Route path="/decks" element={
-                <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                  <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
-                </div>
-              } />
-              <Route path="/factory" element={<FlashcardFactory />} />
-              <Route path="/notes" element={
-                <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                  <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
-                </div>
-              } />
-            </Routes>
-          </Layout>
-        </ForceWorkspaceWrapper>
+        <FlashcardFactoryProvider>
+          <ForceWorkspaceWrapper>
+            <Layout currentView={currentView} onNavigate={handleNavigate}>
+              <Routes>
+                <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
+                <Route path="/upload" element={<Navigate to="/" replace />} />
+                <Route path="/tags" element={
+                  <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                    <PageHeader
+                      title="Tags"
+                      description="Manage your collection tags. Click on a tag to view all notes with that tag."
+                    />
+                    <TagList />
+                  </div>
+                } />
+                <Route path="/decks" element={
+                  <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                    <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
+                  </div>
+                } />
+                <Route path="/factory" element={<FlashcardFactory />} />
+                <Route path="/notes" element={
+                  <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                    <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
+                  </div>
+                } />
+              </Routes>
+            </Layout>
+            <Toaster />
+          </ForceWorkspaceWrapper>
+        </FlashcardFactoryProvider>
       </WorkspaceProvider>
     </ThemeProvider >
   );

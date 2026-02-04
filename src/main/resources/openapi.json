@@ -41,6 +41,157 @@
         "tags" : [ "AI Resource" ]
       }
     },
+    "/chats" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "X-Workspace-Id",
+          "in" : "header",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Chat"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary" : "List Chats",
+        "tags" : [ "Chat Resource" ]
+      },
+      "post" : {
+        "parameters" : [ {
+          "name" : "X-Workspace-Id",
+          "in" : "header",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Chat"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Chat"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Create Chat",
+        "tags" : [ "Chat Resource" ]
+      }
+    },
+    "/chats/{id}" : {
+      "delete" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Delete Chat",
+        "tags" : [ "Chat Resource" ]
+      }
+    },
+    "/chats/{id}/history" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ChatHistory"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Get History",
+        "tags" : [ "Chat Resource" ]
+      }
+    },
+    "/chats/{id}/messages" : {
+      "post" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Send Message",
+        "tags" : [ "Chat Resource" ]
+      }
+    },
     "/v1/anki/upload" : {
       "post" : {
         "summary" : "Upload Anki package",
@@ -1314,6 +1465,49 @@
           }
         }
       },
+      "Chat" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "workspaceId" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          }
+        }
+      },
+      "ChatHistory" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "chat" : {
+            "$ref" : "#/components/schemas/Chat"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "content" : {
+            "type" : "string"
+          },
+          "messageType" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          }
+        }
+      },
       "DeckRequest" : {
         "type" : "object",
         "properties" : {
@@ -1337,6 +1531,11 @@
             "format" : "int64"
           }
         }
+      },
+      "LocalDateTime" : {
+        "type" : "string",
+        "format" : "date-time",
+        "examples" : [ "2022-03-10T12:15:50" ]
       },
       "NoteRequest" : {
         "type" : "object",
@@ -1524,6 +1723,11 @@
             "format" : "int64"
           }
         }
+      },
+      "UUID" : {
+        "type" : "string",
+        "format" : "uuid",
+        "pattern" : "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
       },
       "Workspace" : {
         "type" : "object",

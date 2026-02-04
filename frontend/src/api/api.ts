@@ -443,6 +443,86 @@ export interface CardResponse {
 /**
  * 
  * @export
+ * @interface Chat
+ */
+export interface Chat {
+    /**
+     * 
+     * @type {string}
+     * @memberof Chat
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Chat
+     */
+    'workspaceId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Chat
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Chat
+     */
+    'createdAt'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Chat
+     */
+    'updatedAt'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ChatHistory
+ */
+export interface ChatHistory {
+    /**
+     * 
+     * @type {string}
+     * @memberof ChatHistory
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {Chat}
+     * @memberof ChatHistory
+     */
+    'chat'?: Chat;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChatHistory
+     */
+    'role'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChatHistory
+     */
+    'content'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChatHistory
+     */
+    'messageType'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChatHistory
+     */
+    'createdAt'?: string;
+}
+/**
+ * 
+ * @export
  * @interface DeckRequest
  */
 export interface DeckRequest {
@@ -2005,6 +2085,408 @@ export class CardResourceApi extends BaseAPI {
      */
     public v1CardsPost(cardRequest: CardRequest, options?: RawAxiosRequestConfig) {
         return CardResourceApiFp(this.configuration).v1CardsPost(cardRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * ChatResourceApi - axios parameter creator
+ * @export
+ */
+export const ChatResourceApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary List Chats
+         * @param {string} [xWorkspaceId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsGet: async (xWorkspaceId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/chats`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            if (xWorkspaceId != null) {
+                localVarHeaderParameter['X-Workspace-Id'] = String(xWorkspaceId);
+            }
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Delete Chat
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsIdDelete: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('chatsIdDelete', 'id', id)
+            const localVarPath = `/chats/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get History
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsIdHistoryGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('chatsIdHistoryGet', 'id', id)
+            const localVarPath = `/chats/{id}/history`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Send Message
+         * @param {string} id 
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsIdMessagesPost: async (id: string, body: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('chatsIdMessagesPost', 'id', id)
+            // verify required parameter 'body' is not null or undefined
+            assertParamExists('chatsIdMessagesPost', 'body', body)
+            const localVarPath = `/chats/{id}/messages`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'text/plain';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create Chat
+         * @param {Chat} chat 
+         * @param {string} [xWorkspaceId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsPost: async (chat: Chat, xWorkspaceId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'chat' is not null or undefined
+            assertParamExists('chatsPost', 'chat', chat)
+            const localVarPath = `/chats`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            if (xWorkspaceId != null) {
+                localVarHeaderParameter['X-Workspace-Id'] = String(xWorkspaceId);
+            }
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(chat, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ChatResourceApi - functional programming interface
+ * @export
+ */
+export const ChatResourceApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ChatResourceApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary List Chats
+         * @param {string} [xWorkspaceId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatsGet(xWorkspaceId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Chat>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatsGet(xWorkspaceId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatResourceApi.chatsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Delete Chat
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatsIdDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatsIdDelete(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatResourceApi.chatsIdDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get History
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatsIdHistoryGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ChatHistory>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatsIdHistoryGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatResourceApi.chatsIdHistoryGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Send Message
+         * @param {string} id 
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatsIdMessagesPost(id: string, body: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatsIdMessagesPost(id, body, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatResourceApi.chatsIdMessagesPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create Chat
+         * @param {Chat} chat 
+         * @param {string} [xWorkspaceId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatsPost(chat: Chat, xWorkspaceId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Chat>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatsPost(chat, xWorkspaceId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatResourceApi.chatsPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ChatResourceApi - factory interface
+ * @export
+ */
+export const ChatResourceApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ChatResourceApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary List Chats
+         * @param {string} [xWorkspaceId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsGet(xWorkspaceId?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<Chat>> {
+            return localVarFp.chatsGet(xWorkspaceId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Delete Chat
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsIdDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.chatsIdDelete(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get History
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsIdHistoryGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<ChatHistory>> {
+            return localVarFp.chatsIdHistoryGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Send Message
+         * @param {string} id 
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsIdMessagesPost(id: string, body: string, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.chatsIdMessagesPost(id, body, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create Chat
+         * @param {Chat} chat 
+         * @param {string} [xWorkspaceId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatsPost(chat: Chat, xWorkspaceId?: string, options?: RawAxiosRequestConfig): AxiosPromise<Chat> {
+            return localVarFp.chatsPost(chat, xWorkspaceId, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ChatResourceApi - object-oriented interface
+ * @export
+ * @class ChatResourceApi
+ * @extends {BaseAPI}
+ */
+export class ChatResourceApi extends BaseAPI {
+    /**
+     * 
+     * @summary List Chats
+     * @param {string} [xWorkspaceId] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ChatResourceApi
+     */
+    public chatsGet(xWorkspaceId?: string, options?: RawAxiosRequestConfig) {
+        return ChatResourceApiFp(this.configuration).chatsGet(xWorkspaceId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Delete Chat
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ChatResourceApi
+     */
+    public chatsIdDelete(id: string, options?: RawAxiosRequestConfig) {
+        return ChatResourceApiFp(this.configuration).chatsIdDelete(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get History
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ChatResourceApi
+     */
+    public chatsIdHistoryGet(id: string, options?: RawAxiosRequestConfig) {
+        return ChatResourceApiFp(this.configuration).chatsIdHistoryGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Send Message
+     * @param {string} id 
+     * @param {string} body 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ChatResourceApi
+     */
+    public chatsIdMessagesPost(id: string, body: string, options?: RawAxiosRequestConfig) {
+        return ChatResourceApiFp(this.configuration).chatsIdMessagesPost(id, body, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create Chat
+     * @param {Chat} chat 
+     * @param {string} [xWorkspaceId] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ChatResourceApi
+     */
+    public chatsPost(chat: Chat, xWorkspaceId?: string, options?: RawAxiosRequestConfig) {
+        return ChatResourceApiFp(this.configuration).chatsPost(chat, xWorkspaceId, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
