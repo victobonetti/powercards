@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { noteApi, modelApi } from "@/lib/api";
 import { useSearchParams } from "react-router-dom";
 import { NoteResponse, AnkiModelResponse } from "@/api/api";
+import { getDisplayField, stripHtml } from "@/lib/displayUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "./ui/page-header";
@@ -239,11 +240,7 @@ export function NoteCRUD() {
 
     const totalPages = Math.ceil(totalNotes / perPage) || 1;
 
-    const stripHtml = (html: string) => {
-        const tmp = document.createElement("DIV");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
-    };
+
 
     return (
         <div className="flex h-full flex-col overflow-hidden">
@@ -344,7 +341,7 @@ export function NoteCRUD() {
                                 )}
                             </CardHeader>
 
-                            <CardContent className="h-[600px] flex flex-col p-0">
+                            <CardContent className="flex-1 flex flex-col p-0 min-h-0">
                                 <DataTable
                                     data={notes}
                                     columns={[
@@ -357,11 +354,14 @@ export function NoteCRUD() {
                                         {
                                             header: "Field Content",
                                             className: "max-w-md truncate text-xs py-1 h-8",
-                                            cell: (note) => (
-                                                <span title={note.fields?.split("\u001f")[0] || ""}>
-                                                    {stripHtml(note.fields?.split("\u001f")[0] || "")}
-                                                </span>
-                                            ),
+                                            cell: (note) => {
+                                                const rawField = getDisplayField(note.fields);
+                                                return (
+                                                    <span title={rawField}>
+                                                        {stripHtml(rawField)}
+                                                    </span>
+                                                );
+                                            },
                                             sortKey: "sfld"
                                         },
                                         {

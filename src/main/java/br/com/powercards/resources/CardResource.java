@@ -228,8 +228,20 @@ public class CardResource {
     }
 
     private CardResponse toResponse(Card card) {
-        String noteField = card.note != null && card.note.flds != null ? card.note.flds.split("\u001f")[0] : "";
-        if (card.note != null) {
+        String noteField = "";
+        if (card.note != null && card.note.flds != null) {
+            String[] fields = card.note.flds.split("\u001f");
+            for (String f : fields) {
+                if (!f.trim().matches("^\\d+$")) {
+                    noteField = f;
+                    break;
+                }
+            }
+            // Fallback to first field if all are numeric or empty
+            if (noteField.isEmpty() && fields.length > 0) {
+                noteField = fields[0];
+            }
+
             noteField = ankiService.replaceMediaWithUrls(card.note.id, noteField);
         }
         return new CardResponse(

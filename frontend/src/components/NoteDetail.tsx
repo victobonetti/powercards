@@ -160,7 +160,7 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : (
-                    <div className="grid gap-6">
+                    <div className="grid">
                         {model?.fields?.map((field: AnkiFieldDto, index: number) => (
                             <div key={index} className="grid gap-2">
                                 <Label htmlFor={`field-${index}`} className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">

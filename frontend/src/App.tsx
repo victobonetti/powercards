@@ -122,7 +122,7 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
   };
 
   return (
-    <div>
+    <div className="flex flex-col h-full overflow-hidden">
       <PageHeader
         title="My Decks"
         description="Manage your decks and notes here."
@@ -150,7 +150,7 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
         </div>
       </PageHeader>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col">
         {activeTab === "decks" ? <DeckCRUD highlightNew={highlightNewDecks} /> : <NoteCRUD />}
       </div>
     </div>

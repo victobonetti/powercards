@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import { Badge } from "@/components/ui/badge";
 import { stringToColor } from "@/lib/colorUtils";
+import { getDisplayField, stripHtml } from "@/lib/displayUtils";
 
 import { useDebounce } from "@/hooks/use-debounce";
 import { Input } from "@/components/ui/input";
@@ -111,11 +112,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
 
     const totalPages = Math.ceil(totalCards / perPage) || 1;
 
-    const stripHtml = (html: string) => {
-        const tmp = document.createElement("DIV");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
-    };
+
 
     const handleBulkMove = async (targetDeckId: number) => {
         try {
@@ -230,7 +227,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                 )}
                             </CardHeader>
 
-                            <CardContent className="p-0 flex-1 overflow-auto h-[600px] flex flex-col">
+                            <CardContent className="p-0 flex-1 flex flex-col min-h-0">
                                 <DataTable
                                     data={cards}
                                     columns={[
@@ -243,11 +240,14 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                         {
                                             header: "Note Content",
                                             className: "max-w-xs truncate text-xs py-1 h-8",
-                                            cell: (card) => (
-                                                <span title={(card as any).noteField}>
-                                                    {stripHtml((card as any).noteField || "-")}
-                                                </span>
-                                            ),
+                                            cell: (card) => {
+                                                const rawField = getDisplayField((card as any).noteField);
+                                                return (
+                                                    <span title={rawField}>
+                                                        {stripHtml(rawField)}
+                                                    </span>
+                                                );
+                                            },
                                             sortKey: "sfld" // Backend usually uses 'sfld' (sort field) for note content, verifying with sort logic: previous code toggled 'sfld'?? No, checking previous code: onClick={() => toggleSort("tags")} for tags, but CardList previously didn't sort by content? 
                                             // Wait, looking at lines 284-293 in original file: 
                                             // ID sort is 'id'. 

@@ -190,8 +190,8 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const totalPages = Math.ceil(totalDecks / perPage) || 1;
 
     return (
-        <div>
-            <Card className={highlightNew ? "ring-2 ring-primary transition-all duration-500" : ""}>
+        <div className="flex flex-col h-full overflow-hidden">
+            <Card className={`flex flex-col border shadow-sm flex-1 overflow-hidden ${highlightNew ? "ring-2 ring-primary transition-all duration-500" : ""}`}>
                 <CardHeader className="p-8">
                     <div className="flex items-center justify-between">
                         <PageHeader
@@ -235,7 +235,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="h-[600px] flex flex-col p-0">
+                <CardContent className="flex-1 flex flex-col p-0 min-h-0">
                     <DataTable
                         data={decks}
                         columns={[
