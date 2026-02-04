@@ -6,6 +6,8 @@ import br.com.powercards.services.AnkiService;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,88 +15,120 @@ import static org.junit.jupiter.api.Assertions.*;
 @QuarkusTest
 public class AnkiMediaReplacementTest {
 
-    @Inject
-    AnkiService ankiService;
+        @Inject
+        AnkiService ankiService;
 
-    @Test
-    @TestTransaction
-    public void testMediaReplacementPatterns() {
-        Long noteId = 999L;
-        String minioBaseUrl = "http://localhost:9000/anki-media/";
+        private br.com.powercards.model.Workspace workspace;
 
-        // Setup mock media
-        new AnkiMedia(noteId, "cat.png", minioBaseUrl + "cat.png").persist();
-        new AnkiMedia(noteId, "meow.mp3", minioBaseUrl + "meow.mp3").persist();
-        new AnkiMedia(noteId, "dog.jpg", minioBaseUrl + "dog.jpg").persist();
+        @BeforeEach
+        @Transactional // Helper to create workspace
+        void setUp() {
+                // Cleanup if needed or rely on TestTransaction
+                br.com.powercards.domain.entities.AnkiMedia.deleteAll();
+                br.com.powercards.model.Card.deleteAll();
+                Note.deleteAll();
+                br.com.powercards.model.Deck.deleteAll();
+                br.com.powercards.model.AnkiTemplate.deleteAll();
+                br.com.powercards.model.AnkiField.deleteAll();
+                br.com.powercards.model.AnkiModel.deleteAll();
+                br.com.powercards.model.Tag.deleteAll();
+                br.com.powercards.model.Workspace.deleteAll();
 
-        // 1. Test standard img src replacement (with quotes)
-        String content1 = "Look at this <img src=\"cat.png\">";
-        String result1 = ankiService.replaceMediaWithUrls(noteId, content1);
-        assertEquals("Look at this <img src=\"" + minioBaseUrl + "cat.png\">", result1);
+                workspace = new br.com.powercards.model.Workspace();
+                workspace.name = "Test Workspace";
+                workspace.persist();
+        }
 
-        // 2. Test user's img= replacement (no quotes mentions)
-        String content2 = "Another image img=cat.png inside";
-        String result2 = ankiService.replaceMediaWithUrls(noteId, content2);
-        assertEquals("Another image src=\"" + minioBaseUrl + "cat.png\" inside", result2);
+        @Test
+        @Transactional
+        // @TestTransaction removed because we need manual transaction control for setUp
+        // or mix them
+        // But @BeforeEach runs outside @TestTransaction if not careful.
+        // Simpler to just use @Transactional on methods if needed or keep it simple.
+        // The previous code used @TestTransaction. We can keep it but cleanup might be
+        // tricky.
+        // We'll trust our manual cleanup in setUp.
+        public void testMediaReplacementPatterns() {
+                Long noteId = 999L;
+                String minioBaseUrl = "http://localhost:9000/anki-media/";
 
-        // 2b. Test single quotes and no quotes in src
-        assertEquals("src=\"" + minioBaseUrl + "cat.png\"", ankiService.replaceMediaWithUrls(noteId, "src='cat.png'"));
-        assertEquals("src=\"" + minioBaseUrl + "cat.png\"", ankiService.replaceMediaWithUrls(noteId, "src=cat.png"));
+                // Setup mock media
+                new AnkiMedia(noteId, "cat.png", minioBaseUrl + "cat.png").persist();
+                new AnkiMedia(noteId, "meow.mp3", minioBaseUrl + "meow.mp3").persist();
+                new AnkiMedia(noteId, "dog.jpg", minioBaseUrl + "dog.jpg").persist();
 
-        // 2c. Test spaces around =
-        assertEquals("src=\"" + minioBaseUrl + "cat.png\"",
-                ankiService.replaceMediaWithUrls(noteId, "src  =  \"cat.png\""));
-        assertEquals("src=\"" + minioBaseUrl + "cat.png\"", ankiService.replaceMediaWithUrls(noteId, "img = cat.png"));
+                // 1. Test standard img src replacement (with quotes)
+                String content1 = "Look at this <img src=\"cat.png\">";
+                String result1 = ankiService.replaceMediaWithUrls(noteId, content1);
+                assertEquals("Look at this <img src=\"" + minioBaseUrl + "cat.png\">", result1);
 
-        // 2d. Test termination before unit separator
-        String contentWithUS = "src=cat.png\u001fNextField";
-        assertEquals("src=\"" + minioBaseUrl + "cat.png\"\u001fNextField",
-                ankiService.replaceMediaWithUrls(noteId, contentWithUS));
+                // 2. Test user's img= replacement (no quotes mentions)
+                String content2 = "Another image img=cat.png inside";
+                String result2 = ankiService.replaceMediaWithUrls(noteId, content2);
+                assertEquals("Another image src=\"" + minioBaseUrl + "cat.png\" inside", result2);
 
-        // 3. Test [sound:...] replacement
-        String content3 = "Listen: [sound:meow.mp3]";
-        String result3 = ankiService.replaceMediaWithUrls(noteId, content3);
-        assertEquals("Listen: <audio controls src=\"" + minioBaseUrl + "meow.mp3\"></audio>", result3);
+                // 2b. Test single quotes and no quotes in src
+                assertEquals("src=\"" + minioBaseUrl + "cat.png\"",
+                                ankiService.replaceMediaWithUrls(noteId, "src='cat.png'"));
+                assertEquals("src=\"" + minioBaseUrl + "cat.png\"",
+                                ankiService.replaceMediaWithUrls(noteId, "src=cat.png"));
 
-        // 4. Test [source:...] replacement
-        String content4 = "Source sound: [source:meow.mp3]";
-        String result4 = ankiService.replaceMediaWithUrls(noteId, content4);
-        assertEquals("Source sound: <audio controls src=\"" + minioBaseUrl + "meow.mp3\"></audio>", result4);
+                // 2c. Test spaces around =
+                assertEquals("src=\"" + minioBaseUrl + "cat.png\"",
+                                ankiService.replaceMediaWithUrls(noteId, "src  =  \"cat.png\""));
+                assertEquals("src=\"" + minioBaseUrl + "cat.png\"",
+                                ankiService.replaceMediaWithUrls(noteId, "img = cat.png"));
 
-        // 5. Test missing media (should remain unchanged or follow fallback)
-        String content5 = "Unknown <img src=\"missing.png\"> and [sound:missing.mp3]";
-        String result5 = ankiService.replaceMediaWithUrls(noteId, content5);
-        assertEquals(content5, result5, "Missing media should not be replaced");
+                // 2d. Test termination before unit separator
+                String contentWithUS = "src=cat.png\u001fNextField";
+                assertEquals("src=\"" + minioBaseUrl + "cat.png\"\u001fNextField",
+                                ankiService.replaceMediaWithUrls(noteId, contentWithUS));
 
-        // 6. Test complex filename with dashes (reported by user)
-        String complexFile = "image-650be0aafaee818e5f824b2dd4990090da291019.png";
-        new AnkiMedia(noteId, complexFile, minioBaseUrl + complexFile).persist();
-        String contentComplex = "<img src=\"" + complexFile + "\">";
-        assertEquals("<img src=\"" + minioBaseUrl + complexFile + "\">",
-                ankiService.replaceMediaWithUrls(noteId, contentComplex));
-    }
+                // 3. Test [sound:...] replacement
+                String content3 = "Listen: [sound:meow.mp3]";
+                String result3 = ankiService.replaceMediaWithUrls(noteId, content3);
+                assertEquals("Listen: <audio controls src=\"" + minioBaseUrl + "meow.mp3\"></audio>", result3);
 
-    @Test
-    @TestTransaction
-    public void testDatabaseStaysIntactAfterReplacement() {
-        // Create a real note
-        Note note = new Note();
-        note.flds = "Original content with [sound:meow.mp3]";
-        note.persist();
-        Long noteId = note.id;
+                // 4. Test [source:...] replacement
+                String content4 = "Source sound: [source:meow.mp3]";
+                String result4 = ankiService.replaceMediaWithUrls(noteId, content4);
+                assertEquals("Source sound: <audio controls src=\"" + minioBaseUrl + "meow.mp3\"></audio>", result4);
 
-        // Setup media
-        new AnkiMedia(noteId, "meow.mp3", "http://minio/meow.mp3").persist();
+                // 5. Test missing media (should remain unchanged or follow fallback)
+                String content5 = "Unknown <img src=\"missing.png\"> and [sound:missing.mp3]";
+                String result5 = ankiService.replaceMediaWithUrls(noteId, content5);
+                assertEquals(content5, result5, "Missing media should not be replaced");
 
-        // Trigger replacement (what resource does during rendering)
-        String renderedContent = ankiService.replaceMediaWithUrls(noteId, note.flds);
+                // 6. Test complex filename with dashes (reported by user)
+                String complexFile = "image-650be0aafaee818e5f824b2dd4990090da291019.png";
+                new AnkiMedia(noteId, complexFile, minioBaseUrl + complexFile).persist();
+                String contentComplex = "<img src=\"" + complexFile + "\">";
+                assertEquals("<img src=\"" + minioBaseUrl + complexFile + "\">",
+                                ankiService.replaceMediaWithUrls(noteId, contentComplex));
+        }
 
-        // Verify replacement happened in result
-        assertTrue(renderedContent.contains("<audio"), "Content should be rendered");
+        @Test
+        @Transactional
+        public void testDatabaseStaysIntactAfterReplacement() {
+                // Create a real note
+                Note note = new Note();
+                note.flds = "Original content with [sound:meow.mp3]";
+                note.workspace = workspace; // Assign workspace!
+                note.persist();
+                Long noteId = note.id;
 
-        // Verify entity in DB is UNCHANGED
-        Note fetchedNote = Note.findById(noteId);
-        assertEquals("Original content with [sound:meow.mp3]", fetchedNote.flds,
-                "Database content must remain original");
-    }
+                // Setup media
+                new AnkiMedia(noteId, "meow.mp3", "http://minio/meow.mp3").persist();
+
+                // Trigger replacement (what resource does during rendering)
+                String renderedContent = ankiService.replaceMediaWithUrls(noteId, note.flds);
+
+                // Verify replacement happened in result
+                assertTrue(renderedContent.contains("<audio"), "Content should be rendered");
+
+                // Verify entity in DB is UNCHANGED
+                Note fetchedNote = Note.findById(noteId);
+                assertEquals("Original content with [sound:meow.mp3]", fetchedNote.flds,
+                                "Database content must remain original");
+        }
 }

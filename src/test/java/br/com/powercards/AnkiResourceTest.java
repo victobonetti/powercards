@@ -25,11 +25,29 @@ public class AnkiResourceTest {
 
         private Path tempTestDir;
         private File apkgFile;
+        private br.com.powercards.model.Workspace workspace;
 
         @BeforeEach
         public void setUp() throws Exception {
                 tempTestDir = Files.createTempDirectory("anki_upload_test");
                 createSyntheticApkg();
+                createWorkspace();
+        }
+
+        @jakarta.transaction.Transactional
+        void createWorkspace() {
+                br.com.powercards.domain.entities.AnkiMedia.deleteAll();
+                br.com.powercards.model.Card.deleteAll();
+                br.com.powercards.model.Note.deleteAll();
+                br.com.powercards.model.Deck.deleteAll();
+                br.com.powercards.model.AnkiTemplate.deleteAll();
+                br.com.powercards.model.AnkiField.deleteAll();
+                br.com.powercards.model.AnkiModel.deleteAll();
+                br.com.powercards.model.Tag.deleteAll();
+                br.com.powercards.model.Workspace.deleteAll();
+                workspace = new br.com.powercards.model.Workspace();
+                workspace.name = "Import Workspace";
+                workspace.persist();
         }
 
         @AfterEach
@@ -99,6 +117,7 @@ public class AnkiResourceTest {
         public void testUploadAndPersistence() {
                 // Extract generated IDs from response
                 io.restassured.response.ExtractableResponse<io.restassured.response.Response> response = given()
+                                .header("X-Workspace-Id", workspace.id)
                                 .multiPart("file", apkgFile)
                                 .when()
                                 .post("/v1/anki/upload")
@@ -113,6 +132,7 @@ public class AnkiResourceTest {
 
                 // Verify Deck CRUD
                 given()
+                                .header("X-Workspace-Id", workspace.id)
                                 .when().get("/v1/decks/" + deckId)
                                 .then()
                                 .statusCode(200)
@@ -123,6 +143,7 @@ public class AnkiResourceTest {
         public void testDuplicateAndForceUpload() {
                 // 1. First Upload
                 given()
+                                .header("X-Workspace-Id", workspace.id)
                                 .multiPart("file", apkgFile)
                                 .when()
                                 .post("/v1/anki/upload")
@@ -133,6 +154,7 @@ public class AnkiResourceTest {
 
                 // 2. Duplicate Upload (Force = false by default or explicit)
                 given()
+                                .header("X-Workspace-Id", workspace.id)
                                 .multiPart("file", apkgFile)
                                 .multiPart("force", "false")
                                 .when()
@@ -146,6 +168,7 @@ public class AnkiResourceTest {
 
                 // 3. Force Upload
                 given()
+                                .header("X-Workspace-Id", workspace.id)
                                 .multiPart("file", apkgFile)
                                 .multiPart("force", "true")
                                 .when()

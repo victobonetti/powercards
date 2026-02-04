@@ -10,7 +10,8 @@ import { UploadAnki } from "./components/UploadAnki";
 import { ThemeProvider } from "./components/theme-provider";
 import { PageHeader } from "./components/ui/page-header";
 
-import { WorkspaceProvider } from "./context/WorkspaceContext";
+import { WorkspaceProvider, useWorkspace } from "./context/WorkspaceContext"; // Ensure useWorkspace is exported and imported
+import { WorkspaceCreateDialog } from "./components/WorkspaceCreateDialog";
 
 function App() {
   const navigate = useNavigate();
@@ -44,36 +45,70 @@ function App() {
     else if (view === "tags") navigate("/tags");
   };
 
+  // Logic for forced workspace creation
+  // We need to access useWorkspace here, but App is outside of WorkspaceProvider.
+  // We should move WorkspaceProvider up or move this logic down into a child component.
+  // Looking at the structure: Layout is inside WorkspaceProvider.
+  // Best place is inside Layout or a wrapper component inside WorkspaceProvider.
+  // Let's modify Layout component instead, or creating a wrapper here.
+
+  // Since Layout is used inside WorkspaceProvider, let's modify Layout.
+  // Wait, Layout is imported from "./components/Layout".
+  // Let's check Layout.tsx content first. I haven't seen Layout.tsx content yet, only listed it.
+  // Ah, I listed it but didn't view it.
+  // I should check Layout.tsx. 
+  // But I can also add a wrapper component inside App.tsx
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <WorkspaceProvider>
-        <Layout currentView={currentView} onNavigate={handleNavigate}>
-          <Routes>
-            <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
-            <Route path="/upload" element={<Navigate to="/" replace />} />
-            <Route path="/tags" element={
-              <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                <PageHeader
-                  title="Tags"
-                  description="Manage your collection tags. Click on a tag to view all notes with that tag."
-                />
-                <TagList />
-              </div>
-            } />
-            <Route path="/decks" element={
-              <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
-              </div>
-            } />
-            <Route path="/notes" element={
-              <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
-              </div>
-            } />
-          </Routes>
-        </Layout>
+        <ForceWorkspaceWrapper>
+          <Layout currentView={currentView} onNavigate={handleNavigate}>
+            <Routes>
+              <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
+              <Route path="/upload" element={<Navigate to="/" replace />} />
+              <Route path="/tags" element={
+                <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                  <PageHeader
+                    title="Tags"
+                    description="Manage your collection tags. Click on a tag to view all notes with that tag."
+                  />
+                  <TagList />
+                </div>
+              } />
+              <Route path="/decks" element={
+                <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                  <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
+                </div>
+              } />
+              <Route path="/notes" element={
+                <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+                  <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
+                </div>
+              } />
+            </Routes>
+          </Layout>
+        </ForceWorkspaceWrapper>
       </WorkspaceProvider>
     </ThemeProvider >
+  );
+}
+
+// Wrapper to handle forced workspace creation
+function ForceWorkspaceWrapper({ children }: { children: React.ReactNode }) {
+  const { workspaces, isLoading } = useWorkspace();
+  const shouldForceCreate = !isLoading && workspaces.length === 0;
+
+  return (
+    <>
+      {/* Show main content but overlay will block it if dialog is forced */}
+      {children}
+      <WorkspaceCreateDialog
+        open={shouldForceCreate}
+        onOpenChange={() => { }} // No-op, cannot close
+        force={true}
+      />
+    </>
   );
 }
 

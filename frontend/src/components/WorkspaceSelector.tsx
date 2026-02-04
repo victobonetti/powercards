@@ -17,55 +17,16 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useWorkspace } from "@/context/WorkspaceContext";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { WorkspaceCreateDialog } from "./WorkspaceCreateDialog";
+import { WorkspaceDeleteDialog } from "./WorkspaceDeleteDialog";
 
 export function WorkspaceSelector() {
-    const { workspaces, currentWorkspaceId, selectWorkspace, createWorkspace, deleteWorkspace } = useWorkspace();
+    const { workspaces, currentWorkspaceId, selectWorkspace } = useWorkspace();
     const [open, setOpen] = useState(false);
     const [showNewWorkspaceDialog, setShowNewWorkspaceDialog] = useState(false);
-    const [newWorkspaceName, setNewWorkspaceName] = useState("");
     const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
 
     const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
-
-    const handleCreateWorkspace = async () => {
-        if (!newWorkspaceName.trim()) return;
-        try {
-            await createWorkspace(newWorkspaceName);
-            setShowNewWorkspaceDialog(false);
-            setNewWorkspaceName("");
-        } catch (error) {
-            // Toast handled in context
-        }
-    };
-
-    const handleDeleteWorkspace = async () => {
-        if (!workspaceToDelete) return;
-        try {
-            await deleteWorkspace(workspaceToDelete);
-            setWorkspaceToDelete(null);
-        } catch (error) {
-            // Toast handled in context
-        }
-    };
 
     return (
         <div className="font-serif">
@@ -142,47 +103,16 @@ export function WorkspaceSelector() {
                 </PopoverContent>
             </Popover>
 
-            <Dialog open={showNewWorkspaceDialog} onOpenChange={setShowNewWorkspaceDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create Workspace</DialogTitle>
-                        <DialogDescription>
-                            Add a new workspace to organize your decks and notes separately.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <Input
-                            placeholder="Workspace Name"
-                            value={newWorkspaceName}
-                            onChange={(e) => setNewWorkspaceName(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleCreateWorkspace()}
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowNewWorkspaceDialog(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleCreateWorkspace}>Create</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <WorkspaceCreateDialog
+                open={showNewWorkspaceDialog}
+                onOpenChange={setShowNewWorkspaceDialog}
+            />
 
-            <AlertDialog open={!!workspaceToDelete} onOpenChange={(open) => !open && setWorkspaceToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete the workspace. You can only delete empty workspaces.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteWorkspace} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <WorkspaceDeleteDialog
+                workspaceId={workspaceToDelete}
+                open={!!workspaceToDelete}
+                onOpenChange={(open) => !open && setWorkspaceToDelete(null)}
+            />
         </div>
     );
 }

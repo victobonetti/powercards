@@ -18,6 +18,9 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class AnkiModelResource {
 
+    @jakarta.inject.Inject
+    br.com.powercards.security.WorkspaceContext workspaceContext;
+
     @GET
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "List all Anki models")
     public List<AnkiModelResponse> list() {
@@ -44,7 +47,12 @@ public class AnkiModelResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Create a new Anki model")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201", description = "Model created")
     public Response create(AnkiModelRequest modelRequest) {
+        br.com.powercards.model.Workspace currentWorkspace = workspaceContext.getWorkspace();
+        if (currentWorkspace == null) {
+            throw new BadRequestException("Invalid or missing Workspace ID");
+        }
         AnkiModel model = new AnkiModel();
+        model.workspace = currentWorkspace;
         model.name = modelRequest.name();
         model.css = modelRequest.css();
         // Mapping fields and templates if provided

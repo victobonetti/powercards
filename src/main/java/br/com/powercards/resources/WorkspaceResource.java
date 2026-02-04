@@ -47,6 +47,27 @@ public class WorkspaceResource {
             if (w == null) {
                 throw new NotFoundException();
             }
+            // Delete Cards first (referencing Note and Deck)
+            // Note: Card doesn't have a direct workspace link, so we reach it via Deck
+            br.com.powercards.model.Card.delete("deck.workspace.id = ?1", longId);
+
+            // Delete Notes (referencing Workspace and AnkiModel)
+            br.com.powercards.model.Note.delete("workspace.id = ?1", longId);
+
+            // Delete Decks (referencing Workspace)
+            br.com.powercards.model.Deck.delete("workspace.id = ?1", longId);
+
+            // Delete AnkiTemplates and AnkiFields (referencing AnkiModel)
+            br.com.powercards.model.AnkiTemplate.delete("model.workspace.id = ?1", longId);
+            br.com.powercards.model.AnkiField.delete("model.workspace.id = ?1", longId);
+
+            // Delete AnkiModels (referencing Workspace)
+            br.com.powercards.model.AnkiModel.delete("workspace.id = ?1", longId);
+
+            // Delete Tags (referencing Workspace)
+            br.com.powercards.model.Tag.delete("workspace.id = ?1", longId);
+
+            // Finally, delete the Workspace
             w.delete();
         } catch (NumberFormatException e) {
             throw new NotFoundException();
