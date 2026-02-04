@@ -7,7 +7,7 @@ import { NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
 import { splitAnkiFields, joinAnkiFields } from "@/lib/anki";
-import { Loader2, Pencil, X, Save } from "lucide-react";
+import { Loader2, Pencil, X, Save, Sparkles, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -166,14 +166,38 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                                 <Label htmlFor={`field-${index}`} className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">
                                     {field.name}
                                 </Label>
-                                <HtmlInput
-                                    id={`field-${index}`}
-                                    value={fieldValues[index] || ""}
-                                    onChange={(value) => handleFieldChange(index, value)}
-                                    // Use a slightly larger or different background to distinguish visual read-only mode if needed
-                                    className={cn("min-h-[80px]", !isEditing && "bg-muted/10 border-transparent px-0")}
-                                    disabled={!isEditing}
-                                />
+                                <div className="flex items-start gap-2">
+                                    <HtmlInput
+                                        id={`field-${index}`}
+                                        value={fieldValues[index] || ""}
+                                        onChange={(value) => handleFieldChange(index, value)}
+                                        // Use a slightly larger or different background to distinguish visual read-only mode if needed
+                                        className={cn("min-h-[80px] flex-1", !isEditing && "bg-muted/10 border-transparent px-0")}
+                                        disabled={!isEditing}
+                                    />
+                                    {isEditing && (
+                                        <div className="flex flex-col gap-1 pt-1">
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                                title="AI Magic (Coming Soon)"
+                                                onClick={() => toast({ title: "Coming Soon", description: "AI features are not yet implemented." })}
+                                            >
+                                                <Sparkles className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                                title="Upload Media (Coming Soon)"
+                                                onClick={() => toast({ title: "Coming Soon", description: "Media upload is not yet implemented." })}
+                                            >
+                                                <ImageIcon className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ))}
 

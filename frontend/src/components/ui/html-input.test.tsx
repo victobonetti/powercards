@@ -4,20 +4,22 @@ import { describe, it, expect, vi } from "vitest";
 import { HtmlInput } from "./html-input";
 
 describe("HtmlInput", () => {
-    it("renders HTML content in preview mode by default", () => {
+    it("renders Markdown in editor by default", () => {
         const value = "<b>Bold Text</b>";
         render(<HtmlInput value={value} onChange={vi.fn()} />);
 
-        // Should find the text "Bold Text" (rendered)
-        expect(screen.getByText("Bold Text")).toBeInTheDocument();
-        // Should contain the bold tag in innerHTML logic (implicit in finding by text in a container)
+        // Should find the markdown text "**Bold**" in the textarea
+        // Note: htmlToMarkdown("<b>Bold Text</b>") -> "**Bold Text**" or similar.
+        // We use getByRole('textbox') to check the value.
+        const textarea = screen.getByRole("textbox");
+        expect(textarea).toHaveValue("**Bold Text**");
     });
 
     it("toggles to code view and shows raw HTML", () => {
         const value = "<b>Bold Text</b>";
         render(<HtmlInput value={value} onChange={vi.fn()} />);
 
-        const toggleButton = screen.getByRole("button", { name: /Edit HTML Source/i });
+        const toggleButton = screen.getByTitle("Switch to HTML (Advanced)");
         fireEvent.click(toggleButton);
 
         // Now should find a textarea with raw value
@@ -30,7 +32,7 @@ describe("HtmlInput", () => {
         render(<HtmlInput value="" onChange={handleChange} />);
 
         // Switch to code view
-        const toggleButton = screen.getByRole("button", { name: /Edit HTML Source/i });
+        const toggleButton = screen.getByTitle("Switch to HTML (Advanced)");
         fireEvent.click(toggleButton);
 
         const textarea = screen.getByRole("textbox");
@@ -39,31 +41,34 @@ describe("HtmlInput", () => {
         expect(handleChange).toHaveBeenCalledWith("<i>Italic</i>");
     });
 
-    it("updates value when editing in preview mode (contentEditable)", () => {
-        const handleChange = vi.fn();
-        render(<HtmlInput value="Initial" onChange={handleChange} />);
+    it("toggles split view and renders preview", () => {
+        const value = "<b>Bold Text</b>";
+        render(<HtmlInput value={value} onChange={vi.fn()} />);
 
-        // Edit ContentEditable
-        // Note: Testing contentEditable interactions in JSDOM/HappyDOM can be tricky.
-        // We typically simulate 'input' event.
-        const previewDiv = screen.getByText("Initial");
+        // Initially no preview (only textarea)
+        // Note: The previous implementation might have had issues with getByText finding text in textarea, 
+        // but now we explicitly check for the preview div which has prose class.
 
-        // Simulate typing
-        previewDiv.innerHTML = "Initial Changed";
-        fireEvent.input(previewDiv);
+        const togglePreviewBtn = screen.getByTitle("Show Split View");
+        fireEvent.click(togglePreviewBtn);
 
-        expect(handleChange).toHaveBeenCalledWith("Initial Changed");
+        // Now preview should be visible and contain the rendered text
+        // The preview renders markdownToHtml("**Bold Text**") -> "<strong>Bold Text</strong>" (roughly)
+        const previewText = screen.getByText("Bold Text");
+        expect(previewText).toBeInTheDocument();
+        expect(previewText.tagName).match(/STRONG|B/);
     });
 
     it("handles &nbsp; correctly", () => {
         const value = "foo&nbsp;bar";
         render(<HtmlInput value={value} onChange={vi.fn()} />);
 
-        // In preview, &nbsp; is rendered as a non-breaking space (char code 160)
-        // getByText might match "foo bar" if it normalizes spaces, but let's check.
-        const preview = screen.getByText((_, element) => {
-            return element?.innerHTML === "foo&nbsp;bar";
-        });
-        expect(preview).toBeInTheDocument();
+        // In Markdown, &nbsp; might be preserved or converted.
+        // Let's just check the raw value in html mode to be safe.
+        const toggleButton = screen.getByTitle("Switch to HTML (Advanced)");
+        fireEvent.click(toggleButton);
+
+        const textarea = screen.getByRole("textbox");
+        expect(textarea).toHaveValue("foo&nbsp;bar");
     });
 });

@@ -33,6 +33,8 @@ export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInpu
     // Track if we are currently editing to prevent external updates from messing with cursor
     const isEditingRef = useRef(false);
 
+    const [showPreview, setShowPreview] = useState(false);
+
     // Image Modal State
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [imageModalSrc, setImageModalSrc] = useState<string | null>(null);
@@ -116,74 +118,92 @@ export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInpu
 
     return (
         <div className={cn("relative border rounded-md group", className)}>
-            <div className="absolute top-1 right-1 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-1 right-1 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-0.5 rounded-sm backdrop-blur-[2px]">
                 {mode === 'markdown' && (
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 bg-background/50 hover:bg-background border shadow-sm"
-                                title="Markdown Help"
-                            >
-                                <HelpCircle className="h-3 w-3" />
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                            <DialogHeader>
-                                <DialogTitle>Markdown Guide</DialogTitle>
-                                <DialogDescription>
-                                    You can use standard Markdown to format your text.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-2 text-sm">
-                                <div className="grid grid-cols-2 gap-2 border-b pb-2 font-medium text-muted-foreground">
-                                    <div>Markdown</div>
-                                    <div>Result</div>
+                    <>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "h-6 w-6 border shadow-sm",
+                                showPreview ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-background/50 hover:bg-background"
+                            )}
+                            onClick={() => setShowPreview(!showPreview)}
+                            title={showPreview ? "Hide Preview" : "Show Split View"}
+                        >
+                            <span className="sr-only">Toggle Preview</span>
+                            {/* Simple icon for columns/split view */}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M12 3v18" /></svg>
+                        </Button>
+
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 bg-background/50 hover:bg-background border shadow-sm"
+                                    title="Markdown Help"
+                                >
+                                    <HelpCircle className="h-3 w-3" />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>Markdown Guide</DialogTitle>
+                                    <DialogDescription>
+                                        You can use standard Markdown to format your text.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-2 text-sm">
+                                    <div className="grid grid-cols-2 gap-2 border-b pb-2 font-medium text-muted-foreground">
+                                        <div>Markdown</div>
+                                        <div>Result</div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded"># Header 1</code>
+                                        <h1 className="text-xl font-bold">Header 1</h1>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded">## Header 2</code>
+                                        <h2 className="text-lg font-bold">Header 2</h2>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded">### Header 3</code>
+                                        <h3 className="text-base font-bold">Header 3</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded">**Bold**</code>
+                                        <strong>Bold</strong>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded">_Italic_</code>
+                                        <em>Italic</em>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded">- List item</code>
+                                        <ul className="list-disc list-inside"><li>List item</li></ul>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded">1. Item</code>
+                                        <ol className="list-decimal list-inside"><li>Item</li></ol>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded">&gt; Quote</code>
+                                        <blockquote className="border-l-2 pl-2 italic">Quote</blockquote>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 items-center">
+                                        <code className="bg-muted px-1 rounded">`Code`</code>
+                                        <code className="bg-muted px-1 rounded">Code</code>
+                                    </div>
+                                    <div className="col-span-2 pt-2 border-t mt-2 text-xs text-muted-foreground">
+                                        <strong>Note:</strong> You can switch to "Raw HTML" mode using the <Code className="inline h-3 w-3" /> icon for advanced editing.
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded"># Header 1</code>
-                                    <h1 className="text-xl font-bold">Header 1</h1>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded">## Header 2</code>
-                                    <h2 className="text-lg font-bold">Header 2</h2>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded">### Header 3</code>
-                                    <h3 className="text-base font-bold">Header 3</h3>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded">**Bold**</code>
-                                    <strong>Bold</strong>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded">_Italic_</code>
-                                    <em>Italic</em>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded">- List item</code>
-                                    <ul className="list-disc list-inside"><li>List item</li></ul>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded">1. Item</code>
-                                    <ol className="list-decimal list-inside"><li>Item</li></ol>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded">&gt; Quote</code>
-                                    <blockquote className="border-l-2 pl-2 italic">Quote</blockquote>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 items-center">
-                                    <code className="bg-muted px-1 rounded">`Code`</code>
-                                    <code className="bg-muted px-1 rounded">Code</code>
-                                </div>
-                                <div className="col-span-2 pt-2 border-t mt-2 text-xs text-muted-foreground">
-                                    <strong>Note:</strong> You can switch to "Raw HTML" mode using the <Code className="inline h-3 w-3" /> icon for advanced editing.
-                                </div>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                            </DialogContent>
+                        </Dialog>
+                    </>
                 )}
 
                 <Button
@@ -198,17 +218,29 @@ export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInpu
                 </Button>
             </div>
 
-            <Textarea
-                id={id}
-                value={internalValue}
-                onChange={(e) => handleChange(e.target.value)}
-                onBlur={handleBlur}
-                className={cn(
-                    "min-h-[80px] border-0 focus-visible:ring-0 resize-y",
-                    mode === 'html' ? "font-mono text-xs" : "text-sm"
+            <div className={cn("grid", showPreview && mode === 'markdown' ? "grid-cols-2 divide-x" : "grid-cols-1")}>
+                <Textarea
+                    id={id}
+                    value={internalValue}
+                    onChange={(e) => handleChange(e.target.value)}
+                    onBlur={handleBlur}
+                    className={cn(
+                        "min-h-[80px] border-0 focus-visible:ring-0 resize-y rounded-none bg-transparent shadow-none",
+                        mode === 'html' ? "font-mono text-xs" : "text-sm",
+                        // If preview is ON, prevent user from resizing Textarea manually because it breaks grid layout usually.
+                        // Or we can let them resize and it affects height of container. Layout shift might happen.
+                        // Let's keep resize-y active, it should be fine.
+                    )}
+                    placeholder={mode === 'markdown' ? "Type here... (Markdown supported)" : "Enter HTML here..."}
+                />
+
+                {showPreview && mode === 'markdown' && (
+                    <div
+                        className="p-3 text-sm prose prose-sm dark:prose-invert max-w-none overflow-auto max-h-[500px]"
+                        dangerouslySetInnerHTML={{ __html: markdownToHtml(internalValue) }}
+                    />
                 )}
-                placeholder={mode === 'markdown' ? "Type here... (Markdown supported)" : "Enter HTML here..."}
-            />
+            </div>
         </div>
     );
 }
