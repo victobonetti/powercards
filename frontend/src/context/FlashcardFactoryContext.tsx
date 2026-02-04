@@ -76,6 +76,13 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
         }
     }, [currentChatId]);
 
+    // Clear notification if we are viewing the chat on factory page
+    useEffect(() => {
+        if (location.pathname === "/factory" && currentChatId) {
+            clearNotification(currentChatId);
+        }
+    }, [location.pathname, currentChatId]);
+
     const fetchChats = async () => {
         if (!currentWorkspaceId) return;
         setItemsLoading(true);
