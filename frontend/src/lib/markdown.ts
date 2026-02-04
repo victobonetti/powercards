@@ -11,6 +11,8 @@ const turndownService = new TurndownService({
     strongDelimiter: '**' // **bold**
 });
 
+turndownService.keep(['audio', 'video', 'img']);
+
 // custom rule for keeping Anki divs as newlines?
 // Anki uses <div>line</div>. Turndown converts div to newline usually.
 // Let's test standard behavior first.

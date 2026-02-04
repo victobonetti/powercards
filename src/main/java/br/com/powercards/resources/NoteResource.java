@@ -259,6 +259,44 @@ public class NoteResource {
     }
 
     @POST
+    @Path("/{id}/media")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Upload media for a note")
+    public Response uploadMedia(@PathParam("id") Long id,
+            @org.jboss.resteasy.reactive.RestForm("file") org.jboss.resteasy.reactive.multipart.FileUpload file) {
+        ensureFilter();
+        Note note = Note.findById(id);
+        if (note == null) {
+            throw new NotFoundException();
+        }
+
+        if (file == null) {
+            throw new BadRequestException("File is required");
+        }
+
+        try {
+            String filename = file.fileName();
+            // Basic sanitization
+            filename = java.nio.file.Paths.get(filename).getFileName().toString();
+
+            // Read all bytes
+            byte[] data = java.nio.file.Files.readAllBytes(file.uploadedFile().toPath());
+
+            br.com.powercards.domain.entities.AnkiMedia media = ankiService.uploadSingleFile(id, filename, data,
+                    file.contentType());
+
+            java.util.Map<String, String> result = new java.util.HashMap<>();
+            result.put("url", media.minioUrl);
+            result.put("filename", filename);
+
+            return Response.ok(result).build();
+        } catch (java.io.IOException e) {
+            throw new InternalServerErrorException("Failed to process file", e);
+        }
+    }
+
+    @POST
     @Path("/bulk/tags")
     @Transactional
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Bulk add tags to notes")

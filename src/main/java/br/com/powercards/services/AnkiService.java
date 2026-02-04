@@ -307,6 +307,46 @@ public class AnkiService {
         }
     }
 
+    public br.com.powercards.domain.entities.AnkiMedia uploadSingleFile(Long noteId, String filename, byte[] data,
+            String contentType) {
+        try {
+            createBucketIfNotExists();
+
+            // Check if already exists
+            br.com.powercards.domain.entities.AnkiMediaId mediaId = new br.com.powercards.domain.entities.AnkiMediaId(
+                    noteId, filename);
+            br.com.powercards.domain.entities.AnkiMedia existing = br.com.powercards.domain.entities.AnkiMedia
+                    .findById(mediaId);
+            if (existing != null) {
+                return existing;
+            }
+
+            LOGGER.info("Uploading single media file: " + filename);
+
+            try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(data)) {
+                minioClient.putObject(
+                        io.minio.PutObjectArgs.builder()
+                                .bucket(BUCKET_NAME)
+                                .object(filename)
+                                .stream(bais, data.length, -1)
+                                .contentType(contentType)
+                                .build());
+            }
+
+            br.com.powercards.domain.entities.AnkiMedia media = new br.com.powercards.domain.entities.AnkiMedia(
+                    noteId,
+                    filename,
+                    minioUrl + "/" + BUCKET_NAME + "/" + filename);
+            media.persist();
+            LOGGER.info("Mídia enviada para o MinIO: {}", filename);
+            return media;
+
+        } catch (Exception e) {
+            LOGGER.error("Falha ao fazer upload da mídia {}: {}", filename, e.getMessage());
+            throw new RuntimeException("Media upload failed", e);
+        }
+    }
+
     private void uploadMedia(Anki4j anki4j, Long noteId, String filename) {
         try {
             // Check if already exists to avoid re-uploading (optional, but good practice)

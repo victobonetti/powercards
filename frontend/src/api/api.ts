@@ -2518,6 +2518,49 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
         },
         /**
          * 
+         * @summary Upload media for a note
+         * @param {number} id 
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesIdMediaPost: async (id: number, file?: File, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('v1NotesIdMediaPost', 'id', id)
+            const localVarPath = `/v1/notes/{id}/media`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+            const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
+
+
+            if (file !== undefined) { 
+                localVarFormParams.append('file', file as any);
+            }
+    
+    
+            localVarHeaderParameter['Content-Type'] = 'multipart/form-data';
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = localVarFormParams;
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Update an existing note
          * @param {number} id 
          * @param {NoteRequest} noteRequest 
@@ -2672,6 +2715,20 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Upload media for a note
+         * @param {number} id 
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1NotesIdMediaPost(id: number, file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesIdMediaPost(id, file, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesIdMediaPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Update an existing note
          * @param {number} id 
          * @param {NoteRequest} noteRequest 
@@ -2759,6 +2816,17 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
          */
         v1NotesIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<NoteResponse> {
             return localVarFp.v1NotesIdGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Upload media for a note
+         * @param {number} id 
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesIdMediaPost(id: number, file?: File, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1NotesIdMediaPost(id, file, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2852,6 +2920,19 @@ export class NoteResourceApi extends BaseAPI {
      */
     public v1NotesIdGet(id: number, options?: RawAxiosRequestConfig) {
         return NoteResourceApiFp(this.configuration).v1NotesIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Upload media for a note
+     * @param {number} id 
+     * @param {File} [file] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NoteResourceApi
+     */
+    public v1NotesIdMediaPost(id: number, file?: File, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesIdMediaPost(id, file, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

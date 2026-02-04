@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { HtmlInput } from "@/components/ui/html-input";
-import { noteApi, modelApi } from "@/lib/api";
+import { noteApi, modelApi, uploadMedia } from "@/lib/api";
 import { NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
@@ -83,6 +83,41 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
         const newValues = [...fieldValues];
         newValues[index] = value;
         setFieldValues(newValues);
+    };
+
+    const handleUpload = async (index: number, file: File) => {
+        if (!note?.id) {
+            toast({ title: "Error", description: "Save the note first before uploading media.", variant: "destructive" });
+            return;
+        }
+
+        try {
+            toast({ title: "Uploading...", description: "Please wait." });
+            const result = await uploadMedia(note.id, file);
+
+            // Determine tag based on file type
+            let tag = "";
+            if (file.type.startsWith("image/")) {
+                tag = `<img src="${result.url}" alt="${result.filename}" style="max-width: 100%;" />`;
+            } else if (file.type.startsWith("audio/")) {
+                tag = `<audio controls src="${result.url}"></audio>`;
+            } else if (file.type.startsWith("video/")) {
+                tag = `<video controls src="${result.url}" style="max-width: 100%;"></video>`;
+            } else {
+                tag = `<a href="${result.url}">${result.filename}</a>`;
+            }
+
+            // Append to field
+            const currentValue = fieldValues[index] || "";
+            // Add a newline if not empty
+            const newValue = currentValue ? `${currentValue}\n${tag}` : tag;
+            handleFieldChange(index, newValue);
+
+            toast({ title: "Success", description: "Media uploaded and added to field." });
+        } catch (error) {
+            console.error("Upload failed", error);
+            toast({ title: "Error", description: "Failed to upload media.", variant: "destructive" });
+        }
     };
 
     const handleSave = async () => {
@@ -186,15 +221,21 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                                             >
                                                 <Sparkles className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                                title="Upload Media (Coming Soon)"
-                                                onClick={() => toast({ title: "Coming Soon", description: "Media upload is not yet implemented." })}
-                                            >
-                                                <ImageIcon className="h-4 w-4" />
-                                            </Button>
+                                            <label htmlFor={`upload-${index}`} className="cursor-pointer">
+                                                <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 w-8 text-muted-foreground hover:text-primary">
+                                                    <ImageIcon className="h-4 w-4" />
+                                                </div>
+                                                <input
+                                                    id={`upload-${index}`}
+                                                    type="file"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) handleUpload(index, file);
+                                                        e.target.value = ""; // Reset
+                                                    }}
+                                                />
+                                            </label>
                                         </div>
                                     )}
                                 </div>

@@ -773,6 +773,47 @@
         "tags" : [ "Note Resource" ]
       }
     },
+    "/v1/notes/{id}/media" : {
+      "post" : {
+        "summary" : "Upload media for a note",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "tags" : [ "Note Resource" ]
+      }
+    },
     "/v1/tags" : {
       "get" : {
         "summary" : "List tags",

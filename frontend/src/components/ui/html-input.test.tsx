@@ -71,4 +71,16 @@ describe("HtmlInput", () => {
         const textarea = screen.getByRole("textbox");
         expect(textarea).toHaveValue("foo&nbsp;bar");
     });
+
+    it("preserves audio tags in markdown mode", () => {
+        const value = '<audio controls src="test.mp3"></audio>';
+        render(<HtmlInput value={value} onChange={vi.fn()} />);
+
+        const toggleButton = screen.getByTitle("Switch to HTML (Advanced)");
+        fireEvent.click(toggleButton);
+
+        const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+        // Should contain the audio tag exactly, not stripped
+        expect(textarea.value).toContain('<audio controls src="test.mp3">');
+    });
 });
