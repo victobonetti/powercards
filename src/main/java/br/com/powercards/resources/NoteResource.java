@@ -281,7 +281,7 @@ public class NoteResource {
             filename = java.nio.file.Paths.get(filename).getFileName().toString();
 
             // Read all bytes
-            byte[] data = java.nio.file.Files.readAllBytes(file.uploadedFile().toPath());
+            byte[] data = java.nio.file.Files.readAllBytes(file.uploadedFile());
 
             br.com.powercards.domain.entities.AnkiMedia media = ankiService.uploadSingleFile(id, filename, data,
                     file.contentType());

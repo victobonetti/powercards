@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-
 import { DeckCRUD } from "./components/DeckCRUD";
 import { NoteCRUD } from "./components/NoteCRUD";
 import { TagList } from "./components/TagList";
+import { FlashcardFactory } from "./components/FlashcardFactory";
 import { Button } from "./components/ui/button";
 import { Layers, FileText } from "lucide-react";
 import { Layout } from "./components/Layout";
@@ -20,13 +21,15 @@ function App() {
   const [highlightNewDecks, setHighlightNewDecks] = useState(false);
 
   // Derive currentView from location
-  const [currentView, setCurrentView] = useState<"upload" | "decks" | "tags">("upload");
+  const [currentView, setCurrentView] = useState<"upload" | "decks" | "tags" | "factory">("upload");
 
   useEffect(() => {
     if (location.pathname === "/" || location.pathname === "/upload") {
       setCurrentView("upload");
     } else if (location.pathname === "/tags") {
       setCurrentView("tags");
+    } else if (location.pathname === "/factory") {
+      setCurrentView("factory");
     } else {
       setCurrentView("decks");
     }
@@ -39,10 +42,11 @@ function App() {
     setTimeout(() => setHighlightNewDecks(false), 5000);
   };
 
-  const handleNavigate = (view: "upload" | "decks" | "tags") => {
+  const handleNavigate = (view: "upload" | "decks" | "tags" | "factory") => {
     if (view === "upload") navigate("/");
     else if (view === "decks") navigate("/decks");
     else if (view === "tags") navigate("/tags");
+    else if (view === "factory") navigate("/factory");
   };
 
   // Logic for forced workspace creation
@@ -81,6 +85,7 @@ function App() {
                   <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
                 </div>
               } />
+              <Route path="/factory" element={<FlashcardFactory />} />
               <Route path="/notes" element={
                 <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
                   <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />

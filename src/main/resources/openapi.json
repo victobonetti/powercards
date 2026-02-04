@@ -13,6 +13,34 @@
     "version" : "1.0.0"
   },
   "paths" : {
+    "/ai/chat" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Chat",
+        "tags" : [ "AI Resource" ]
+      }
+    },
     "/v1/anki/upload" : {
       "post" : {
         "summary" : "Upload Anki package",

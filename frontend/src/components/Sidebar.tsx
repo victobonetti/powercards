@@ -1,4 +1,4 @@
-import { Layers, Upload, Moon, Sun, Pin, Tag, HelpCircle } from "lucide-react";
+import { Layers, Upload, Moon, Sun, Pin, Tag, HelpCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useTheme } from "./theme-provider";
@@ -9,8 +9,8 @@ import { WorkspaceSelector } from "./WorkspaceSelector";
 import { HelpModal } from "./HelpModal";
 
 interface SidebarProps {
-    currentView: "upload" | "decks" | "tags";
-    onNavigate: (view: "upload" | "decks" | "tags") => void;
+    currentView: "upload" | "decks" | "tags" | "factory";
+    onNavigate: (view: "upload" | "decks" | "tags" | "factory") => void;
     className?: string;
 }
 
@@ -136,6 +136,15 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                             onClick={() => onNavigate("tags")}
                         />
                     </div>
+                    <div className={cn("transition-all duration-300", getItemClass(3))}>
+                        <SidebarButton
+                            icon={Sparkles}
+                            label="Flashcard Factory"
+                            isActive={currentView === "factory"}
+                            isExpanded={isExpanded}
+                            onClick={() => onNavigate("factory")}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -178,6 +187,6 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                 </div>
             </div>
             <HelpModal open={showHelp} onOpenChange={setShowHelp} currentStep={helpStep} onStepChange={setHelpStep} />
-        </div>
+        </div >
     );
 }

@@ -822,6 +822,116 @@ export interface WorkspaceResponse {
 }
 
 /**
+ * AIResourceApi - axios parameter creator
+ * @export
+ */
+export const AIResourceApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Chat
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        aiChatPost: async (body: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'body' is not null or undefined
+            assertParamExists('aiChatPost', 'body', body)
+            const localVarPath = `/ai/chat`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'text/plain';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AIResourceApi - functional programming interface
+ * @export
+ */
+export const AIResourceApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AIResourceApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Chat
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async aiChatPost(body: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.aiChatPost(body, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AIResourceApi.aiChatPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AIResourceApi - factory interface
+ * @export
+ */
+export const AIResourceApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AIResourceApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Chat
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        aiChatPost(body: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.aiChatPost(body, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AIResourceApi - object-oriented interface
+ * @export
+ * @class AIResourceApi
+ * @extends {BaseAPI}
+ */
+export class AIResourceApi extends BaseAPI {
+    /**
+     * 
+     * @summary Chat
+     * @param {string} body 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AIResourceApi
+     */
+    public aiChatPost(body: string, options?: RawAxiosRequestConfig) {
+        return AIResourceApiFp(this.configuration).aiChatPost(body, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
  * AnkiModelResourceApi - axios parameter creator
  * @export
  */
