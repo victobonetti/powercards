@@ -31,7 +31,10 @@ services:
       - db
 
   ollama:
-    image: ollama/ollama:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    image: powercards-ollama
     ports:
       - "11434:11434"
     volumes:
