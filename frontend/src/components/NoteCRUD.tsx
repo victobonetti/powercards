@@ -25,6 +25,7 @@ import { TagInput } from "./ui/tag-input";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 import { BulkTagDialog } from "./BulkTagDialog";
 import { useDebounce } from "@/hooks/use-debounce";
+import { ResizableSidebar } from "./ui/resizable-sidebar";
 import { NoteDetail } from "./NoteDetail";
 
 export function NoteCRUD() {
@@ -105,45 +106,7 @@ export function NoteCRUD() {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
-    // Resize State
-    const [sidebarWidth, setSidebarWidth] = useState(450);
-    const [isResizing, setIsResizing] = useState(false);
 
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!isResizing) return;
-
-            // Calculate new width: Total Width - Mouse X
-            // Since it's on the right, width = window.innerWidth - e.clientX
-            let newWidth = window.innerWidth - e.clientX;
-
-            // Constraints
-            const minWidth = 400;
-            const maxWidth = window.innerWidth * 0.5; // Max 50%
-
-            if (newWidth < minWidth) newWidth = minWidth;
-            if (newWidth > maxWidth) newWidth = maxWidth;
-
-            setSidebarWidth(newWidth);
-        };
-
-        const handleMouseUp = () => {
-            setIsResizing(false);
-            document.body.style.cursor = 'default';
-        };
-
-        if (isResizing) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-            document.body.style.cursor = 'col-resize';
-        }
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-            document.body.style.cursor = 'default';
-        };
-    }, [isResizing]);
 
     const { toast } = useToast();
 
@@ -468,24 +431,13 @@ export function NoteCRUD() {
 
                 {/* Side Panel for Detail View */}
                 {editingNote && (
-                    <div
-                        className="relative border-l bg-background shadow-xl z-20 flex"
-                        style={{ width: sidebarWidth }}
-                    >
-                        {/* Drag Handle */}
-                        <div
-                            className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 transition-colors z-30"
-                            onMouseDown={() => setIsResizing(true)}
+                    <ResizableSidebar>
+                        <NoteDetail
+                            noteId={editingNote.id || null}
+                            onSaved={() => fetchNotes(currentPage)}
+                            onClose={() => setEditingNote(null)}
                         />
-
-                        <div className="flex-1 overflow-hidden animate-in slide-in-from-right duration-300">
-                            <NoteDetail
-                                noteId={editingNote.id || null}
-                                onSaved={() => fetchNotes(currentPage)}
-                                onClose={() => setEditingNote(null)}
-                            />
-                        </div>
-                    </div>
+                    </ResizableSidebar>
                 )}
 
                 <ConfirmationDialog

@@ -18,6 +18,7 @@ import { getDisplayField, stripHtml } from "@/lib/displayUtils";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Input } from "@/components/ui/input";
 import { NoteDetail } from "./NoteDetail";
+import { ResizableSidebar } from "./ui/resizable-sidebar";
 import { DataTable } from "./ui/data-table";
 
 interface CardListProps {
@@ -321,13 +322,13 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
 
                 {/* Side Panel for Detail View */}
                 {editingCard && (
-                    <div className="w-[450px] min-w-[400px] border-l bg-background shadow-xl z-20 transition-all duration-300 animate-in slide-in-from-right">
+                    <ResizableSidebar>
                         <NoteDetail
                             noteId={editingCard.noteId || null}
                             onSaved={handleSaved}
                             onClose={() => setEditingCard(null)}
                         />
-                    </div>
+                    </ResizableSidebar>
                 )}
 
                 <BulkMoveDialog
