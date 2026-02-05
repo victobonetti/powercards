@@ -1,5 +1,0 @@
-FROM ollama/ollama:latest
-
-# Start the server, pull the model, and then stop the server
-# The '&' runs serve in background, sleep ensures it's ready, pull gets the model
-RUN ollama serve & sleep 5 && ollama pull llama3.2
