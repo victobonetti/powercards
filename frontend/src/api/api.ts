@@ -867,6 +867,12 @@ export interface Workspace {
      * @memberof Workspace
      */
     'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Workspace
+     */
+    'userId'?: string;
 }
 /**
  * 

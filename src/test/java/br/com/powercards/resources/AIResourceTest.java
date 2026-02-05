@@ -11,9 +11,11 @@ import dev.langchain4j.exception.ModelNotFoundException;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
+import io.quarkus.test.security.TestSecurity;
 import static org.hamcrest.Matchers.is;
 
 @QuarkusTest
+@TestSecurity(user = "test-user", roles = "user")
 public class AIResourceTest {
 
     @InjectMock

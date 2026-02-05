@@ -9,9 +9,11 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import io.quarkus.test.security.TestSecurity;
 import static org.hamcrest.Matchers.empty;
 
 @QuarkusTest
+@TestSecurity(user = "test-user", roles = "user")
 public class TagResourceTest {
 
     private br.com.powercards.model.Workspace workspace;

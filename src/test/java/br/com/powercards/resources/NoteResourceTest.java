@@ -3,14 +3,18 @@ package br.com.powercards.resources;
 import br.com.powercards.model.Card;
 import br.com.powercards.model.Note;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
+@TestSecurity(user = "test-user", roles = "user")
 public class NoteResourceTest {
 
         private br.com.powercards.model.Workspace workspace;

@@ -13,9 +13,11 @@ import org.mockito.Mockito;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import io.quarkus.test.security.TestSecurity;
 import static org.hamcrest.Matchers.hasSize;
 
 @QuarkusTest
+@TestSecurity(user = "test-user", roles = "user")
 public class ChatResourceTest {
 
         @InjectMock

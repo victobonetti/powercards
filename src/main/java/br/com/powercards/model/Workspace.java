@@ -12,10 +12,18 @@ public class Workspace extends PanacheEntity {
 
     public String name;
 
+    @Column(name = "user_id")
+    public String userId;
+
     public Workspace() {
     }
 
     public Workspace(String name) {
         this.name = name;
+    }
+
+    public Workspace(String name, String userId) {
+        this.name = name;
+        this.userId = userId;
     }
 }

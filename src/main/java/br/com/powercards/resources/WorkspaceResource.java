@@ -10,15 +10,21 @@ import jakarta.ws.rs.core.Response;
 import java.util.List;
 
 import java.util.stream.Collectors;
+import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.inject.Inject;
 
 @Path("/v1/workspaces")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class WorkspaceResource {
 
+    @Inject
+    SecurityIdentity identity;
+
     @GET
     public List<WorkspaceResponse> list() {
-        List<Workspace> list = Workspace.listAll();
+        // Filter by authenticated user ID
+        List<Workspace> list = Workspace.find("userId = ?1", identity.getPrincipal().getName()).list();
         return list.stream()
                 .map(w -> new WorkspaceResponse(w.id.toString(), w.name))
                 .collect(Collectors.toList());
@@ -30,7 +36,8 @@ public class WorkspaceResource {
         if (request.name() == null || request.name().isBlank()) {
             throw new BadRequestException("Name is required");
         }
-        Workspace w = new Workspace(request.name());
+        // Save with authenticated user ID
+        Workspace w = new Workspace(request.name(), identity.getPrincipal().getName());
         w.persist();
         return Response.status(Response.Status.CREATED)
                 .entity(new WorkspaceResponse(w.id.toString(), w.name))
@@ -43,10 +50,20 @@ public class WorkspaceResource {
     public void delete(@PathParam("id") String id) {
         try {
             Long longId = Long.parseLong(id);
-            Workspace w = Workspace.findById(longId);
+            // Verify ownership
+            Workspace w = Workspace.find("id = ?1 and userId = ?2", longId, identity.getPrincipal().getName())
+                    .firstResult();
+
             if (w == null) {
+                // Determine if it exists but belongs to another user (403) or doesn't exist
+                // (404)
+                // For security through obscurity, 404 is often preferred, but let's stick to
+                // simple logic first.
+                // If we want strict segregation, finding nothing means 404 from the user's
+                // perspective.
                 throw new NotFoundException();
             }
+
             // Delete Cards first (referencing Note and Deck)
             // Note: Card doesn't have a direct workspace link, so we reach it via Deck
             br.com.powercards.model.Card.delete("deck.workspace.id = ?1", longId);

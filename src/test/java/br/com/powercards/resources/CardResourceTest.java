@@ -13,9 +13,11 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import io.quarkus.test.security.TestSecurity;
 import java.util.List;
 
 @QuarkusTest
+@TestSecurity(user = "test-user", roles = "user")
 public class CardResourceTest {
 
         private Long deckId;

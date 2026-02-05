@@ -16,11 +16,13 @@ import java.sql.Statement;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import io.quarkus.test.security.TestSecurity;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 @QuarkusTest
+@TestSecurity(user = "test-user", roles = "user")
 public class AnkiResourceTest {
 
         private Path tempTestDir;

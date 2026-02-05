@@ -1738,6 +1738,9 @@
           },
           "name" : {
             "type" : "string"
+          },
+          "userId" : {
+            "type" : "string"
           }
         }
       },
@@ -1759,6 +1762,13 @@
             "type" : "string"
           }
         }
+      }
+    },
+    "securitySchemes" : {
+      "SecurityScheme" : {
+        "type" : "openIdConnect",
+        "openIdConnectUrl" : "http://localhost:8081/realms/powercards/.well-known/openid-configuration",
+        "description" : "Authentication"
       }
     }
   },

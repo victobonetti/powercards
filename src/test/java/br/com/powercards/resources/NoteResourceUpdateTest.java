@@ -8,9 +8,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import io.quarkus.test.security.TestSecurity;
 import static org.hamcrest.Matchers.is;
 
 @QuarkusTest
+@TestSecurity(user = "test-user", roles = "user")
 public class NoteResourceUpdateTest {
 
     private br.com.powercards.model.Workspace workspace;

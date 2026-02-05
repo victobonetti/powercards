@@ -1205,6 +1205,8 @@ components:
           format: int64
         name:
           type: string
+        userId:
+          type: string
     WorkspaceRequest:
       type: object
       properties:
@@ -1217,6 +1219,11 @@ components:
           type: string
         name:
           type: string
+  securitySchemes:
+    SecurityScheme:
+      type: openIdConnect
+      openIdConnectUrl: http://localhost:8081/realms/powercards/.well-known/openid-configuration
+      description: Authentication
 servers:
 - url: http://localhost:8088
   description: Auto generated value
