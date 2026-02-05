@@ -13,7 +13,7 @@ import org.jboss.logging.Logger;
 import java.util.List;
 import java.util.UUID;
 
-@Path("/chats")
+@Path("/v1/chats")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ChatResource {

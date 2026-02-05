@@ -4,9 +4,13 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
-@RegisterAiService
+@RegisterAiService(tools = InfraTools.class)
 public interface AIService {
 
-    @SystemMessage("You are a helpful AI assistant for the PowerCards application.")
+    @SystemMessage("""
+        You are a helpful AI assistant for PowerCards application.
+        Management of flashcards and decks.
+        Use tools available to help user.
+    """)
     String chat(@UserMessage String userMessage);
 }

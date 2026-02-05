@@ -33,7 +33,7 @@ services:
   ollama:
     build:
       context: .
-      dockerfile: Dockerfile.ollama
+      dockerfile: Dockerfile.function-gemma
     image: powercards-ollama
     ports:
       - "11434:11434"

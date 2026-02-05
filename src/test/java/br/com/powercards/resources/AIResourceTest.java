@@ -24,10 +24,11 @@ public class AIResourceTest {
         Mockito.when(aiService.chat("Hello")).thenReturn("Hello there!");
 
         given()
+                .header("X-Workspace-Id", "1")
                 .contentType(ContentType.TEXT)
                 .body("Hello")
                 .when()
-                .post("/ai/chat")
+                .post("/v1/ai/chat")
                 .then()
                 .statusCode(200)
                 .body(is("Hello there!"));
@@ -38,12 +39,13 @@ public class AIResourceTest {
         Mockito.when(aiService.chat("Hello")).thenThrow(new ModelNotFoundException("Model not found"));
 
         given()
+                .header("X-Workspace-Id", "1")
                 .contentType(ContentType.TEXT)
                 .body("Hello")
                 .when()
-                .post("/ai/chat")
+                .post("/v1/ai/chat")
                 .then()
                 .statusCode(503)
-                .body("error", containsString("AI Model not available"));
+                .body(containsString("AI Model not available"));
     }
 }

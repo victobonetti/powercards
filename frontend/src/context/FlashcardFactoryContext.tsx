@@ -87,7 +87,7 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
         if (!currentWorkspaceId) return;
         setItemsLoading(true);
         try {
-            const response = await fetch("http://localhost:8088/chats", {
+            const response = await fetch("http://localhost:8088/v1/chats", {
                 headers: {
                     "X-Workspace-Id": currentWorkspaceId
                 }
@@ -106,7 +106,7 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
     const createNewChat = async () => {
         if (!currentWorkspaceId) return;
         try {
-            const response = await fetch("http://localhost:8088/chats", {
+            const response = await fetch("http://localhost:8088/v1/chats", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -130,9 +130,13 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
     };
 
     const deleteChat = async (chatId: string) => {
+        if (!currentWorkspaceId) return;
         try {
-            const response = await fetch(`http://localhost:8088/chats/${chatId}`, {
-                method: "DELETE"
+            const response = await fetch(`http://localhost:8088/v1/chats/${chatId}`, {
+                method: "DELETE",
+                headers: {
+                    "X-Workspace-Id": currentWorkspaceId
+                }
             });
             if (response.ok) {
                 setChats(prev => prev.filter(c => c.id !== chatId));
@@ -152,8 +156,13 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
     };
 
     const fetchMessages = async (chatId: string) => {
+        if (!currentWorkspaceId) return;
         try {
-            const response = await fetch(`http://localhost:8088/chats/${chatId}/history`);
+            const response = await fetch(`http://localhost:8088/v1/chats/${chatId}/history`, {
+                headers: {
+                    "X-Workspace-Id": currentWorkspaceId
+                }
+            });
             if (response.ok) {
                 const data = await response.json();
                 // Map backend history to frontend message structure if needed
@@ -177,7 +186,7 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
     }
 
     const sendMessage = async () => {
-        if (!input.trim() || isProcessing || !currentChatId) return;
+        if (!input.trim() || isProcessing || !currentChatId || !currentWorkspaceId) return;
 
         const tempId = Date.now().toString();
         const userMessage: Message = {
@@ -192,10 +201,11 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
         setIsProcessing(true);
 
         try {
-            const response = await fetch(`http://localhost:8088/chats/${currentChatId}/messages`, {
+            const response = await fetch(`http://localhost:8088/v1/chats/${currentChatId}/messages`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "text/plain" // Just sending content string as body
+                    "Content-Type": "text/plain", // Just sending content string as body
+                    "X-Workspace-Id": currentWorkspaceId
                 },
                 body: userMessage.content
             });

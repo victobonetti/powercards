@@ -35,7 +35,7 @@ public class ChatResourceTest {
                                 .contentType(ContentType.JSON)
                                 .body("{\"name\": \"My Chat\"}")
                                 .when()
-                                .post("/chats")
+                                .post("/v1/chats")
                                 .then()
                                 .statusCode(200)
                                 .body("name", equalTo("My Chat"))
@@ -48,7 +48,7 @@ public class ChatResourceTest {
                                 .contentType(ContentType.JSON)
                                 .body("{\"name\": \"My Chat\"}")
                                 .when()
-                                .post("/chats")
+                                .post("/v1/chats")
                                 .then()
                                 .statusCode(400);
         }
@@ -64,16 +64,16 @@ public class ChatResourceTest {
                 // Let's use RestAssured to create setup
 
                 given().header("X-Workspace-Id", "1").contentType(ContentType.JSON).body("{\"name\": \"Chat 1\"}")
-                                .post("/chats");
+                                .post("/v1/chats");
                 given().header("X-Workspace-Id", "1").contentType(ContentType.JSON).body("{\"name\": \"Chat 2\"}")
-                                .post("/chats");
+                                .post("/v1/chats");
                 given().header("X-Workspace-Id", "2").contentType(ContentType.JSON).body("{\"name\": \"Chat 3\"}")
-                                .post("/chats");
+                                .post("/v1/chats");
 
                 given()
                                 .header("X-Workspace-Id", "1")
                                 .when()
-                                .get("/chats")
+                                .get("/v1/chats")
                                 .then()
                                 .statusCode(200)
                                 .body("$", hasSize(2));
@@ -89,15 +89,16 @@ public class ChatResourceTest {
                                 .header("X-Workspace-Id", "1")
                                 .contentType(ContentType.JSON)
                                 .body("{\"name\": \"Chat 1\"}")
-                                .post("/chats")
+                                .post("/v1/chats")
                                 .jsonPath().getString("id");
 
                 // Send message
                 given()
+                                .header("X-Workspace-Id", "1")
                                 .pathParam("id", chatId)
                                 .body("Hello AI")
                                 .when()
-                                .post("/chats/{id}/messages")
+                                .post("/v1/chats/{id}/messages")
                                 .then()
                                 .statusCode(200)
                                 .body("content", equalTo("I am AI"))
@@ -105,11 +106,38 @@ public class ChatResourceTest {
 
                 // Verify history
                 given()
+                                .header("X-Workspace-Id", "1")
                                 .pathParam("id", chatId)
                                 .when()
-                                .get("/chats/{id}/history")
+                                .get("/v1/chats/{id}/history")
                                 .then()
                                 .statusCode(200)
                                 .body("$", hasSize(2)); // User + AI
+        }
+
+        @Test
+        public void testChatAIError() {
+                // Mock AI error
+                Mockito.when(aiService.chat(Mockito.anyString()))
+                                .thenThrow(new dev.langchain4j.exception.ModelNotFoundException("Model not found"));
+
+                // Create chat
+                String chatId = given()
+                                .header("X-Workspace-Id", "1")
+                                .contentType(ContentType.JSON)
+                                .body("{\"name\": \"Error Chat\"}")
+                                .post("/v1/chats")
+                                .jsonPath().getString("id");
+
+                // Send message and expect error
+                given()
+                                .header("X-Workspace-Id", "1")
+                                .pathParam("id", chatId)
+                                .body("Trigger Error")
+                                .when()
+                                .post("/v1/chats/{id}/messages")
+                                .then()
+                                .statusCode(500)
+                                .body(equalTo("AI Service Error"));
         }
 }
