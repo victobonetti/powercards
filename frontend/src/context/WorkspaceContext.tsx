@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { workspaceApi } from "@/lib/api"; // We will export this from lib/api.ts
 import { WorkspaceResponse } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/auth/AuthProvider";
 
 interface WorkspaceContextType {
     workspaces: WorkspaceResponse[];
@@ -15,6 +16,7 @@ interface WorkspaceContextType {
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
+    const auth = useAuth();
     const [workspaces, setWorkspaces] = useState<WorkspaceResponse[]>([]);
     const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(() => {
         return localStorage.getItem("currentWorkspaceId");
@@ -46,9 +48,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+
+
     useEffect(() => {
-        fetchWorkspaces();
-    }, []);
+        if (auth.isAuthenticated) {
+            fetchWorkspaces();
+        } else {
+            setIsLoading(false);
+        }
+    }, [auth.isAuthenticated]);
 
     const selectWorkspace = (id: string) => {
         setCurrentWorkspaceId(id);

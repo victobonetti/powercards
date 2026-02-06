@@ -16,4 +16,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './vitest.setup.ts',
   },
+  server: {
+    proxy: {
+      '/keycloak': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/keycloak/, ''),
+      },
+    },
+  },
 })

@@ -19,12 +19,20 @@ export const axiosInstance = axios.create({
     baseURL: basePath,
 });
 
-// Add interceptor to inject X-Workspace-Id
+
+
+// Add interceptor to inject X-Workspace-Id and Authorization
 axiosInstance.interceptors.request.use((config) => {
     const workspaceId = localStorage.getItem("currentWorkspaceId");
     if (workspaceId) {
         config.headers["X-Workspace-Id"] = workspaceId;
     }
+
+    const accessToken = localStorage.getItem("auth_token");
+    if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
     return config;
 });
 
