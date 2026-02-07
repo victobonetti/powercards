@@ -19,7 +19,8 @@ import java.io.InputStream;
 public class ProfileService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileService.class);
-    private static final String BUCKET_NAME = "user-avatars";
+    private static final String AVATAR_BUCKET = "user-avatars";
+    private static final String BANNER_BUCKET = "user-banners";
 
     @Inject
     MinioClient minioClient;
@@ -33,9 +34,14 @@ public class ProfileService {
     }
 
     @Transactional
-    public User updateProfile(String keycloakId, String displayName) {
+    public User updateProfile(String keycloakId, String displayName, String description) {
         User user = User.findOrCreate(keycloakId);
-        user.displayName = displayName;
+        if (displayName != null) {
+            user.displayName = displayName;
+        }
+        if (description != null) {
+            user.description = description;
+        }
         return user;
     }
 
@@ -43,7 +49,7 @@ public class ProfileService {
     public User uploadAvatar(String keycloakId, InputStream fileStream, String filename, String contentType,
             long size) {
         try {
-            createBucketIfNotExists();
+            createBucketIfNotExists(AVATAR_BUCKET);
 
             User user = User.findOrCreate(keycloakId);
 
@@ -52,19 +58,48 @@ public class ProfileService {
 
             minioClient.putObject(
                     PutObjectArgs.builder()
-                            .bucket(BUCKET_NAME)
+                            .bucket(AVATAR_BUCKET)
                             .object(objectName)
                             .stream(fileStream, size, -1)
                             .contentType(contentType)
                             .build());
 
-            user.avatarUrl = minioUrl + "/" + BUCKET_NAME + "/" + objectName;
+            user.avatarUrl = minioUrl + "/" + AVATAR_BUCKET + "/" + objectName;
             LOGGER.info("Avatar uploaded for user {}: {}", keycloakId, user.avatarUrl);
 
             return user;
         } catch (Exception e) {
             LOGGER.error("Failed to upload avatar for user {}: {}", keycloakId, e.getMessage());
             throw new RuntimeException("Avatar upload failed", e);
+        }
+    }
+
+    @Transactional
+    public User uploadBanner(String keycloakId, InputStream fileStream, String filename, String contentType,
+            long size) {
+        try {
+            createBucketIfNotExists(BANNER_BUCKET);
+
+            User user = User.findOrCreate(keycloakId);
+
+            // Generate unique filename with user ID prefix
+            String objectName = "banner-" + user.id + "-" + System.currentTimeMillis() + getExtension(filename);
+
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(BANNER_BUCKET)
+                            .object(objectName)
+                            .stream(fileStream, size, -1)
+                            .contentType(contentType)
+                            .build());
+
+            user.bannerUrl = minioUrl + "/" + BANNER_BUCKET + "/" + objectName;
+            LOGGER.info("Banner uploaded for user {}: {}", keycloakId, user.bannerUrl);
+
+            return user;
+        } catch (Exception e) {
+            LOGGER.error("Failed to upload banner for user {}: {}", keycloakId, e.getMessage());
+            throw new RuntimeException("Banner upload failed", e);
         }
     }
 
@@ -75,14 +110,14 @@ public class ProfileService {
         return lastDot > 0 ? filename.substring(lastDot) : ".png";
     }
 
-    private void createBucketIfNotExists() {
+    private void createBucketIfNotExists(String bucketName) {
         try {
-            boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(BUCKET_NAME).build());
+            boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!found) {
-                LOGGER.info("Creating avatar bucket: {}", BUCKET_NAME);
-                minioClient.makeBucket(MakeBucketArgs.builder().bucket(BUCKET_NAME).build());
+                LOGGER.info("Creating bucket: {}", bucketName);
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
 
-                // Set public read-only policy for avatars
+                // Set public read-only policy
                 String policy = """
                         {
                             "Version": "2012-10-17",
@@ -95,14 +130,14 @@ public class ProfileService {
                                 }
                             ]
                         }
-                        """.formatted(BUCKET_NAME);
+                        """.formatted(bucketName);
                 minioClient.setBucketPolicy(
-                        SetBucketPolicyArgs.builder().bucket(BUCKET_NAME).config(policy).build());
-                LOGGER.info("Public read-only policy applied to bucket: {}", BUCKET_NAME);
+                        SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+                LOGGER.info("Public read-only policy applied to bucket: {}", bucketName);
             }
         } catch (Exception e) {
-            LOGGER.error("Error initializing avatar bucket: {}", e.getMessage());
-            throw new RuntimeException("Could not initialize avatar bucket", e);
+            LOGGER.error("Error initializing bucket {}: {}", bucketName, e.getMessage());
+            throw new RuntimeException("Could not initialize bucket", e);
         }
     }
 }

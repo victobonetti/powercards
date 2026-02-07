@@ -22,8 +22,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const KEYCLOAK_TOKEN_URL = '/keycloak/realms/powercards/protocol/openid-connect/token';
-const CLIENT_ID = 'cli-web-pwc';
+const LOGIN_URL = '/api/v1/auth/login';
+const REFRESH_URL = '/api/v1/auth/refresh';
 
 // Decode JWT payload (base64url encoded)
 function decodeJwtPayload(token: string): UserInfo | null {
@@ -69,13 +69,9 @@ async function refreshAccessToken(): Promise<string | null> {
 
     refreshPromise = (async () => {
         try {
-            const params = new URLSearchParams();
-            params.append('client_id', CLIENT_ID);
-            params.append('grant_type', 'refresh_token');
-            params.append('refresh_token', refreshToken);
-
-            const response = await axios.post(KEYCLOAK_TOKEN_URL, params, {
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            // Call backend proxy for refresh
+            const response = await axios.post(REFRESH_URL, null, {
+                params: { refresh_token: refreshToken },
                 // Don't use interceptor for refresh request
                 _skipAuthRefresh: true,
             } as any);
@@ -107,8 +103,8 @@ async function refreshAccessToken(): Promise<string | null> {
 function setupAxiosInterceptor(onLogout: () => void) {
     // Request interceptor - add token and check expiry
     axios.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-        // Skip for auth endpoints
-        if ((config as any)._skipAuthRefresh || config.url?.includes('/keycloak/')) {
+        // Skip for auth endpoints or keycloak if any remains
+        if ((config as any)._skipAuthRefresh || config.url?.includes('/auth/login') || config.url?.includes('/auth/refresh')) {
             return config;
         }
 
@@ -221,14 +217,12 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const params = new URLSearchParams();
-            params.append('client_id', CLIENT_ID);
-            params.append('grant_type', 'password');
-            params.append('username', username);
-            params.append('password', password);
-
-            const response = await axios.post(KEYCLOAK_TOKEN_URL, params, {
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            // Call backend proxy for login
+            const response = await axios.post(LOGIN_URL, {
+                username,
+                password
+            }, {
+                headers: { 'Content-Type': 'application/json' },
                 _skipAuthRefresh: true,
             } as any);
 

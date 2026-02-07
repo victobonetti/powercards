@@ -80,6 +80,87 @@
         "tags" : [ "Anki Resource" ]
       }
     },
+    "/v1/auth/login" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Login",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
+    "/v1/auth/refresh" : {
+      "post" : {
+        "parameters" : [ {
+          "name" : "refresh_token",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Refresh",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
+    "/v1/auth/register" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UserRegistrationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Register",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
     "/v1/cards" : {
       "get" : {
         "summary" : "List all cards",
@@ -1074,6 +1155,40 @@
         "tags" : [ "Profile Resource" ]
       }
     },
+    "/v1/profile/banner" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Upload Banner",
+        "tags" : [ "Profile Resource" ]
+      }
+    },
     "/v1/tags" : {
       "get" : {
         "summary" : "List tags",
@@ -1618,6 +1733,17 @@
         "format" : "date-time",
         "examples" : [ "2022-03-10T12:15:50" ]
       },
+      "LoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          }
+        }
+      },
       "NoteRequest" : {
         "type" : "object",
         "properties" : {
@@ -1779,6 +1905,9 @@
         "properties" : {
           "displayName" : {
             "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
           }
         }
       },
@@ -1796,6 +1925,12 @@
             "type" : "string"
           },
           "avatarUrl" : {
+            "type" : "string"
+          },
+          "bannerUrl" : {
+            "type" : "string"
+          },
+          "description" : {
             "type" : "string"
           }
         }
@@ -1835,6 +1970,26 @@
         "type" : "string",
         "format" : "uuid",
         "pattern" : "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+      },
+      "UserRegistrationRequest" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          },
+          "firstName" : {
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          }
+        }
       },
       "Workspace" : {
         "type" : "object",

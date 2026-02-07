@@ -19,6 +19,8 @@ import { WorkspaceCreateDialog } from "./components/WorkspaceCreateDialog";
 
 import { AppAuthProvider } from "./auth/AuthProvider";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 
 function App() {
@@ -64,6 +66,7 @@ function App() {
             <ForceWorkspaceWrapper>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
 
                 <Route element={<ProtectedRoute />}>
                   <Route element={<Layout currentView={currentView} onNavigate={handleNavigate} />}>
@@ -89,6 +92,7 @@ function App() {
                         <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
                       </div>
                     } />
+                    <Route path="/profile" element={<ProfilePage />} />
                   </Route>
                 </Route>
               </Routes>

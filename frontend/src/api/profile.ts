@@ -7,6 +7,13 @@ export interface ProfileData {
     keycloakId: string;
     displayName: string | null;
     avatarUrl: string | null;
+    bannerUrl: string | null;
+    description: string | null;
+}
+
+export interface ProfileUpdateRequest {
+    displayName?: string;
+    description?: string;
 }
 
 // Note: Auth headers are automatically added by axios interceptor in AuthProvider
@@ -16,10 +23,10 @@ export async function getProfile(): Promise<ProfileData> {
     return response.data;
 }
 
-export async function updateProfile(displayName: string): Promise<ProfileData> {
+export async function updateProfile(data: ProfileUpdateRequest): Promise<ProfileData> {
     const response = await axios.put(
         `${API_BASE}/profile`,
-        { displayName },
+        data,
         { headers: { "Content-Type": "application/json" } }
     );
     return response.data;
@@ -35,3 +42,12 @@ export async function uploadAvatar(file: File): Promise<ProfileData> {
     return response.data;
 }
 
+export async function uploadBanner(file: File): Promise<ProfileData> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axios.post(`${API_BASE}/profile/banner`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+}

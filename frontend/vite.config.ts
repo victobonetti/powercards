@@ -18,10 +18,11 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/keycloak': {
-        target: 'http://localhost:8081',
+
+      '/api': {
+        target: 'http://localhost:8088',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/keycloak/, ''),
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

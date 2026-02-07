@@ -1,4 +1,4 @@
 package br.com.powercards.dto;
 
-public record ProfileRequest(String displayName) {
+public record ProfileRequest(String displayName, String description) {
 }

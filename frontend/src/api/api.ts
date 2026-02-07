@@ -561,6 +561,25 @@ export interface DeckResponse {
 /**
  * 
  * @export
+ * @interface LoginRequest
+ */
+export interface LoginRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof LoginRequest
+     */
+    'username'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LoginRequest
+     */
+    'password'?: string;
+}
+/**
+ * 
+ * @export
  * @interface NoteRequest
  */
 export interface NoteRequest {
@@ -811,6 +830,12 @@ export interface ProfileRequest {
      * @memberof ProfileRequest
      */
     'displayName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileRequest
+     */
+    'description'?: string;
 }
 /**
  * 
@@ -842,6 +867,18 @@ export interface ProfileResponse {
      * @memberof ProfileResponse
      */
     'avatarUrl'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileResponse
+     */
+    'bannerUrl'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileResponse
+     */
+    'description'?: string;
 }
 /**
  * 
@@ -892,6 +929,43 @@ export interface TagStats {
      * @memberof TagStats
      */
     'noteCount'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface UserRegistrationRequest
+ */
+export interface UserRegistrationRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRegistrationRequest
+     */
+    'username'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRegistrationRequest
+     */
+    'email'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRegistrationRequest
+     */
+    'password'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRegistrationRequest
+     */
+    'firstName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRegistrationRequest
+     */
+    'lastName'?: string;
 }
 /**
  * 
@@ -1559,6 +1633,257 @@ export class AnkiResourceApi extends BaseAPI {
      */
     public v1AnkiUploadPost(file?: File, force?: boolean, options?: RawAxiosRequestConfig) {
         return AnkiResourceApiFp(this.configuration).v1AnkiUploadPost(file, force, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * AuthResourceApi - axios parameter creator
+ * @export
+ */
+export const AuthResourceApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Login
+         * @param {LoginRequest} loginRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthLoginPost: async (loginRequest: LoginRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'loginRequest' is not null or undefined
+            assertParamExists('v1AuthLoginPost', 'loginRequest', loginRequest)
+            const localVarPath = `/v1/auth/login`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(loginRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Refresh
+         * @param {string} [refreshToken] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthRefreshPost: async (refreshToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/auth/refresh`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (refreshToken !== undefined) {
+                localVarQueryParameter['refresh_token'] = refreshToken;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Register
+         * @param {UserRegistrationRequest} userRegistrationRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthRegisterPost: async (userRegistrationRequest: UserRegistrationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userRegistrationRequest' is not null or undefined
+            assertParamExists('v1AuthRegisterPost', 'userRegistrationRequest', userRegistrationRequest)
+            const localVarPath = `/v1/auth/register`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(userRegistrationRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AuthResourceApi - functional programming interface
+ * @export
+ */
+export const AuthResourceApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AuthResourceApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Login
+         * @param {LoginRequest} loginRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthLoginPost(loginRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthLoginPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Refresh
+         * @param {string} [refreshToken] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthRefreshPost(refreshToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthRefreshPost(refreshToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthRefreshPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Register
+         * @param {UserRegistrationRequest} userRegistrationRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthRegisterPost(userRegistrationRequest: UserRegistrationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthRegisterPost(userRegistrationRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthRegisterPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AuthResourceApi - factory interface
+ * @export
+ */
+export const AuthResourceApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AuthResourceApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Login
+         * @param {LoginRequest} loginRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthLoginPost(loginRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Refresh
+         * @param {string} [refreshToken] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthRefreshPost(refreshToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthRefreshPost(refreshToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Register
+         * @param {UserRegistrationRequest} userRegistrationRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthRegisterPost(userRegistrationRequest: UserRegistrationRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthRegisterPost(userRegistrationRequest, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AuthResourceApi - object-oriented interface
+ * @export
+ * @class AuthResourceApi
+ * @extends {BaseAPI}
+ */
+export class AuthResourceApi extends BaseAPI {
+    /**
+     * 
+     * @summary Login
+     * @param {LoginRequest} loginRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthLoginPost(loginRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Refresh
+     * @param {string} [refreshToken] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthRefreshPost(refreshToken?: string, options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthRefreshPost(refreshToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Register
+     * @param {UserRegistrationRequest} userRegistrationRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthRegisterPost(userRegistrationRequest: UserRegistrationRequest, options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthRegisterPost(userRegistrationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -3646,6 +3971,45 @@ export const ProfileResourceApiAxiosParamCreator = function (configuration?: Con
         },
         /**
          * 
+         * @summary Upload Banner
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ProfileBannerPost: async (file?: File, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/profile/banner`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+            const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
+
+
+            if (file !== undefined) { 
+                localVarFormParams.append('file', file as any);
+            }
+    
+    
+            localVarHeaderParameter['Content-Type'] = 'multipart/form-data';
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = localVarFormParams;
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Get Profile
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3735,6 +4099,19 @@ export const ProfileResourceApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Upload Banner
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1ProfileBannerPost(file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProfileResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ProfileBannerPost(file, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfileResourceApi.v1ProfileBannerPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Get Profile
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3780,6 +4157,16 @@ export const ProfileResourceApiFactory = function (configuration?: Configuration
         },
         /**
          * 
+         * @summary Upload Banner
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ProfileBannerPost(file?: File, options?: RawAxiosRequestConfig): AxiosPromise<ProfileResponse> {
+            return localVarFp.v1ProfileBannerPost(file, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Get Profile
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3817,6 +4204,18 @@ export class ProfileResourceApi extends BaseAPI {
      */
     public v1ProfileAvatarPost(file?: File, options?: RawAxiosRequestConfig) {
         return ProfileResourceApiFp(this.configuration).v1ProfileAvatarPost(file, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Upload Banner
+     * @param {File} [file] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfileResourceApi
+     */
+    public v1ProfileBannerPost(file?: File, options?: RawAxiosRequestConfig) {
+        return ProfileResourceApiFp(this.configuration).v1ProfileBannerPost(file, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

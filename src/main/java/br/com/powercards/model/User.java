@@ -18,6 +18,12 @@ public class User extends PanacheEntity {
     @Column(name = "avatar_url")
     public String avatarUrl;
 
+    @Column(name = "banner_url")
+    public String bannerUrl;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    public String description;
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     public List<Workspace> workspaces;

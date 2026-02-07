@@ -35,7 +35,7 @@ public class ProfileResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public ProfileResponse updateProfile(ProfileRequest request) {
         String keycloakId = identity.getPrincipal().getName();
-        User user = profileService.updateProfile(keycloakId, request.displayName());
+        User user = profileService.updateProfile(keycloakId, request.displayName(), request.description());
         return toResponse(user);
     }
 
@@ -62,11 +62,36 @@ public class ProfileResource {
         }
     }
 
+    @POST
+    @Path("/banner")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public ProfileResponse uploadBanner(@RestForm("file") FileUpload file) {
+        if (file == null || file.filePath() == null) {
+            throw new BadRequestException("No file provided");
+        }
+
+        String keycloakId = identity.getPrincipal().getName();
+
+        try (FileInputStream fis = new FileInputStream(file.filePath().toFile())) {
+            User user = profileService.uploadBanner(
+                    keycloakId,
+                    fis,
+                    file.fileName(),
+                    file.contentType(),
+                    file.size());
+            return toResponse(user);
+        } catch (IOException e) {
+            throw new InternalServerErrorException("Failed to read uploaded file", e);
+        }
+    }
+
     private ProfileResponse toResponse(User user) {
         return new ProfileResponse(
                 user.id,
                 user.keycloakId,
                 user.displayName,
-                user.avatarUrl);
+                user.avatarUrl,
+                user.bannerUrl,
+                user.description);
     }
 }

@@ -7,6 +7,16 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Keycloak registration URL
+const KEYCLOAK_BASE_URL = "http://localhost:8081";
+const KEYCLOAK_REALM = "powercards";
+const KEYCLOAK_CLIENT_ID = "cli-web-pwc";
+const REDIRECT_URI = window.location.origin;
+
+const getRegistrationUrl = () => {
+    return `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/registrations?client_id=${KEYCLOAK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid`;
+};
+
 export default function LoginPage() {
     const { login, isAuthenticated, error, isLoading } = useAuth();
     const navigate = useNavigate();
@@ -29,6 +39,10 @@ export default function LoginPage() {
             return;
         }
         await login(username, password);
+    };
+
+    const handleRegister = () => {
+        window.location.href = getRegistrationUrl();
     };
 
     return (
@@ -72,6 +86,16 @@ export default function LoginPage() {
                             <Button type="submit" className="w-full" disabled={isLoading}>
                                 {isLoading ? "Logging in..." : "Log in"}
                             </Button>
+                            <div className="text-center text-sm text-muted-foreground">
+                                Don't have an account?{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => navigate("/register")}
+                                    className="text-primary hover:underline font-medium"
+                                >
+                                    Register
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </CardContent>
