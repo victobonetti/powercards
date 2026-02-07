@@ -117,9 +117,9 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden">
-            {/* Banner Section - isolated stacking context */}
-            <div className="relative h-48 md:h-64 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex-shrink-0">
+        <div className="h-full overflow-y-auto bg-background">
+            {/* Banner Section - Full Width */}
+            <div className="relative h-48 md:h-64 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex-shrink-0 overflow-hidden group">
                 {profile?.bannerUrl && (
                     <img
                         src={profile.bannerUrl}
@@ -133,7 +133,7 @@ export default function ProfilePage() {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-4 left-4 bg-black/30 hover:bg-black/50 text-white"
+                    className="absolute top-4 left-4 bg-black/30 hover:bg-black/50 text-white rounded-full"
                     onClick={() => navigate(-1)}
                 >
                     <ArrowLeft className="h-5 w-5" />
@@ -143,7 +143,7 @@ export default function ProfilePage() {
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute bottom-4 right-4 bg-black/30 hover:bg-black/50 text-white"
+                    className="absolute bottom-4 right-4 bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     onClick={() => bannerInputRef.current?.click()}
                 >
                     <Camera className="h-4 w-4 mr-2" />
@@ -158,115 +158,167 @@ export default function ProfilePage() {
                 />
             </div>
 
-            {/* Avatar & Info Section */}
-            <div className="flex-1 overflow-y-auto bg-background">
-                <div className="max-w-3xl mx-auto px-6 -mt-16 relative">
-                    {/* Avatar */}
-                    <div className="relative inline-block mb-4">
-                        <div className="h-32 w-32 rounded-full border-4 border-background overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                            {profile?.avatarUrl ? (
-                                <img
-                                    src={profile.avatarUrl}
-                                    alt={currentDisplayName}
-                                    className="h-full w-full object-cover"
-                                />
-                            ) : (
-                                <span>{initials}</span>
-                            )}
-                        </div>
-                        <Button
-                            variant="secondary"
-                            size="icon"
-                            className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-md"
-                            onClick={() => avatarInputRef.current?.click()}
-                        >
-                            <Camera className="h-4 w-4" />
-                        </Button>
-                        <input
-                            ref={avatarInputRef}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleAvatarUpload}
-                        />
-                    </div>
+            {/* Main Content - 2 Column Grid */}
+            <div className="min-h-0">
+                <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-20 relative z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                    {/* Profile Card */}
-                    <Card className="mb-6">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Profile Information</CardTitle>
-                            {!isEditing ? (
-                                <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
-                                    <Pencil className="h-4 w-4 mr-2" />
-                                    Edit
-                                </Button>
-                            ) : (
-                                <div className="flex gap-2">
-                                    <Button variant="ghost" size="sm" onClick={handleCancel} disabled={saving}>
-                                        <X className="h-4 w-4 mr-1" />
-                                        Cancel
-                                    </Button>
-                                    <Button size="sm" onClick={handleSave} disabled={saving}>
-                                        {saving ? (
-                                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                        ) : (
-                                            <Save className="h-4 w-4 mr-1" />
-                                        )}
-                                        Save
-                                    </Button>
-                                </div>
-                            )}
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            {/* Display Name */}
-                            <div className="space-y-2">
-                                <Label htmlFor="displayName">Display Name</Label>
-                                {isEditing ? (
-                                    <Input
-                                        id="displayName"
-                                        value={displayName}
-                                        onChange={(e) => setDisplayName(e.target.value)}
-                                        placeholder="Enter your display name"
-                                    />
-                                ) : (
-                                    <p className="text-lg font-medium">{currentDisplayName}</p>
-                                )}
-                            </div>
-
-                            {/* Email (read-only) */}
-                            <div className="space-y-2">
-                                <Label>Email</Label>
-                                <p className="text-muted-foreground">{user?.email || "Not available"}</p>
-                            </div>
-
-                            {/* Description/Bio */}
-                            <div className="space-y-2">
-                                <Label htmlFor="description">About Me</Label>
-                                {isEditing ? (
-                                    <div className="space-y-2">
-                                        <Textarea
-                                            id="description"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            placeholder="Write something about yourself... (Markdown supported)"
-                                            rows={6}
-                                            className="resize-none"
-                                        />
-                                        <p className="text-xs text-muted-foreground">
-                                            Supports Markdown: **bold**, _italic_, # headers, - lists, etc.
-                                        </p>
+                        {/* Left Sidebar (Identity) */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <Card className="overflow-visible shadow-lg">
+                                <CardContent className="pt-0 relative">
+                                    {/* Avatar - Pull up */}
+                                    <div className="flex justify-center -mt-16 mb-6">
+                                        <div className="relative group">
+                                            <div className="h-32 w-32 rounded-full border-4 border-background overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold shadow-md">
+                                                {profile?.avatarUrl ? (
+                                                    <img
+                                                        src={profile.avatarUrl}
+                                                        alt={currentDisplayName}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <span>{initials}</span>
+                                                )}
+                                            </div>
+                                            <Button
+                                                variant="secondary"
+                                                size="icon"
+                                                className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                                onClick={() => avatarInputRef.current?.click()}
+                                            >
+                                                <Camera className="h-4 w-4" />
+                                            </Button>
+                                            <input
+                                                ref={avatarInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleAvatarUpload}
+                                            />
+                                        </div>
                                     </div>
-                                ) : profile?.description ? (
-                                    <div
-                                        className="prose prose-sm dark:prose-invert max-w-none p-4 bg-muted/30 rounded-md"
-                                        dangerouslySetInnerHTML={{ __html: markdownToHtml(profile.description) }}
-                                    />
-                                ) : (
-                                    <p className="text-muted-foreground italic">No description yet. Click Edit to add one.</p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+
+                                    {/* Identity Info */}
+                                    <div className="text-center space-y-2 mb-6">
+                                        {isEditing ? (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="displayName" className="sr-only">Display Name</Label>
+                                                <Input
+                                                    id="displayName"
+                                                    value={displayName}
+                                                    onChange={(e) => setDisplayName(e.target.value)}
+                                                    placeholder="Display Name"
+                                                    className="text-center text-lg font-bold"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <h1 className="text-2xl font-bold">{currentDisplayName}</h1>
+                                        )}
+                                        <p className="text-muted-foreground">{user?.email}</p>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex flex-col gap-2">
+                                        {!isEditing ? (
+                                            <Button variant="outline" className="w-full" onClick={() => setIsEditing(true)}>
+                                                <Pencil className="h-4 w-4 mr-2" />
+                                                Edit Profile
+                                            </Button>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" className="flex-1" onClick={handleCancel} disabled={saving}>
+                                                    <X className="h-4 w-4 mr-1" />
+                                                    Cancel
+                                                </Button>
+                                                <Button className="flex-1" onClick={handleSave} disabled={saving}>
+                                                    {saving ? (
+                                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                                    ) : (
+                                                        <Save className="h-4 w-4 mr-1" />
+                                                    )}
+                                                    Save
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Stats Placeholder */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-lg">Statistics</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-muted-foreground">Decks Created</span>
+                                            <span className="font-bold">0</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-muted-foreground">Notes Added</span>
+                                            <span className="font-bold">0</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-muted-foreground">Days Streak</span>
+                                            <span className="font-bold text-orange-500">0 🔥</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Right Content (About & Activity) */}
+                        <div className="lg:col-span-8 space-y-6">
+                            {/* About Me */}
+                            <Card className="h-full">
+                                <CardHeader>
+                                    <CardTitle>About Me</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {isEditing ? (
+                                        <div className="space-y-2">
+                                            <Textarea
+                                                id="description"
+                                                value={description}
+                                                onChange={(e) => setDescription(e.target.value)}
+                                                placeholder="Write something about yourself... (Markdown supported)"
+                                                rows={8}
+                                                className="resize-none"
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Supports Markdown: **bold**, _italic_, # headers, - lists, etc.
+                                            </p>
+                                        </div>
+                                    ) : profile?.description ? (
+                                        <div
+                                            className="prose prose-sm dark:prose-invert max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: markdownToHtml(profile.description) }}
+                                        />
+                                    ) : (
+                                        <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed text-sm">
+                                            <p>No bio added yet.</p>
+                                            {!isEditing && (
+                                                <Button variant="link" onClick={() => setIsEditing(true)}>Click to add a bio</Button>
+                                            )}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Recent Activity Placeholder */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Recent Activity</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground italic">No recent activity.</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>

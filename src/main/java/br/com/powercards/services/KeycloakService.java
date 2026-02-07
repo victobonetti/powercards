@@ -68,33 +68,29 @@ public class KeycloakService {
         user.setEnabled(true);
         user.setEmailVerified(false);
 
-        try {
-            Response response = usersResource.create(user);
-            LOGGER.info("Keycloak create response status: {}", response.getStatus());
+        Response response = usersResource.create(user);
+        LOGGER.info("Keycloak create response status: {}", response.getStatus());
 
-            if (response.getStatus() == 201) {
-                String userId = CreatedResponseUtil.getCreatedId(response);
-                LOGGER.info("User created with userId: {}", userId);
+        if (response.getStatus() == 201) {
+            String userId = CreatedResponseUtil.getCreatedId(response);
+            LOGGER.info("User created with userId: {}", userId);
 
-                // Set password
-                CredentialRepresentation passwordCred = new CredentialRepresentation();
-                passwordCred.setTemporary(false);
-                passwordCred.setType(CredentialRepresentation.PASSWORD);
-                passwordCred.setValue(request.password());
+            // Set password
+            CredentialRepresentation passwordCred = new CredentialRepresentation();
+            passwordCred.setTemporary(false);
+            passwordCred.setType(CredentialRepresentation.PASSWORD);
+            passwordCred.setValue(request.password());
 
-                usersResource.get(userId).resetPassword(passwordCred);
-                LOGGER.info("Password set for user: {}", userId);
-            } else if (response.getStatus() == 409) {
-                LOGGER.warn("User already exists: {}", request.username());
-                throw new WebApplicationException("User already exists", 409);
-            } else {
-                LOGGER.error("Failed to create user. Status: {} Body: {}", response.getStatus(),
-                        response.readEntity(String.class));
-                throw new WebApplicationException("Failed to create user", response.getStatus());
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error communicating with Keycloak", e);
-            throw e;
+            usersResource.get(userId).resetPassword(passwordCred);
+            LOGGER.info("Password set for user: {}", userId);
+        } else if (response.getStatus() == 409) {
+            LOGGER.warn("User already exists: {}", request.username());
+            throw new WebApplicationException("User already exists", 409);
+        } else {
+            LOGGER.error("Failed to create user. Status: {} Body: {}", response.getStatus(),
+                    response.readEntity(String.class));
+            throw new WebApplicationException("Failed to create user", response.getStatus());
         }
+
     }
 }

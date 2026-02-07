@@ -71,8 +71,16 @@ public class AuthResource {
                     "password");
             LOGGER.info("Login successful for user: {}", request.username());
             return Response.ok(token).build();
+        } catch (WebApplicationException e) {
+            String msg = e.getMessage();
+            if (e.getResponse().getStatus() == 401) {
+                LOGGER.warn("Login failed for user: {}. Invalid credentials.", request.username());
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid credentials").build();
+            }
+            LOGGER.error("Login web error for {}: {}", request.username(), msg);
+            return Response.status(e.getResponse().getStatus()).entity("Login failed").build();
         } catch (Exception e) {
-            LOGGER.error("Login failed for user: {}", request.username(), e);
+            LOGGER.error("Login unexpected error for user: {}", request.username(), e);
             return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid credentials").build();
         }
     }
@@ -90,8 +98,11 @@ public class AuthResource {
                     "refresh_token");
             LOGGER.info("Refresh successful");
             return Response.ok(token).build();
+        } catch (WebApplicationException e) {
+            LOGGER.warn("Refresh failed: {}", e.getMessage());
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Refresh failed").build();
         } catch (Exception e) {
-            LOGGER.error("Refresh failed", e);
+            LOGGER.error("Refresh unexpected error", e);
             return Response.status(Response.Status.UNAUTHORIZED).entity("Refresh failed").build();
         }
     }

@@ -156,4 +156,28 @@ public class ProfileResourceTest {
                                 .body("$", hasKey("avatarUrl"))
                                 .body("$", hasKey("bannerUrl"));
         }
+
+        @Test
+        public void testBannerUpload() {
+                // Upload a dummy file
+                given()
+                                .multiPart("file", "banner.txt", "some content".getBytes())
+                                .when().post("/v1/profile/banner")
+                                .then()
+                                .statusCode(200)
+                                .body("bannerUrl", notNullValue())
+                                .body("bannerUrl", containsString("user-banners/banner-"));
+        }
+
+        @Test
+        public void testAvatarUpload() {
+                // Upload a dummy file
+                given()
+                                .multiPart("file", "avatar.png", "image data".getBytes())
+                                .when().post("/v1/profile/avatar")
+                                .then()
+                                .statusCode(200)
+                                .body("avatarUrl", notNullValue())
+                                .body("avatarUrl", containsString("user-avatars/avatar-"));
+        }
 }
