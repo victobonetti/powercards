@@ -993,6 +993,87 @@
         "tags" : [ "Note Resource" ]
       }
     },
+    "/v1/profile" : {
+      "put" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProfileRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Update Profile",
+        "tags" : [ "Profile Resource" ]
+      },
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Get Profile",
+        "tags" : [ "Profile Resource" ]
+      }
+    },
+    "/v1/profile/avatar" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Upload Avatar",
+        "tags" : [ "Profile Resource" ]
+      }
+    },
     "/v1/tags" : {
       "get" : {
         "summary" : "List tags",
@@ -1693,6 +1774,32 @@
           }
         }
       },
+      "ProfileRequest" : {
+        "type" : "object",
+        "properties" : {
+          "displayName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProfileResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "keycloakId" : {
+            "type" : "string"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "avatarUrl" : {
+            "type" : "string"
+          }
+        }
+      },
       "Tag" : {
         "type" : "object",
         "properties" : {
@@ -1737,9 +1844,6 @@
             "format" : "int64"
           },
           "name" : {
-            "type" : "string"
-          },
-          "userId" : {
             "type" : "string"
           }
         }

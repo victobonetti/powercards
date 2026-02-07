@@ -802,6 +802,50 @@ export interface PaginationMeta {
 /**
  * 
  * @export
+ * @interface ProfileRequest
+ */
+export interface ProfileRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileRequest
+     */
+    'displayName'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ProfileResponse
+ */
+export interface ProfileResponse {
+    /**
+     * 
+     * @type {number}
+     * @memberof ProfileResponse
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileResponse
+     */
+    'keycloakId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileResponse
+     */
+    'displayName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileResponse
+     */
+    'avatarUrl'?: string;
+}
+/**
+ * 
+ * @export
  * @interface Tag
  */
 export interface Tag {
@@ -867,12 +911,6 @@ export interface Workspace {
      * @memberof Workspace
      */
     'name'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Workspace
-     */
-    'userId'?: string;
 }
 /**
  * 
@@ -3556,6 +3594,252 @@ export class NoteResourceApi extends BaseAPI {
      */
     public v1NotesPost(noteRequest: NoteRequest, options?: RawAxiosRequestConfig) {
         return NoteResourceApiFp(this.configuration).v1NotesPost(noteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * ProfileResourceApi - axios parameter creator
+ * @export
+ */
+export const ProfileResourceApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Upload Avatar
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ProfileAvatarPost: async (file?: File, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/profile/avatar`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+            const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
+
+
+            if (file !== undefined) { 
+                localVarFormParams.append('file', file as any);
+            }
+    
+    
+            localVarHeaderParameter['Content-Type'] = 'multipart/form-data';
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = localVarFormParams;
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get Profile
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ProfileGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/profile`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update Profile
+         * @param {ProfileRequest} profileRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ProfilePut: async (profileRequest: ProfileRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'profileRequest' is not null or undefined
+            assertParamExists('v1ProfilePut', 'profileRequest', profileRequest)
+            const localVarPath = `/v1/profile`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(profileRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ProfileResourceApi - functional programming interface
+ * @export
+ */
+export const ProfileResourceApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ProfileResourceApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Upload Avatar
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1ProfileAvatarPost(file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProfileResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ProfileAvatarPost(file, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfileResourceApi.v1ProfileAvatarPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get Profile
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1ProfileGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProfileResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ProfileGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfileResourceApi.v1ProfileGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update Profile
+         * @param {ProfileRequest} profileRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1ProfilePut(profileRequest: ProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProfileResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ProfilePut(profileRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfileResourceApi.v1ProfilePut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ProfileResourceApi - factory interface
+ * @export
+ */
+export const ProfileResourceApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ProfileResourceApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Upload Avatar
+         * @param {File} [file] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ProfileAvatarPost(file?: File, options?: RawAxiosRequestConfig): AxiosPromise<ProfileResponse> {
+            return localVarFp.v1ProfileAvatarPost(file, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get Profile
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ProfileGet(options?: RawAxiosRequestConfig): AxiosPromise<ProfileResponse> {
+            return localVarFp.v1ProfileGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update Profile
+         * @param {ProfileRequest} profileRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ProfilePut(profileRequest: ProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProfileResponse> {
+            return localVarFp.v1ProfilePut(profileRequest, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ProfileResourceApi - object-oriented interface
+ * @export
+ * @class ProfileResourceApi
+ * @extends {BaseAPI}
+ */
+export class ProfileResourceApi extends BaseAPI {
+    /**
+     * 
+     * @summary Upload Avatar
+     * @param {File} [file] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfileResourceApi
+     */
+    public v1ProfileAvatarPost(file?: File, options?: RawAxiosRequestConfig) {
+        return ProfileResourceApiFp(this.configuration).v1ProfileAvatarPost(file, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get Profile
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfileResourceApi
+     */
+    public v1ProfileGet(options?: RawAxiosRequestConfig) {
+        return ProfileResourceApiFp(this.configuration).v1ProfileGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update Profile
+     * @param {ProfileRequest} profileRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfileResourceApi
+     */
+    public v1ProfilePut(profileRequest: ProfileRequest, options?: RawAxiosRequestConfig) {
+        return ProfileResourceApiFp(this.configuration).v1ProfilePut(profileRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

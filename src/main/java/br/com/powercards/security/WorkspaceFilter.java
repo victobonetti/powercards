@@ -27,8 +27,9 @@ public class WorkspaceFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
-        // Skip Quarkus internal paths and Workspace management
-        if (path.startsWith("/q/") || path.equals("/health") || path.startsWith("/v1/workspaces")) {
+        // Skip Quarkus internal paths, Workspace management, and Profile (user-level)
+        if (path.startsWith("/q/") || path.equals("/health") ||
+                path.startsWith("/v1/workspaces") || path.startsWith("/v1/profile")) {
             return;
         }
 

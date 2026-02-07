@@ -1,0 +1,4 @@
+package br.com.powercards.dto;
+
+public record ProfileRequest(String displayName) {
+}

@@ -2,6 +2,7 @@ package br.com.powercards.resources;
 
 import br.com.powercards.dto.WorkspaceRequest;
 import br.com.powercards.dto.WorkspaceResponse;
+import br.com.powercards.model.User;
 import br.com.powercards.model.Workspace;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -23,8 +24,9 @@ public class WorkspaceResource {
 
     @GET
     public List<WorkspaceResponse> list() {
-        // Filter by authenticated user ID
-        List<Workspace> list = Workspace.find("userId = ?1", identity.getPrincipal().getName()).list();
+        String keycloakId = identity.getPrincipal().getName();
+        // Filter by authenticated user
+        List<Workspace> list = Workspace.find("user.keycloakId = ?1", keycloakId).list();
         return list.stream()
                 .map(w -> new WorkspaceResponse(w.id.toString(), w.name))
                 .collect(Collectors.toList());
@@ -36,8 +38,10 @@ public class WorkspaceResource {
         if (request.name() == null || request.name().isBlank()) {
             throw new BadRequestException("Name is required");
         }
-        // Save with authenticated user ID
-        Workspace w = new Workspace(request.name(), identity.getPrincipal().getName());
+        String keycloakId = identity.getPrincipal().getName();
+        // Find or create user entity
+        User user = User.findOrCreate(keycloakId);
+        Workspace w = new Workspace(request.name(), user);
         w.persist();
         return Response.status(Response.Status.CREATED)
                 .entity(new WorkspaceResponse(w.id.toString(), w.name))
@@ -50,22 +54,16 @@ public class WorkspaceResource {
     public void delete(@PathParam("id") String id) {
         try {
             Long longId = Long.parseLong(id);
-            // Verify ownership
-            Workspace w = Workspace.find("id = ?1 and userId = ?2", longId, identity.getPrincipal().getName())
+            String keycloakId = identity.getPrincipal().getName();
+            // Verify ownership via User entity
+            Workspace w = Workspace.find("id = ?1 and user.keycloakId = ?2", longId, keycloakId)
                     .firstResult();
 
             if (w == null) {
-                // Determine if it exists but belongs to another user (403) or doesn't exist
-                // (404)
-                // For security through obscurity, 404 is often preferred, but let's stick to
-                // simple logic first.
-                // If we want strict segregation, finding nothing means 404 from the user's
-                // perspective.
                 throw new NotFoundException();
             }
 
             // Delete Cards first (referencing Note and Deck)
-            // Note: Card doesn't have a direct workspace link, so we reach it via Deck
             br.com.powercards.model.Card.delete("deck.workspace.id = ?1", longId);
 
             // Delete Notes (referencing Workspace and AnkiModel)
