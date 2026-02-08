@@ -21,4 +21,12 @@ public class AIResource {
     public String chat(String message) {
         return aiService.chat(message);
     }
+
+    @POST
+    @Path("/enhance")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String enhance(String content) {
+        return aiService.enhanceContent(content);
+    }
 }

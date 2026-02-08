@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { HtmlInput } from "@/components/ui/html-input";
-import { noteApi, modelApi, uploadMedia } from "@/lib/api";
+import { noteApi, modelApi, uploadMedia, enhanceContent } from "@/lib/api";
 import { NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
@@ -120,6 +120,28 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
         }
     };
 
+    const handleEnhance = async (index: number) => {
+        const content = fieldValues[index];
+        if (!content || content.trim().length === 0) {
+            toast({ title: "Empty Field", description: "Please add some content before enhancing." });
+            return;
+        }
+
+        toast({ title: "Enhancing...", description: "AI is improving your note." });
+        setLoading(true);
+        try {
+            const enhanced = await enhanceContent(content);
+            handleFieldChange(index, enhanced);
+            toast({ title: "Enhanced!", description: "Content improved successfully." });
+        } catch (error) {
+            console.error("Enhancement failed", error);
+            toast({ title: "Error", description: "Failed to enhance content.", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
     const handleSave = async () => {
         if (!note?.id) return;
 
@@ -216,8 +238,9 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                                                 variant="outline"
                                                 size="icon"
                                                 className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                                title="AI Magic (Coming Soon)"
-                                                onClick={() => toast({ title: "Coming Soon", description: "AI features are not yet implemented." })}
+                                                title="AI Magic - Enhance with AI"
+                                                onClick={() => handleEnhance(index)}
+                                                disabled={loading}
                                             >
                                                 <Sparkles className="h-4 w-4" />
                                             </Button>

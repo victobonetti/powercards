@@ -1073,6 +1073,42 @@ export const AIResourceApiAxiosParamCreator = function (configuration?: Configur
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @summary Enhance
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AiEnhancePost: async (body: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'body' is not null or undefined
+            assertParamExists('v1AiEnhancePost', 'body', body)
+            const localVarPath = `/v1/ai/enhance`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'text/plain';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -1096,6 +1132,19 @@ export const AIResourceApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['AIResourceApi.v1AiChatPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * 
+         * @summary Enhance
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AiEnhancePost(body: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AiEnhancePost(body, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AIResourceApi.v1AiEnhancePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -1115,6 +1164,16 @@ export const AIResourceApiFactory = function (configuration?: Configuration, bas
          */
         v1AiChatPost(body: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
             return localVarFp.v1AiChatPost(body, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Enhance
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AiEnhancePost(body: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.v1AiEnhancePost(body, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1136,6 +1195,18 @@ export class AIResourceApi extends BaseAPI {
      */
     public v1AiChatPost(body: string, options?: RawAxiosRequestConfig) {
         return AIResourceApiFp(this.configuration).v1AiChatPost(body, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Enhance
+     * @param {string} body 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AIResourceApi
+     */
+    public v1AiEnhancePost(body: string, options?: RawAxiosRequestConfig) {
+        return AIResourceApiFp(this.configuration).v1AiEnhancePost(body, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

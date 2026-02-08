@@ -8,6 +8,9 @@ import br.com.powercards.security.WorkspaceContext;
 import br.com.powercards.model.Deck;
 import br.com.powercards.model.Card;
 import br.com.powercards.model.Note;
+import br.com.powercards.model.AnkiModel;
+import br.com.powercards.model.AnkiField;
+import br.com.powercards.model.AnkiTemplate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,22 +20,22 @@ public class InfraTools {
     @Inject
     WorkspaceContext workspaceContext;
 
-    @Tool("Count the number of decks in the current workspace")
+    @Tool("Count the number of decks")
     public long countDecks() {
         return Deck.count("workspace.id = ?1", getWorkspaceId());
     }
 
-    @Tool("Count the number of cards in the current workspace")
+    @Tool("Count the number of cards")
     public long countCards() {
         return Card.count("deck.workspace.id = ?1", getWorkspaceId());
     }
 
-    @Tool("Count the number of notes in the current workspace")
+    @Tool("Count the number of notes")
     public long countNotes() {
         return Note.count("workspace.id = ?1", getWorkspaceId());
     }
 
-    @Tool("List all deck names in the current workspace")
+    @Tool("List all deck names")
     public List<String> listDecks() {
         return Deck.<Deck>find("workspace.id = ?1", getWorkspaceId()).stream()
                 .map(d -> d.name)

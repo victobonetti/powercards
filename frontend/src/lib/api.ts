@@ -59,3 +59,17 @@ export const deckApi = DeckResourceApiFactory(config, basePath, axiosInstance);
 export const cardApi = CardResourceApiFactory(config, basePath, axiosInstance);
 export const tagApi = TagResourceApiFactory(config, basePath, axiosInstance);
 export const workspaceApi = WorkspaceResourceApiFactory(config, basePath, axiosInstance);
+
+export const enhanceContent = async (content: string): Promise<string> => {
+    const response = await axiosInstance.post<string>(
+        '/v1/ai/enhance',
+        content,
+        {
+            headers: {
+                'Content-Type': 'text/plain'
+            }
+        }
+    );
+    return response.data;
+};
+
