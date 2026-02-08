@@ -111,13 +111,15 @@ export function applyTheme(paletteName: string, isDark: boolean) {
     const colors = isDark ? palette.dark : palette.light;
     const root = document.documentElement;
 
+    // Extract Hue and Saturation for tinting
+    const { h } = getHsValues(colors.primary);
+
     // Apply key CSS variables to root
     root.style.setProperty("--primary", colors.primary);
     root.style.setProperty("--ring", colors.ring);
 
-    // Apply tinted background for dark mode
+    // Apply tinted backgrounds and borders
     if (isDark) {
-        const { h } = getHsValues(colors.primary);
         // Desaturate slightly for background (e.g., 30% of original saturation or fixed low saturation)
         // Using a fixed low saturation (e.g., 30%) often looks better than full saturation for dark backgrounds
         const bgSaturation = "30%";
@@ -127,12 +129,23 @@ export function applyTheme(paletteName: string, isDark: boolean) {
         root.style.setProperty("--popover", `${h} ${bgSaturation} 10%`);
         root.style.setProperty("--secondary", `${h} ${bgSaturation} 15%`);
         root.style.setProperty("--muted", `${h} ${bgSaturation} 15%`);
+        root.style.setProperty("--accent", `${h} ${bgSaturation} 15%`);
+        root.style.setProperty("--border", `${h} ${bgSaturation} 20%`);
+        root.style.setProperty("--input", `${h} ${bgSaturation} 20%`);
     } else {
-        // Reset to defaults for light mode (clean white look)
+        // Light mode with subtle tint
         root.style.removeProperty("--background");
         root.style.removeProperty("--card");
         root.style.removeProperty("--popover");
-        root.style.removeProperty("--secondary");
-        root.style.removeProperty("--muted");
+
+        // Use a very low saturation for light mode neutrals to avoid looking "dirty"
+        // But keep them consistent with the theme
+        const lightSat = "10%";
+
+        root.style.setProperty("--secondary", `${h} ${lightSat} 96%`);
+        root.style.setProperty("--muted", `${h} ${lightSat} 96%`);
+        root.style.setProperty("--accent", `${h} ${lightSat} 96%`);
+        root.style.setProperty("--border", `${h} ${lightSat} 90%`);
+        root.style.setProperty("--input", `${h} ${lightSat} 90%`);
     }
 }

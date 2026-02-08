@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback, useRef } from "react";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getProfile, ProfileData } from "../api/profile";
+import { applyTheme } from "@/lib/themes";
 
 interface UserInfo {
     sub: string;
@@ -200,6 +201,11 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
             const data = await getProfile();
             setProfile(data);
             if (data.colorPalette) {
+                // Apply theme globally
+                const theme = localStorage.getItem("vite-ui-theme") || "system";
+                const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+                applyTheme(data.colorPalette, isDark);
+
                 localStorage.setItem("user-palette", data.colorPalette);
             }
         } catch (err) {
