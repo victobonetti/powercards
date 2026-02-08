@@ -19,8 +19,10 @@ import {
 import { useDebounce } from "@/hooks/use-debounce";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "./ui/data-table";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function TagList() {
+    const { t } = useLanguage();
     const [tags, setTags] = useState<TagStats[]>([]);
     const [totalTags, setTotalTags] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -105,11 +107,11 @@ export function TagList() {
                             <TagIcon className="h-5 w-5" />
                             Tags
                             <span className="text-sm font-normal text-muted-foreground ml-2">
-                                ({totalTags} tags)
+                                ({totalTags} {t.tags.count})
                             </span>
                         </CardTitle>
                         <Input
-                            placeholder="Search tags..."
+                            placeholder={t.tags.searchPlaceholder}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-64"
@@ -121,7 +123,7 @@ export function TagList() {
                         data={tags}
                         columns={[
                             {
-                                header: "Name",
+                                header: t.tags.nameHeader,
                                 accessorKey: "name",
                                 className: "font-medium",
                                 sortKey: undefined, // Backend sort not dynamic yet in TagList as per code
@@ -145,12 +147,12 @@ export function TagList() {
                                 }
                             },
                             {
-                                header: "Notes",
+                                header: t.tags.notesHeader,
                                 accessorKey: "noteCount",
                                 className: "text-right w-32",
                             },
                             {
-                                header: "Actions",
+                                header: t.tags.actionsHeader,
                                 className: "text-right w-20",
                                 cell: (tag) => (
                                     <Button
@@ -177,7 +179,7 @@ export function TagList() {
                             if (tag.name) handleTagClick(tag.name);
                         }}
                         rowClassName={() => "cursor-pointer hover:bg-muted/50"}
-                        emptyMessage="No tags found."
+                        emptyMessage={t.tags.empty}
                     />
                 </CardContent>
             </Card>
@@ -185,16 +187,16 @@ export function TagList() {
             <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Tag</DialogTitle>
+                        <DialogTitle>{t.tags.deleteTitle}</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete the tag <strong>{deleteTag?.name}</strong>?
+                            {t.tags.deleteDescription} <strong>{deleteTag?.name}</strong>?
                             <br />
                             This will remove the tag from {deleteTag?.noteCount} notes. The notes will not be deleted.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={confirmDelete}>Delete Tag</Button>
+                        <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>{t.tags.cancel}</Button>
+                        <Button variant="destructive" onClick={confirmDelete}>{t.tags.deleteAction}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

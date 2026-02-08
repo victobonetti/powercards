@@ -11,7 +11,7 @@ interface LayoutProps {
 
 export function Layout({ children, currentView, onNavigate }: LayoutProps) {
     return (
-        <div className="flex h-screen overflow-hidden font-sans antialiased text-neutral-900 dark:text-neutral-50 bg-background">
+        <div className="flex h-screen overflow-hidden font-sans antialiased text-neutral-900 dark:text-neutral-50">
             <Sidebar currentView={currentView} onNavigate={onNavigate} />
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Top Header Bar */}

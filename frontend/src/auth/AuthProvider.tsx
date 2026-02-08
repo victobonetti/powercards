@@ -160,7 +160,7 @@ function setupAxiosInterceptor(onLogout: () => void) {
 
                 // Refresh failed or no token
                 // Only logout/redirect if NOT already on login page to avoid loops
-                if (window.location.pathname !== '/login') {
+                if (!window.location.pathname.includes('/login')) {
                     onLogout();
                 }
             }
@@ -190,8 +190,15 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
         setToken(null);
         setProfile(null);
         setIsAuthenticated(false);
-        // Redirect to login
-        window.location.href = '/login';
+        // Redirect to login (preserve language if possible)
+        const currentPath = window.location.pathname;
+        const langMatch = currentPath.match(/^\/(en|pt)\//);
+        const langPrefix = langMatch ? langMatch[0] : '/'; // /en/ or /pt/ or /
+
+        // If we are already on a login page, don't redirect to avoid reload loops if something weird happens
+        if (!currentPath.includes('/login')) {
+            window.location.href = `${langPrefix}login`.replace('//', '/');
+        }
     }, []);
 
     // Fetch profile

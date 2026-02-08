@@ -7,12 +7,14 @@ import { useState } from "react";
 import { axiosInstance } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ImportResponse } from "@/api/custom-types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface UploadAnkiProps {
     onUploadSuccess?: () => void;
 }
 
 export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
+    const { t } = useLanguage();
     const [file, setFile] = useState<File | null>(null);
     const [progress, setProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
@@ -83,10 +85,10 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
         } catch (error: any) {
             console.error("Upload failed", error);
             if (error.response && error.response.status === 412) {
-                setErrorMessage("File too large. Please upload a smaller file.");
+                setErrorMessage(t.upload.errorTooLarge);
                 setStatus("error");
             } else {
-                setErrorMessage("Upload failed. Please try again.");
+                setErrorMessage(t.upload.errorGeneric);
                 setStatus("error");
             }
         } finally {
@@ -97,9 +99,9 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
     return (
         <div className="space-y-6 max-w-2xl mx-auto mt-10">
             <div>
-                <h3 className="text-2xl font-semibold tracking-tight">Upload Anki Collection</h3>
+                <h3 className="text-2xl font-semibold tracking-tight">{t.upload.title}</h3>
                 <p className="text-muted-foreground">
-                    Import your existing .apkg files to start studying.
+                    {t.upload.description}
                 </p>
             </div>
 
@@ -110,8 +112,8 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
                 status === "partial" && "border-yellow-500"
             )}>
                 <CardHeader>
-                    <CardTitle>File Upload</CardTitle>
-                    <CardDescription>Drag and drop your .apkg file here or click to browse.</CardDescription>
+                    <CardTitle>{t.upload.fileUpload}</CardTitle>
+                    <CardDescription>{t.upload.dragDrop}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center space-y-4 py-8">
                     {status === "success" ? (
@@ -120,9 +122,9 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
                                 <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
                             </div>
                             <div className="text-center">
-                                <p className="font-medium text-green-600">Import Successful!</p>
+                                <p className="font-medium text-green-600">{t.upload.successTitle}</p>
                                 <p className="text-sm text-muted-foreground">
-                                    Imported: {importResult?.importedNotes} | Updated: {importResult?.updatedNotes}
+                                    {t.upload.imported}: {importResult?.importedNotes} | {t.upload.updated}: {importResult?.updatedNotes}
                                 </p>
                             </div>
                         </div>
@@ -132,11 +134,11 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
                                 <AlertCircle className="h-10 w-10 text-yellow-600 dark:text-yellow-400" />
                             </div>
                             <div className="text-center space-y-1">
-                                <p className="font-medium text-yellow-600">Duplicates Found</p>
+                                <p className="font-medium text-yellow-600">{t.upload.partialTitle}</p>
                                 <p className="text-sm text-muted-foreground">
-                                    Imported: {importResult?.importedNotes} <br />
-                                    Skipped (Duplicates): {importResult?.skippedNotes} <br />
-                                    Updated: {importResult?.updatedNotes}
+                                    {t.upload.imported}: {importResult?.importedNotes} <br />
+                                    {t.upload.skipped}: {importResult?.skippedNotes} <br />
+                                    {t.upload.updated}: {importResult?.updatedNotes}
                                 </p>
                             </div>
 
@@ -146,7 +148,7 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
                                     className="flex-1"
                                     onClick={() => onUploadSuccess && onUploadSuccess()}
                                 >
-                                    Done
+                                    {t.upload.done}
                                 </Button>
                                 <Button
                                     className="flex-1"
@@ -158,7 +160,7 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
                                     ) : (
                                         <RefreshCw className="mr-2 h-4 w-4" />
                                     )}
-                                    Overwrite All
+                                    {t.upload.overwrite}
                                 </Button>
                             </div>
                         </div>
@@ -178,7 +180,7 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
                     {status !== "partial" && (
                         <>
                             <div className="grid w-full max-w-sm items-center gap-1.5">
-                                <Label htmlFor="anki-file">Anki Package (.apkg)</Label>
+                                <Label htmlFor="anki-file">{t.upload.selectFile}</Label>
                                 <Input
                                     id="anki-file"
                                     type="file"
@@ -191,7 +193,7 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
                             {isUploading && (
                                 <div className="w-full max-w-sm space-y-2">
                                     <div className="flex justify-between text-xs text-muted-foreground">
-                                        <span>Uploading...</span>
+                                        <span>{t.upload.uploading}</span>
                                         <span>{uploadedSize}</span>
                                     </div>
                                     <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
@@ -212,10 +214,10 @@ export function UploadAnki({ onUploadSuccess }: UploadAnkiProps) {
                                 >
                                     {isUploading ? (
                                         <>
-                                            <FileUp className="mr-2 h-4 w-4 animate-bounce" /> Uploading...
+                                            <FileUp className="mr-2 h-4 w-4 animate-bounce" /> {t.upload.uploading}
                                         </>
                                     ) : (
-                                        "Upload"
+                                        t.upload.uploadButton
                                     )}
                                 </Button>
                             )}

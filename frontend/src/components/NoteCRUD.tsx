@@ -27,8 +27,10 @@ import { BulkTagDialog } from "./BulkTagDialog";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ResizableSidebar } from "./ui/resizable-sidebar";
 import { NoteDetail } from "./NoteDetail";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function NoteCRUD() {
+    const { t } = useLanguage();
     const [notes, setNotes] = useState<NoteResponse[]>([]);
     const [models, setModels] = useState<AnkiModelResponse[]>([]);
     const [totalNotes, setTotalNotes] = useState(0);
@@ -254,13 +256,13 @@ export function NoteCRUD() {
                         <Card className="flex flex-col border shadow-sm flex-1 overflow-hidden">
                             <CardHeader className="p-8 pb-4 space-y-4 border-b">
                                 <PageHeader
-                                    title="Notes"
-                                    description="Search and manage all notes in your collection."
+                                    title={t.notes.title}
+                                    description={t.notes.description}
                                     className="mb-0"
                                 >
                                     <div className="flex items-center gap-2">
                                         <Input
-                                            placeholder="Search content or tag=..."
+                                            placeholder={t.notes.searchPlaceholder}
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                             className="w-64"
@@ -268,17 +270,17 @@ export function NoteCRUD() {
                                         <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
                                             <DialogTrigger asChild>
                                                 <Button size="sm">
-                                                    <Plus className="mr-2 h-4 w-4" /> New Note
+                                                    <Plus className="mr-2 h-4 w-4" /> {t.notes.newNote}
                                                 </Button>
                                             </DialogTrigger>
                                             {/* ... Create Dialog Content kept as is ... */}
                                             <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
                                                 <DialogHeader>
-                                                    <DialogTitle>Create New Note</DialogTitle>
+                                                    <DialogTitle>{t.notes.createTitle}</DialogTitle>
                                                 </DialogHeader>
                                                 <div className="grid gap-4 py-4">
                                                     <div className="space-y-2">
-                                                        <Label>Note Model</Label>
+                                                        <Label>{t.notes.modelLabel}</Label>
                                                         <div className="flex flex-wrap gap-2">
                                                             {models.map(m => (
                                                                 <Button
@@ -305,14 +307,14 @@ export function NoteCRUD() {
                                                                 </div>
                                                             ))}
                                                             <div className="space-y-2">
-                                                                <Label>Tags</Label>
+                                                                <Label>{t.notes.tagsLabel}</Label>
                                                                 <TagInput selected={selectedTags} onChange={setSelectedTags} />
                                                             </div>
                                                         </div>
                                                     )}
                                                 </div>
                                                 <DialogFooter>
-                                                    <Button onClick={createNote} disabled={!selectedModel}>Create Note</Button>
+                                                    <Button onClick={createNote} disabled={!selectedModel}>{t.notes.createAction}</Button>
                                                 </DialogFooter>
                                             </DialogContent>
                                         </Dialog>
@@ -321,7 +323,7 @@ export function NoteCRUD() {
                                             onClick={() => setIsSelectionMode(!isSelectionMode)}
                                             size="sm"
                                         >
-                                            {isSelectionMode ? "Cancel" : "Select"}
+                                            {isSelectionMode ? t.common.cancel : "Select"}
                                         </Button>
                                     </div>
                                 </PageHeader>
@@ -330,14 +332,14 @@ export function NoteCRUD() {
                                 {selectedIds.length > 0 && (
                                     <div className="py-2 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
                                         <div className="text-sm font-medium">
-                                            {selectedIds.length} selected
+                                            {selectedIds.length} {t.notes.bulkSelected}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
-                                                Add Tags
+                                                {t.notes.bulkAddTags}
                                             </Button>
                                             <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
-                                                Delete
+                                                {t.notes.bulkDelete}
                                             </Button>
                                         </div>
                                     </div>
@@ -422,7 +424,7 @@ export function NoteCRUD() {
                                     onRowClick={(note) => handleViewClick(note)}
                                     rowClassName={(note) => editingNote?.id === note.id ? "bg-muted border-l-4 border-l-primary" : ""}
                                     isLoading={loading}
-                                    emptyMessage="No notes found."
+                                    emptyMessage={t.notes.empty}
                                 />
                             </CardContent>
                         </Card>
@@ -444,8 +446,8 @@ export function NoteCRUD() {
                     open={isDeleteOpen}
                     onOpenChange={setIsDeleteOpen}
                     onConfirm={confirmDelete}
-                    title="Delete Note"
-                    description="Are you sure you want to delete this note? This action cannot be undone."
+                    title={t.notes.deleteTitle}
+                    description={t.notes.deleteDescription}
                 />
                 <ConfirmationDialog
                     open={isConfirmOpen}
@@ -454,8 +456,8 @@ export function NoteCRUD() {
                         if (pendingAction) pendingAction();
                         setIsConfirmOpen(false);
                     }}
-                    title="Unsaved Changes"
-                    description="You have unsaved changes. Are you sure you want to discard them?"
+                    title={t.notes.unsavedChangesTitle}
+                    description={t.notes.unsavedChangesDescription}
                 />
                 <BulkTagDialog
                     open={isBulkTagOpen}

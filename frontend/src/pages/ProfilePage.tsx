@@ -12,12 +12,14 @@ import { ArrowLeft, Camera, Pencil, Save, X, Loader2, Check } from "lucide-react
 import { markdownToHtml } from "@/lib/markdown";
 import { palettes, applyTheme } from "@/lib/themes";
 import { useTheme } from "@/components/theme-provider";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ProfilePage() {
     const navigate = useNavigate();
     const { user, refreshProfile } = useAuth();
     const { toast } = useToast();
     const { theme } = useTheme();
+    const { t } = useLanguage();
 
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -139,7 +141,7 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="h-full overflow-y-auto bg-background">
+        <div className="h-full overflow-y-auto">
             {/* Banner Section - Full Width */}
             <div className="relative h-48 md:h-64 bg-gradient-to-br from-primary/80 via-primary to-primary/60 flex-shrink-0 overflow-hidden group">
                 {profile?.bannerUrl && (
@@ -169,7 +171,7 @@ export default function ProfilePage() {
                     onClick={() => bannerInputRef.current?.click()}
                 >
                     <Camera className="h-4 w-4 mr-2" />
-                    Change Banner
+                    {t.profile.changeBanner}
                 </Button>
                 <input
                     ref={bannerInputRef}
@@ -245,13 +247,13 @@ export default function ProfilePage() {
                                         {!isEditing ? (
                                             <Button variant="outline" className="w-full" onClick={() => setIsEditing(true)}>
                                                 <Pencil className="h-4 w-4 mr-2" />
-                                                Edit Profile
+                                                {t.profile.editProfile}
                                             </Button>
                                         ) : (
                                             <div className="flex gap-2">
                                                 <Button variant="outline" className="flex-1" onClick={handleCancel} disabled={saving}>
                                                     <X className="h-4 w-4 mr-1" />
-                                                    Cancel
+                                                    {t.profile.cancel}
                                                 </Button>
                                                 <Button className="flex-1" onClick={handleSave} disabled={saving}>
                                                     {saving ? (
@@ -259,7 +261,7 @@ export default function ProfilePage() {
                                                     ) : (
                                                         <Save className="h-4 w-4 mr-1" />
                                                     )}
-                                                    Save
+                                                    {t.profile.save}
                                                 </Button>
                                             </div>
                                         )}
@@ -270,20 +272,20 @@ export default function ProfilePage() {
                             {/* Stats Placeholder */}
                             <Card>
                                 <CardHeader>
-                                    <CardTitle className="text-lg">Statistics</CardTitle>
+                                    <CardTitle className="text-lg">{t.profile.statistics}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-muted-foreground">Decks Created</span>
+                                            <span className="text-muted-foreground">{t.profile.decksCreated}</span>
                                             <span className="font-bold">0</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-muted-foreground">Notes Added</span>
+                                            <span className="text-muted-foreground">{t.profile.notesAdded}</span>
                                             <span className="font-bold">0</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-muted-foreground">Days Streak</span>
+                                            <span className="text-muted-foreground">{t.profile.daysStreak}</span>
                                             <span className="font-bold text-primary">0 🔥</span>
                                         </div>
                                     </div>
@@ -298,11 +300,11 @@ export default function ProfilePage() {
                             {isEditing && (
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle>Appearance</CardTitle>
+                                        <CardTitle>{t.profile.appearance}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-4">
-                                            <Label>Color Palette</Label>
+                                            <Label>{t.profile.colorPalette}</Label>
                                             <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-3">
                                                 {palettes.map((palette) => (
                                                     <button
@@ -324,7 +326,7 @@ export default function ProfilePage() {
                                                 ))}
                                             </div>
                                             <p className="text-xs text-muted-foreground">
-                                                Select a color theme for your interface.
+                                                {t.profile.themeDescription}
                                             </p>
                                         </div>
                                     </CardContent>
@@ -334,7 +336,7 @@ export default function ProfilePage() {
                             {/* About Me */}
                             <Card className="h-full">
                                 <CardHeader>
-                                    <CardTitle>About Me</CardTitle>
+                                    <CardTitle>{t.profile.aboutMe}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     {isEditing ? (
@@ -343,12 +345,12 @@ export default function ProfilePage() {
                                                 id="description"
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
-                                                placeholder="Write something about yourself... (Markdown supported)"
+                                                placeholder={t.profile.aboutPlaceholder}
                                                 rows={8}
                                                 className="resize-none"
                                             />
                                             <p className="text-xs text-muted-foreground">
-                                                Supports Markdown: **bold**, _italic_, # headers, - lists, etc.
+                                                {t.profile.markdownSupport}
                                             </p>
                                         </div>
                                     ) : profile?.description ? (
@@ -358,9 +360,9 @@ export default function ProfilePage() {
                                         />
                                     ) : (
                                         <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed text-sm">
-                                            <p>No bio added yet.</p>
+                                            <p>{t.profile.noBio}</p>
                                             {!isEditing && (
-                                                <Button variant="link" onClick={() => setIsEditing(true)}>Click to add a bio</Button>
+                                                <Button variant="link" onClick={() => setIsEditing(true)}>{t.profile.addBio}</Button>
                                             )}
                                         </div>
                                     )}

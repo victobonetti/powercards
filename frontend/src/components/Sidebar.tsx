@@ -8,6 +8,7 @@ import logo_collapsed from "@/assets/logo_collapsed.png"
 import { WorkspaceSelector } from "./WorkspaceSelector";
 import { HelpModal } from "./HelpModal";
 import { useFlashcardFactory } from "@/context/FlashcardFactoryContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface SidebarProps {
     currentView: "upload" | "decks" | "tags" | "factory";
@@ -47,6 +48,7 @@ function SidebarButton({ icon: Icon, label, isActive, isExpanded, onClick, class
 
 export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
     const { theme, setTheme } = useTheme();
+    const { t, language, setLanguage } = useLanguage();
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isPinned, setIsPinned] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -179,7 +181,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     <div className={cn("transition-all duration-300", getItemClass(2))}>
                         <SidebarButton
                             icon={Upload}
-                            label="Upload Anki"
+                            label={t.navigation.upload}
                             isActive={currentView === "upload"}
                             isExpanded={isExpanded}
                             onClick={() => onNavigate("upload")}
@@ -188,7 +190,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     <div className={cn("transition-all duration-300", getItemClass(3))}>
                         <SidebarButton
                             icon={Layers}
-                            label="My Decks"
+                            label={t.navigation.decks}
                             isActive={currentView === "decks"}
                             isExpanded={isExpanded}
                             onClick={() => onNavigate("decks")}
@@ -197,7 +199,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     <div className={cn("transition-all duration-300", getItemClass(3))}>
                         <SidebarButton
                             icon={Tag}
-                            label="Tags"
+                            label={t.navigation.tags}
                             isActive={currentView === "tags"}
                             isExpanded={isExpanded}
                             onClick={() => onNavigate("tags")}
@@ -206,7 +208,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     <div className={cn("transition-all duration-300", getItemClass(5))}>
                         <SidebarButton
                             icon={AnimatedFactoryIcon}
-                            label={isProcessing ? "Thinking..." : (notificationChatIds.size > 0 && currentView !== "factory" ? "Response Ready" : "Flashcard Factory")}
+                            label={isProcessing ? t.common.loading : (notificationChatIds.size > 0 && currentView !== "factory" ? "Response Ready" : t.navigation.factory)}
                             labelClassName={notificationChatIds.size > 0 && currentView !== "factory" ? "font-bold" : ""}
                             isActive={currentView === "factory"}
                             isExpanded={isExpanded}
@@ -230,7 +232,6 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
             </div>
 
             <div className={cn("p-4 border-t bg-muted/20 flex flex-col gap-4", !isExpanded && "items-center", getDimClass())}>
-
                 <div className="flex items-center justify-center gap-2 w-full">
                     <Button
                         variant="ghost"
@@ -262,3 +263,4 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
         </div >
     );
 }
+

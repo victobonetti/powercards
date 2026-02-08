@@ -28,6 +28,7 @@ import { ConfirmationDialog } from "./ui/confirmation-dialog";
 import { useDebounce } from "@/hooks/use-debounce";
 import { DataTable } from "./ui/data-table";
 import { PageHeader } from "./ui/page-header";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DeckCRUDProps {
     highlightNew?: boolean;
@@ -65,6 +66,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
     const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
     const { toast } = useToast();
+    const { t } = useLanguage();
 
     // ... handleOpenChangeCreate and handleOpenChangeEdit (omitted for brevity in replacement if unchanged, but I'm replacing the whole top part so I need to keep them or be careful with ranges)
     // Actually, I'll replace the fetchDecks and render part mainly.
@@ -195,13 +197,13 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                 <CardHeader className="p-8">
                     <div className="flex items-center justify-between">
                         <PageHeader
-                            title="Decks"
-                            description="Search and manage all your decks."
+                            title={t.decks.title}
+                            description={t.decks.description}
                             className="mb-0"
                         />
                         <div className="flex items-center gap-2">
                             <Input
-                                placeholder="Search decks..."
+                                placeholder={t.decks.searchPlaceholder}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="w-64"
@@ -209,25 +211,25 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                             <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
                                 <DialogTrigger asChild>
                                     <Button size="sm">
-                                        <Plus className="mr-2 h-4 w-4" /> New Deck
+                                        <Plus className="mr-2 h-4 w-4" /> {t.decks.newDeck}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent onInteractOutside={(e) => e.preventDefault()}>
                                     <DialogHeader>
-                                        <DialogTitle>Create New Deck</DialogTitle>
+                                        <DialogTitle>{t.decks.createTitle}</DialogTitle>
                                         <DialogDescription>
-                                            Enter a name for your new deck.
+                                            {t.decks.createDescription}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <div className="grid gap-4 py-4">
                                         <Input
-                                            placeholder="Deck name"
+                                            placeholder={t.decks.deckNamePlaceholder}
                                             value={newDeckName}
                                             onChange={(e) => setNewDeckName(e.target.value)}
                                             onKeyDown={(e) => e.key === "Enter" && createDeck()}
                                         />
                                         <DialogFooter>
-                                            <Button onClick={createDeck}>Create</Button>
+                                            <Button onClick={createDeck}>{t.common.create}</Button>
                                         </DialogFooter>
                                     </div>
                                 </DialogContent>
@@ -267,10 +269,10 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                                             <DropdownMenuItem onClick={(e) => handleEditClick(deck, e)}>
-                                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                                                <Pencil className="mr-2 h-4 w-4" /> {t.common.edit}
                                             </DropdownMenuItem>
                                             <DropdownMenuItem className="text-red-600" onClick={(e) => handleDeleteClick(deck, e)}>
-                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                <Trash2 className="mr-2 h-4 w-4" /> {t.common.delete}
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -285,7 +287,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                         onPageChange={setCurrentPage}
                         sortColumn={sort}
                         onSort={toggleSort}
-                        emptyMessage="No decks found."
+                        emptyMessage={t.decks.empty}
                         onRowClick={(deck) => deck.id && setSelectedDeck({ id: deck.id, name: deck.name || "Untitled" })}
                         rowClassName={() => "cursor-pointer hover:bg-muted/50"}
                     />
@@ -297,18 +299,18 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
             <Dialog open={isEditOpen} onOpenChange={handleOpenChangeEdit}>
                 <DialogContent onInteractOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
-                        <DialogTitle>Edit Deck</DialogTitle>
-                        <DialogDescription>Rename your deck.</DialogDescription>
+                        <DialogTitle>{t.decks.editTitle}</DialogTitle>
+                        <DialogDescription>{t.decks.editDescription}</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <Input
-                            placeholder="Deck name"
+                            placeholder={t.decks.deckNamePlaceholder}
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && updateDeck()}
                         />
                         <DialogFooter>
-                            <Button onClick={updateDeck}>Save Changes</Button>
+                            <Button onClick={updateDeck}>{t.common.save}</Button>
                         </DialogFooter>
                     </div>
                 </DialogContent>
@@ -318,14 +320,14 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
             <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Deck</DialogTitle>
+                        <DialogTitle>{t.decks.deleteTitle}</DialogTitle>
                         <DialogDescription>
-                            This action cannot be undone. Please type <strong>{deleteDeckData?.name}</strong> to confirm.
+                            {t.decks.deleteDescription} <strong>{deleteDeckData?.name}</strong>
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <Input
-                            placeholder="Type deck name to confirm"
+                            placeholder={t.decks.deleteConfirmPlaceholder}
                             value={deleteConfirmation}
                             onChange={(e) => setDeleteConfirmation(e.target.value)}
                             className={deleteConfirmation === deleteDeckData?.name ? "border-green-500" : ""}
@@ -336,7 +338,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                                 onClick={confirmDelete}
                                 disabled={deleteConfirmation !== deleteDeckData?.name}
                             >
-                                Delete Deck
+                                {t.decks.deleteAction}
                             </Button>
                         </DialogFooter>
                     </div>

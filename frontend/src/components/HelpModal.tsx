@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Upload, Layers, Edit3, ArrowRight, ArrowLeft, User, Sparkles } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export interface HelpModalProps {
     open: boolean;
@@ -9,40 +10,44 @@ export interface HelpModalProps {
     onStepChange: (step: number) => void;
 }
 
-export const steps = [
-    {
-        title: "Welcome to PowerCards",
-        description: "Your advanced Anki deck manager. Let's get you started with a quick tour of the main features.",
-        icon: <div className="p-4 bg-primary/10 rounded-full mb-4"><Layers className="w-12 h-12 text-primary" /></div>
-    },
-    {
-        title: "1. Workspaces",
-        description: "Organize your decks and notes into isolated Workspaces. Use the selector in the sidebar to create new workspaces or switch contexts.",
-        icon: <div className="p-4 bg-orange-100 dark:bg-orange-900/30 rounded-full mb-4"><Layers className="w-12 h-12 text-orange-600 dark:text-orange-400" /></div>
-    },
-    {
-        title: "2. Upload Anki Files",
-        description: "Upload your existing .apkg files. PowerCards works directly with your Anki collection. Just drag and drop to import.",
-        icon: <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4"><Upload className="w-12 h-12 text-blue-600 dark:text-blue-400" /></div>
-    },
-    {
-        title: "3. Manage & Edit",
-        description: "Browse your decks, search for notes, edit fields, and manage tags. All changes are synchronized with your database.",
-        icon: <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full mb-4"><Edit3 className="w-12 h-12 text-green-600 dark:text-green-400" /></div>
-    },
-    {
-        title: "4. Profile & Themes",
-        description: "Customize your experience. Click your avatar to access the Profile menu where you can change your theme color, update your bio, and manage your account settings.",
-        icon: <div className="p-4 bg-purple-100 dark:bg-purple-900/30 rounded-full mb-4"><User className="w-12 h-12 text-purple-600 dark:text-purple-400" /></div>
-    },
-    {
-        title: "5. AI Features",
-        description: "Power up your learning with AI. Use the 'Flashcard Factory' to automatically generate cards from text, or chat with your knowledge base for deeper insights.",
-        icon: <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-full mb-4"><Sparkles className="w-12 h-12 text-yellow-600 dark:text-yellow-400" /></div>
-    }
-];
+// Moved steps inside component to access 't' or make it a function
+
 
 export function HelpModal({ open, onOpenChange, currentStep, onStepChange }: HelpModalProps) {
+    const { t } = useLanguage();
+
+    const steps = [
+        {
+            title: t.help.welcomeTitle,
+            description: t.help.welcomeDescription,
+            icon: <div className="p-4 bg-primary/10 rounded-full mb-4"><Layers className="w-12 h-12 text-primary" /></div>
+        },
+        {
+            title: t.help.workspacesTitle,
+            description: t.help.workspacesDescription,
+            icon: <div className="p-4 bg-orange-100 dark:bg-orange-900/30 rounded-full mb-4"><Layers className="w-12 h-12 text-orange-600 dark:text-orange-400" /></div>
+        },
+        {
+            title: t.help.uploadTitle,
+            description: t.help.uploadDescription,
+            icon: <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4"><Upload className="w-12 h-12 text-blue-600 dark:text-blue-400" /></div>
+        },
+        {
+            title: t.help.manageTitle,
+            description: t.help.manageDescription,
+            icon: <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full mb-4"><Edit3 className="w-12 h-12 text-green-600 dark:text-green-400" /></div>
+        },
+        {
+            title: t.help.profileTitle,
+            description: t.help.profileDescription,
+            icon: <div className="p-4 bg-purple-100 dark:bg-purple-900/30 rounded-full mb-4"><User className="w-12 h-12 text-purple-600 dark:text-purple-400" /></div>
+        },
+        {
+            title: t.help.aiTitle,
+            description: t.help.aiDescription,
+            icon: <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-full mb-4"><Sparkles className="w-12 h-12 text-yellow-600 dark:text-yellow-400" /></div>
+        }
+    ];
 
     const handleNext = () => {
         if (currentStep < steps.length - 1) {
@@ -88,11 +93,11 @@ export function HelpModal({ open, onOpenChange, currentStep, onStepChange }: Hel
                             disabled={currentStep === 0}
                             className={currentStep === 0 ? "invisible" : ""}
                         >
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                            <ArrowLeft className="mr-2 h-4 w-4" /> {t.common.back}
                         </Button>
 
                         <Button onClick={handleNext}>
-                            {currentStep === steps.length - 1 ? "Finish" : "Next"}
+                            {currentStep === steps.length - 1 ? t.common.finish : t.common.next}
                             {currentStep !== steps.length - 1 && <ArrowRight className="ml-2 h-4 w-4" />}
                         </Button>
                     </div>

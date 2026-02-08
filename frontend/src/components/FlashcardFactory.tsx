@@ -6,8 +6,10 @@ import { PageHeader } from "./ui/page-header";
 import { cn } from "@/lib/utils";
 import { useFlashcardFactory } from "@/context/FlashcardFactoryContext";
 import { ScrollArea } from "./ui/scroll-area";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function FlashcardFactory() {
+    const { t } = useLanguage();
     const {
         chats,
         currentChatId,
@@ -35,11 +37,11 @@ export function FlashcardFactory() {
     return (
         <div className="h-[calc(100vh-4rem)] w-full flex flex-col gap-6 p-6 pb-0">
             <PageHeader
-                title="Flashcard Factory"
-                description="Chat with AI to generate cards, improve content, or just brainstorm."
+                title={t.factory.title}
+                description={t.factory.description}
             >
                 <Button onClick={createNewChat} variant="outline" size="sm">
-                    <Plus className="mr-2 h-4 w-4" /> New Chat
+                    <Plus className="mr-2 h-4 w-4" /> {t.factory.newChat}
                 </Button>
             </PageHeader>
 
@@ -47,14 +49,14 @@ export function FlashcardFactory() {
                 {/* Chat List Sidebar */}
                 <div className="w-64 flex flex-col gap-2 shrink-0 border rounded-lg bg-card overflow-hidden">
                     <div className="p-3 border-b bg-muted/30 font-medium text-sm flex items-center justify-between">
-                        <span>History</span>
+                        <span>{t.factory.history}</span>
                         {itemsLoading && <Loader2 className="h-3 w-3 animate-spin" />}
                     </div>
                     <ScrollArea className="flex-1">
                         <div className="flex flex-col gap-1 p-2">
                             {chats.length === 0 ? (
                                 <div className="text-center text-xs text-muted-foreground py-8">
-                                    No chat history
+                                    {t.factory.noHistory}
                                 </div>
                             ) : (
                                 chats.map((chat) => (
@@ -93,9 +95,9 @@ export function FlashcardFactory() {
                     {!currentChatId ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-4">
                             <Bot className="h-12 w-12 opacity-20" />
-                            <p>Select a chat or create a new one to start.</p>
+                            <p>{t.factory.selectChat}</p>
                             <Button onClick={createNewChat}>
-                                Start New Chat
+                                {t.factory.startNewChat}
                             </Button>
                         </div>
                     ) : (
@@ -129,7 +131,7 @@ export function FlashcardFactory() {
                                             <Sparkles size={18} className="animate-pulse" />
                                         </div>
                                         <div className="p-3 rounded-lg text-sm bg-background border shadow-sm text-muted-foreground italic">
-                                            Thinking...
+                                            {t.factory.thinking}
                                         </div>
                                     </div>
                                 )}
@@ -144,13 +146,13 @@ export function FlashcardFactory() {
                                     <Input
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
-                                        placeholder="Type a message..."
+                                        placeholder={t.factory.typeMessage}
                                         className="flex-1"
                                         disabled={isProcessing}
                                     />
                                     <Button type="submit" disabled={isProcessing || !input.trim()}>
                                         <Send size={18} />
-                                        <span className="sr-only">Send</span>
+                                        <span className="sr-only">{t.factory.send}</span>
                                     </Button>
                                 </form>
                             </div>

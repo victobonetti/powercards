@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, Navigate, Outlet, useParams } from "react-router-dom";
 import { DeckCRUD } from "./components/DeckCRUD";
 import { NoteCRUD } from "./components/NoteCRUD";
 import { TagList } from "./components/TagList";
@@ -12,7 +12,7 @@ import { ThemeProvider, useTheme } from "./components/theme-provider";
 import { PageHeader } from "./components/ui/page-header";
 import { applyTheme } from "./lib/themes";
 
-import { WorkspaceProvider, useWorkspace } from "./context/WorkspaceContext"; // Ensure useWorkspace is exported and imported
+import { WorkspaceProvider, useWorkspace } from "./context/WorkspaceContext";
 import { FlashcardFactoryProvider } from "./context/FlashcardFactoryContext";
 import { Toaster } from "./components/ui/toaster";
 import { WorkspaceCreateDialog } from "./components/WorkspaceCreateDialog";
@@ -23,86 +23,153 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { LanguageProvider, useLanguage } from "./context/LanguageContext";
+import { PaperBackground } from "./components/PaperBackground";
+
+// Redirect root to default language (en)
+function RootRedirect() {
+  return <Navigate to="/en" replace />;
+}
+
+// Validate language parameter
+function LanguageGuard() {
+  const { lang } = useParams();
+  // const { setLanguage } = useLanguage(); // Unused
+
+  useEffect(() => {
+    if (lang === 'en' || lang === 'pt') {
+      // Correct lang
+    } else {
+      // Invalid lang, could redirect or just let it fail/default
+    }
+  }, [lang]);
+
+  if (lang !== 'en' && lang !== 'pt') {
+    return <Navigate to="/en" replace />;
+  }
+
+  return <Outlet />;
+}
 
 function App() {
+  return (
+    <AppAuthProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <WorkspaceProvider>
+          <FlashcardFactoryProvider>
+            <LanguageProvider>
+              <PaperBackground />
+              <ForceWorkspaceWrapper>
+                <Routes>
+                  <Route path="/" element={<RootRedirect />} />
+                  <Route path="/login" element={<Navigate to="/en/login" replace />} />
+                  <Route path="/register" element={<Navigate to="/en/register" replace />} />
+
+                  <Route path="/:lang" element={<LanguageGuard />}>
+                    <Route path="login" element={<LoginPage />} />
+                    <Route path="register" element={<RegisterPage />} />
+
+                    <Route element={<ProtectedRoute />}>
+                      <Route element={<AppLayout />}>
+                        {/* These paths are relative to /:lang */}
+                        <Route index element={<UploadWrapper />} />
+                        <Route path="upload" element={<Navigate to="../" replace />} />
+                        <Route path="tags" element={<TagsView />} />
+                        <Route path="decks" element={<DecksWrapper />} />
+                        <Route path="factory" element={<FlashcardFactory />} />
+                        <Route path="notes" element={<NotesWrapper />} />
+                        <Route path="profile" element={<ProfilePage />} />
+                      </Route>
+                    </Route>
+                  </Route>
+                </Routes>
+                <Toaster />
+              </ForceWorkspaceWrapper>
+            </LanguageProvider>
+          </FlashcardFactoryProvider>
+        </WorkspaceProvider>
+      </ThemeProvider >
+    </AppAuthProvider>
+  );
+}
+
+// Wrapper to hold previous logic for AppLayout
+function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [highlightNewDecks, setHighlightNewDecks] = useState(false);
-
-  // Derive currentView from location
+  const { lang } = useParams();
   const [currentView, setCurrentView] = useState<"upload" | "decks" | "tags" | "factory">("upload");
 
   useEffect(() => {
-    if (location.pathname === "/" || location.pathname === "/upload") {
+    // pathname includes /en/ or /pt/
+    // Remove the language part to check the rest
+    const path = location.pathname.substring(3); // Remove /en or /pt
+
+    if (path === "" || path === "/" || path === "/upload") {
       setCurrentView("upload");
-    } else if (location.pathname === "/tags") {
+    } else if (path === "/tags") {
       setCurrentView("tags");
-    } else if (location.pathname === "/factory") {
+    } else if (path === "/factory") {
       setCurrentView("factory");
     } else {
       setCurrentView("decks");
     }
   }, [location.pathname]);
 
-  const handleUploadSuccess = () => {
-    setHighlightNewDecks(true);
-    navigate("/decks");
-    // Reset highlight after some time
-    setTimeout(() => setHighlightNewDecks(false), 5000);
-  };
-
   const handleNavigate = (view: "upload" | "decks" | "tags" | "factory") => {
-    if (view === "upload") navigate("/");
-    else if (view === "decks") navigate("/decks");
-    else if (view === "tags") navigate("/tags");
-    else if (view === "factory") navigate("/factory");
+    const prefix = `/${lang}`;
+    if (view === "upload") navigate(`${prefix}/`);
+    else if (view === "decks") navigate(`${prefix}/decks`);
+    else if (view === "tags") navigate(`${prefix}/tags`);
+    else if (view === "factory") navigate(`${prefix}/factory`);
   };
 
-  return (
-    <AppAuthProvider>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <WorkspaceProvider>
-          <FlashcardFactoryProvider>
-            <ForceWorkspaceWrapper>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+  return <Layout currentView={currentView} onNavigate={handleNavigate} />;
+}
 
-                <Route element={<ProtectedRoute />}>
-                  <Route element={<Layout currentView={currentView} onNavigate={handleNavigate} />}>
-                    <Route path="/" element={<UploadAnki onUploadSuccess={handleUploadSuccess} />} />
-                    <Route path="/upload" element={<Navigate to="/" replace />} />
-                    <Route path="/tags" element={
-                      <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                        <PageHeader
-                          title="Tags"
-                          description="Manage your collection tags. Click on a tag to view all notes with that tag."
-                        />
-                        <TagList />
-                      </div>
-                    } />
-                    <Route path="/decks" element={
-                      <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                        <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNewDecks} />
-                      </div>
-                    } />
-                    <Route path="/factory" element={<FlashcardFactory />} />
-                    <Route path="/notes" element={
-                      <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
-                        <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
-                      </div>
-                    } />
-                    <Route path="/profile" element={<ProfilePage />} />
-                  </Route>
-                </Route>
-              </Routes>
-              <Toaster />
-            </ForceWorkspaceWrapper>
-          </FlashcardFactoryProvider>
-        </WorkspaceProvider>
-      </ThemeProvider >
-    </AppAuthProvider>
+function UploadWrapper() {
+  const navigate = useNavigate();
+  const { lang } = useParams();
+  // Note: highlightNewDecks state lifting is tricky with this refactor. 
+  // Ideally, use context or simpler prop drill. 
+  // For now, I'll pass simple handler.
+
+  const handleUploadSuccess = () => {
+    navigate(`/${lang}/decks`, { state: { highlightNew: true } });
+  };
+
+  return <UploadAnki onUploadSuccess={handleUploadSuccess} />;
+}
+
+
+function TagsView() {
+  const { t } = useLanguage();
+  return (
+    <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+      <PageHeader
+        title={t.tags.title}
+        description={t.tags.description}
+      />
+      <TagList />
+    </div>
+  );
+}
+
+function DecksWrapper() {
+  const location = useLocation();
+  const highlightNew = location.state?.highlightNew || false;
+  return (
+    <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+      <DecksAndNotesView activeTab="decks" highlightNewDecks={highlightNew} />
+    </div>
+  );
+}
+
+function NotesWrapper() {
+  return (
+    <div className="h-[calc(100vh-4rem)] w-full flex flex-col h-full gap-6 p-6 pb-0">
+      <DecksAndNotesView activeTab="notes" highlightNewDecks={false} />
+    </div>
   );
 }
 
@@ -138,20 +205,27 @@ function ForceWorkspaceWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+
 function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activeTab: "decks" | "notes", highlightNewDecks: boolean }) {
   const navigate = useNavigate();
+  const { lang } = useParams();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"decks" | "notes">(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const handleTabChange = (tab: "decks" | "notes") => {
     setActiveTab(tab);
-    navigate(tab === "decks" ? "/decks" : "/notes");
+    navigate(`/${lang}/${tab}`);
   };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <PageHeader
-        title="My Decks"
-        description="Manage your decks and notes here."
+        title={activeTab === 'decks' ? t.decks.title : t.notes.title}
+        description={activeTab === 'decks' ? t.decks.description : t.notes.description}
       >
         <div className="flex flex-col items-end gap-1">
           <span className="text-xs font-medium text-muted-foreground mr-1">View</span>
@@ -162,7 +236,7 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
               onClick={() => handleTabChange("decks")}
               className={activeTab === "decks" ? "bg-background shadow-sm" : ""}
             >
-              <Layers className="mr-2 h-4 w-4" /> Decks
+              <Layers className="mr-2 h-4 w-4" /> {t.navigation.decks}
             </Button>
             <Button
               variant={activeTab === "notes" ? "secondary" : "ghost"}
@@ -170,7 +244,7 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
               onClick={() => handleTabChange("notes")}
               className={activeTab === "notes" ? "bg-background shadow-sm" : ""}
             >
-              <FileText className="mr-2 h-4 w-4" /> Notes
+              <FileText className="mr-2 h-4 w-4" /> {t.navigation.notes}
             </Button>
           </div>
         </div>
@@ -184,3 +258,4 @@ function DecksAndNotesView({ activeTab: initialTab, highlightNewDecks }: { activ
 }
 
 export default App;
+
