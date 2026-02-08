@@ -3,7 +3,14 @@ import { useTheme } from './theme-provider';
 
 export function PaperBackground() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { theme } = useTheme();
+    useTheme(); // Keep hook if needed for context subscription, or remove if not. 
+    // Actually, we use 'theme' in dependency array? No, the previous edit removed it from dep array.
+    // Let's check if useTheme is needed at all.
+    // The previous edit removed 'theme' from useEffect dependency array and used mutation observer.
+    // So we might not need useTheme hook anymore if we are observing DOM.
+    // BUT, useTheme might trigger re-render on context change? 
+    // The mutation observer handles the class change on <html/>.
+    // So we can probably remove useTheme() entirely or just not destructure.
 
     useEffect(() => {
         const canvas = canvasRef.current;

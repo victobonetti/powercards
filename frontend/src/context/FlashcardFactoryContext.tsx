@@ -79,7 +79,8 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
 
     // Clear notification if we are viewing the chat on factory page
     useEffect(() => {
-        if (location.pathname === "/factory" && currentChatId) {
+        // Check if path ends with /factory or /factory/ (handles /en/factory, /pt/factory)
+        if (/\/factory\/?$/.test(location.pathname) && currentChatId) {
             clearNotification(currentChatId);
         }
     }, [location.pathname, currentChatId]);
@@ -169,8 +170,17 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
         }
     }
 
+    // Ref to track current chat ID for async callbacks
+    const currentChatIdRef = useRef(currentChatId);
+    useEffect(() => {
+        currentChatIdRef.current = currentChatId;
+    }, [currentChatId]);
+
     const sendMessage = async () => {
         if (!input.trim() || isProcessing || !currentChatId || !currentWorkspaceId) return;
+
+        // Capture the chat ID this message belongs to
+        const messageChatId = currentChatId;
 
         const tempId = Date.now().toString();
         const userMessage: Message = {
@@ -185,7 +195,7 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
         setIsProcessing(true);
 
         try {
-            const response = await axios.post(`/api/v1/chats/${currentChatId}/messages`, userMessage.content, {
+            const response = await axios.post(`/api/v1/chats/${messageChatId}/messages`, userMessage.content, {
                 headers: {
                     "Content-Type": "text/plain",
                     "X-Workspace-Id": currentWorkspaceId
@@ -201,16 +211,24 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
                 createdAt: aiMessageData.createdAt
             };
 
-            setMessages(prev => [...prev, aiMessage]);
+            // Only update messages if we are still viewing the same chat
+            if (currentChatIdRef.current === messageChatId) {
+                setMessages(prev => [...prev, aiMessage]);
+            }
 
             // If this was the first message exchange, refresh chat list to get updated name
             if (messages.length === 0) {
                 fetchChats();
             }
 
-            // Notify if not on the factory page
-            if (locationRef.current.pathname !== "/factory") {
-                setNotificationChatIds(prev => new Set(prev).add(currentChatId));
+            // Notify if:
+            // 1. Not on the factory page OR
+            // 2. On factory page but viewing a DIFFERENT chat
+            const isOnFactory = /\/factory\/?$/.test(locationRef.current.pathname);
+            const isViewingOtherChat = currentChatIdRef.current !== messageChatId;
+
+            if (!isOnFactory || isViewingOtherChat) {
+                setNotificationChatIds(prev => new Set(prev).add(messageChatId));
 
                 toast({
                     title: "Flashcard Factory",
@@ -219,6 +237,7 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
                         <div
                             className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 rounded-md flex items-center justify-center text-xs cursor-pointer"
                             onClick={() => {
+                                selectChat(messageChatId);
                                 navigate("/factory");
                             }}
                         >
@@ -235,9 +254,12 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
                 role: "ai",
                 content: "Sorry, I encountered an error communicating with the server."
             };
-            setMessages(prev => [...prev, errorMessage]);
 
-            if (locationRef.current.pathname !== "/factory") {
+            if (currentChatIdRef.current === messageChatId) {
+                setMessages(prev => [...prev, errorMessage]);
+            }
+
+            if (!/\/factory\/?$/.test(locationRef.current.pathname)) {
                 toast({
                     variant: "destructive",
                     title: "Flashcard Factory",

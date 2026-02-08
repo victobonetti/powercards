@@ -103,7 +103,10 @@ function AppLayout() {
   useEffect(() => {
     // pathname includes /en/ or /pt/
     // Remove the language part to check the rest
-    const path = location.pathname.substring(3); // Remove /en or /pt
+    let path = location.pathname.substring(3); // Remove /en or /pt
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.slice(0, -1);
+    }
 
     if (path === "" || path === "/" || path === "/upload") {
       setCurrentView("upload");
