@@ -1,5 +1,6 @@
 package br.com.powercards.resources;
 
+import br.com.powercards.services.AIEnhancementService;
 import br.com.powercards.services.AIService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -14,6 +15,9 @@ public class AIResource {
     @Inject
     AIService aiService;
 
+    @Inject
+    AIEnhancementService enhancementService;
+
     @POST
     @Path("/chat")
     @Consumes(MediaType.TEXT_PLAIN)
@@ -27,6 +31,6 @@ public class AIResource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
     public String enhance(String content) {
-        return aiService.enhanceContent(content);
+        return enhancementService.enhanceContent(content);
     }
 }
