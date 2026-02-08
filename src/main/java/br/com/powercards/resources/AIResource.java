@@ -27,10 +27,18 @@ public class AIResource {
     }
 
     @POST
-    @Path("/enhance")
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.TEXT_PLAIN)
-    public String enhance(String content) {
-        return enhancementService.enhanceContent(content);
+    @Path("/enhance-model")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public java.util.List<String> enhanceModel(java.util.List<String> contents) {
+        String input = contents.toString();
+        io.quarkus.logging.Log.info("Enhancing model input: " + input);
+
+        java.util.List<String> result = enhancementService.enhanceModel(contents);
+
+        String output = result != null ? result.toString() : "null";
+        io.quarkus.logging.Log.info("Enhancing model output: " + output);
+
+        return result;
     }
 }

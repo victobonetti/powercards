@@ -73,3 +73,16 @@ export const enhanceContent = async (content: string): Promise<string> => {
     return response.data;
 };
 
+export const enhanceModel = async (contents: string[]): Promise<string[]> => {
+    const response = await axiosInstance.post<string[]>(
+        '/v1/ai/enhance-model',
+        contents,
+        {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+    );
+    return response.data;
+};
+

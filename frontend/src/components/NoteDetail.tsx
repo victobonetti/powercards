@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { HtmlInput } from "@/components/ui/html-input";
-import { noteApi, modelApi, uploadMedia, enhanceContent } from "@/lib/api";
+import { noteApi, modelApi, uploadMedia, enhanceModel } from "@/lib/api";
 import { NoteResponse, AnkiModelResponse, AnkiFieldDto } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
 import { splitAnkiFields, joinAnkiFields } from "@/lib/anki";
-import { Loader2, Pencil, X, Save, Sparkles, Image as ImageIcon } from "lucide-react";
+import { Loader2, Pencil, X, Save, Image as ImageIcon, Undo, Redo, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +79,74 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
         }
     };
 
+    // History State
+    const [history, setHistory] = useState<string[][]>([]); // Array of fieldValues arrays
+    const [future, setFuture] = useState<string[][]>([]);
+
+    const saveToHistory = () => {
+        setHistory(prev => [...prev, [...fieldValues]]);
+        setFuture([]);
+    };
+
+    const handleUndo = () => {
+        if (history.length === 0) return;
+        const previous = history[history.length - 1];
+        const newHistory = history.slice(0, -1);
+
+        setFuture(prev => [[...fieldValues], ...prev]);
+        setHistory(newHistory);
+        setFieldValues(previous);
+    };
+
+    const handleRedo = () => {
+        if (future.length === 0) return;
+        const next = future[0];
+        const newFuture = future.slice(1);
+
+        setHistory(prev => [...prev, [...fieldValues]]);
+        setFuture(newFuture);
+        setFieldValues(next);
+    };
+
+    // Keyboard Shortcut for Undo/Redo
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Check for Ctrl+Z or Cmd+Z
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                const target = e.target as HTMLElement;
+                const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+                // If Shift is pressed, it's Redo (Ctrl+Shift+Z)
+                if (e.shiftKey) {
+                    // Only intercept if NOT input, OR if we decide custom redo is better
+                    // Ideally, avoiding conflict with browser native redo
+                    if (!isInput) {
+                        e.preventDefault();
+                        handleRedo();
+                    }
+                } else {
+                    // Undo
+                    if (!isInput) {
+                        e.preventDefault();
+                        handleUndo();
+                    }
+                }
+            }
+            // Check for Ctrl+Y (Redo on Windows/Linux sometimes)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                const target = e.target as HTMLElement;
+                const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+                if (!isInput) {
+                    e.preventDefault();
+                    handleRedo();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [history, future, fieldValues]); // Dependencies needed for handlers
+
     const handleFieldChange = (index: number, value: string) => {
         const newValues = [...fieldValues];
         newValues[index] = value;
@@ -90,6 +158,9 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
             toast({ title: "Error", description: "Save the note first before uploading media.", variant: "destructive" });
             return;
         }
+
+        // Save state before upload
+        saveToHistory();
 
         try {
             toast({ title: "Uploading...", description: "Please wait." });
@@ -111,7 +182,11 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
             const currentValue = fieldValues[index] || "";
             // Add a newline if not empty
             const newValue = currentValue ? `${currentValue}\n${tag}` : tag;
-            handleFieldChange(index, newValue);
+
+            // Update state directly (we already saved history)
+            const newValues = [...fieldValues];
+            newValues[index] = newValue;
+            setFieldValues(newValues);
 
             toast({ title: "Success", description: "Media uploaded and added to field." });
         } catch (error) {
@@ -120,27 +195,43 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
         }
     };
 
-    const handleEnhance = async (index: number) => {
-        const content = fieldValues[index];
-        if (!content || content.trim().length === 0) {
-            toast({ title: "Empty Field", description: "Please add some content before enhancing." });
+
+
+
+    const handleEnhanceModel = async () => {
+        // Validation: Ensure at least one field has content
+        if (fieldValues.every(val => !val || val.trim().length === 0)) {
+            toast({ title: "Empty Context", description: "Please add content to at least one field before enhancing." });
             return;
         }
 
-        toast({ title: "Enhancing...", description: "AI is improving your note." });
+        // Save state before bulk enhance
+        saveToHistory();
+
+        toast({ title: "Enhancing Note...", description: "AI is improving all fields ensuring consistency." });
         setLoading(true);
         try {
-            const enhanced = await enhanceContent(content);
-            handleFieldChange(index, enhanced);
-            toast({ title: "Enhanced!", description: "Content improved successfully." });
+            console.log("Sending fields for enhancement:", fieldValues);
+            // Send all fields to the new endpoint
+            const enhancedFields = await enhanceModel(fieldValues);
+            console.log("Received enhanced fields:", enhancedFields);
+
+            // Validation: Ensure we get back the same number of fields
+            if (enhancedFields.length !== fieldValues.length) {
+                console.error("Mismatch in field count", { sent: fieldValues.length, received: enhancedFields.length });
+                toast({ title: "Warning", description: "AI returned an unexpected number of fields. Enhancement aborted to prevent data loss.", variant: "destructive" });
+                return;
+            }
+
+            setFieldValues(enhancedFields);
+            toast({ title: "Note Enhanced!", description: "All fields improved successfully." });
         } catch (error) {
             console.error("Enhancement failed", error);
-            toast({ title: "Error", description: "Failed to enhance content.", variant: "destructive" });
+            toast({ title: "Error", description: "Failed to enhance note.", variant: "destructive" });
         } finally {
             setLoading(false);
         }
     };
-
 
     const handleSave = async () => {
         if (!note?.id) return;
@@ -161,6 +252,7 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
 
             toast({ title: "Success", description: "Note updated successfully" });
             setIsEditing(false);
+            setHistory([]); setFuture([]); // Clear history on save? Or keep it? Clearing is safer vs inconsistencies.
             onSaved();
         } catch (error) {
             console.error("Failed to update note", error);
@@ -186,6 +278,39 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                     )}
                     {isEditing && (
                         <div className="flex items-center gap-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleUndo}
+                                disabled={history.length === 0 || loading}
+                                title="Undo (Ctrl+Z)"
+                            >
+                                <Undo className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleRedo}
+                                disabled={future.length === 0 || loading}
+                                title="Redo (Ctrl+Shift+Z)"
+                            >
+                                <Redo className="h-4 w-4" />
+                            </Button>
+                            <div className="w-px h-4 bg-border mx-1" />
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 text-primary border-primary/20 hover:bg-primary/5"
+                                onClick={handleEnhanceModel}
+                                disabled={loading}
+                            >
+                                <Sparkles className="h-4 w-4" />
+                                Enhance Note
+                            </Button>
+
+                            <div className="w-px h-4 bg-border mx-1" />
+
                             <Button variant="ghost" size="sm" onClick={() => {
                                 // Revert changes
                                 if (note) {
@@ -196,6 +321,8 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                                     setTags(tagString.split(" ").filter(Boolean));
                                 }
                                 setIsEditing(false);
+                                setHistory([]);
+                                setFuture([]);
                             }} disabled={loading}>
                                 Cancel
                             </Button>
@@ -234,16 +361,6 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                                     />
                                     {isEditing && (
                                         <div className="flex flex-col gap-1 pt-1">
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                                title="AI Magic - Enhance with AI"
-                                                onClick={() => handleEnhance(index)}
-                                                disabled={loading}
-                                            >
-                                                <Sparkles className="h-4 w-4" />
-                                            </Button>
                                             <label htmlFor={`upload-${index}`} className="cursor-pointer">
                                                 <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 w-8 text-muted-foreground hover:text-primary">
                                                     <ImageIcon className="h-4 w-4" />

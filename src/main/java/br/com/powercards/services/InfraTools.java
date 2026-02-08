@@ -8,9 +8,6 @@ import br.com.powercards.security.WorkspaceContext;
 import br.com.powercards.model.Deck;
 import br.com.powercards.model.Card;
 import br.com.powercards.model.Note;
-import br.com.powercards.model.AnkiModel;
-import br.com.powercards.model.AnkiField;
-import br.com.powercards.model.AnkiTemplate;
 import java.util.List;
 import java.util.stream.Collectors;
 

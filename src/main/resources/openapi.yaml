@@ -28,22 +28,28 @@ paths:
       summary: Chat
       tags:
       - AI Resource
-  /v1/ai/enhance:
+  /v1/ai/enhance-model:
     post:
       requestBody:
         content:
-          text/plain:
+          application/json:
             schema:
-              type: string
+              type: array
+              items:
+                type: string
         required: true
       responses:
         "200":
           description: OK
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-      summary: Enhance
+                type: array
+                items:
+                  type: string
+        "400":
+          description: Bad Request
+      summary: Enhance Model
       tags:
       - AI Resource
   /v1/anki/upload:

@@ -1075,15 +1075,15 @@ export const AIResourceApiAxiosParamCreator = function (configuration?: Configur
         },
         /**
          * 
-         * @summary Enhance
-         * @param {string} body 
+         * @summary Enhance Model
+         * @param {Array<string>} requestBody 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1AiEnhancePost: async (body: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('v1AiEnhancePost', 'body', body)
-            const localVarPath = `/v1/ai/enhance`;
+        v1AiEnhanceModelPost: async (requestBody: Array<string>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'requestBody' is not null or undefined
+            assertParamExists('v1AiEnhanceModelPost', 'requestBody', requestBody)
+            const localVarPath = `/v1/ai/enhance-model`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -1097,12 +1097,12 @@ export const AIResourceApiAxiosParamCreator = function (configuration?: Configur
 
 
     
-            localVarHeaderParameter['Content-Type'] = 'text/plain';
+            localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(requestBody, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1134,15 +1134,15 @@ export const AIResourceApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Enhance
-         * @param {string} body 
+         * @summary Enhance Model
+         * @param {Array<string>} requestBody 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1AiEnhancePost(body: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AiEnhancePost(body, options);
+        async v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<string>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AiEnhanceModelPost(requestBody, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AIResourceApi.v1AiEnhancePost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AIResourceApi.v1AiEnhanceModelPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -1167,13 +1167,13 @@ export const AIResourceApiFactory = function (configuration?: Configuration, bas
         },
         /**
          * 
-         * @summary Enhance
-         * @param {string} body 
+         * @summary Enhance Model
+         * @param {Array<string>} requestBody 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1AiEnhancePost(body: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
-            return localVarFp.v1AiEnhancePost(body, options).then((request) => request(axios, basePath));
+        v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig): AxiosPromise<Array<string>> {
+            return localVarFp.v1AiEnhanceModelPost(requestBody, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1199,14 +1199,14 @@ export class AIResourceApi extends BaseAPI {
 
     /**
      * 
-     * @summary Enhance
-     * @param {string} body 
+     * @summary Enhance Model
+     * @param {Array<string>} requestBody 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AIResourceApi
      */
-    public v1AiEnhancePost(body: string, options?: RawAxiosRequestConfig) {
-        return AIResourceApiFp(this.configuration).v1AiEnhancePost(body, options).then((request) => request(this.axios, this.basePath));
+    public v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig) {
+        return AIResourceApiFp(this.configuration).v1AiEnhanceModelPost(requestBody, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
