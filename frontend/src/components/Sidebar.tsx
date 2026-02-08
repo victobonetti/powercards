@@ -130,12 +130,36 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     {isExpanded ? (
                         <div className="flex items-center gap-3 overflow-hidden relative group">
                             <img src={logo} alt="PowerCards Logo" className="h-32 w-full object-contain grayscale opacity-90 transition-opacity group-hover:opacity-100" />
-                            <div className="absolute inset-0 bg-primary/80 mix-blend-color pointer-events-none" />
+                            <div
+                                className="absolute inset-0 bg-primary mix-blend-color pointer-events-none"
+                                style={{
+                                    maskImage: `url(${logo})`,
+                                    WebkitMaskImage: `url(${logo})`,
+                                    maskSize: 'contain',
+                                    WebkitMaskSize: 'contain',
+                                    maskRepeat: 'no-repeat',
+                                    WebkitMaskRepeat: 'no-repeat',
+                                    maskPosition: 'center',
+                                    WebkitMaskPosition: 'center'
+                                }}
+                            />
                         </div>
                     ) : (
                         <div className="relative group">
                             <img src={logo_collapsed} alt="PowerCards Logo" className="h-16 w-16 object-contain grayscale opacity-90 transition-opacity group-hover:opacity-100" />
-                            <div className="absolute inset-0 bg-primary/80 mix-blend-color pointer-events-none" />
+                            <div
+                                className="absolute inset-0 bg-primary mix-blend-color pointer-events-none"
+                                style={{
+                                    maskImage: `url(${logo_collapsed})`,
+                                    WebkitMaskImage: `url(${logo_collapsed})`,
+                                    maskSize: 'contain',
+                                    WebkitMaskSize: 'contain',
+                                    maskRepeat: 'no-repeat',
+                                    WebkitMaskRepeat: 'no-repeat',
+                                    maskPosition: 'center',
+                                    WebkitMaskPosition: 'center'
+                                }}
+                            />
                         </div>
                     )}
                     {isExpanded && (
