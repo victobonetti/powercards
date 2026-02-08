@@ -154,7 +154,27 @@ public class ProfileResourceTest {
                                 .body("displayName", equalTo("Full Test"))
                                 .body("description", equalTo("Test bio"))
                                 .body("$", hasKey("avatarUrl"))
-                                .body("$", hasKey("bannerUrl"));
+                                .body("$", hasKey("bannerUrl"))
+                                .body("colorPalette", equalTo("tangerine"));
+        }
+
+        @Test
+        public void testUpdateProfileWithColorPalette() {
+                // Update color palette
+                given()
+                                .contentType(ContentType.JSON)
+                                .body("{\"colorPalette\": \"blue\"}")
+                                .when().put("/v1/profile")
+                                .then()
+                                .statusCode(200)
+                                .body("colorPalette", equalTo("blue"));
+
+                // Verify persistence
+                given()
+                                .when().get("/v1/profile")
+                                .then()
+                                .statusCode(200)
+                                .body("colorPalette", equalTo("blue"));
         }
 
         @Test

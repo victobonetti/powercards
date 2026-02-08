@@ -1908,6 +1908,9 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "colorPalette" : {
+            "type" : "string"
           }
         }
       },
@@ -1931,6 +1934,9 @@
             "type" : "string"
           },
           "description" : {
+            "type" : "string"
+          },
+          "colorPalette" : {
             "type" : "string"
           }
         }

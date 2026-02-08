@@ -7,15 +7,15 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Keycloak registration URL
-const KEYCLOAK_BASE_URL = "http://localhost:8081";
-const KEYCLOAK_REALM = "powercards";
-const KEYCLOAK_CLIENT_ID = "cli-web-pwc";
-const REDIRECT_URI = window.location.origin;
+// Keycloak registration URL - unused for now as we use local register page
+// const KEYCLOAK_BASE_URL = "http://localhost:8081";
+// const KEYCLOAK_REALM = "powercards";
+// const KEYCLOAK_CLIENT_ID = "cli-web-pwc";
+// const REDIRECT_URI = window.location.origin;
 
-const getRegistrationUrl = () => {
-    return `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/registrations?client_id=${KEYCLOAK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid`;
-};
+// const getRegistrationUrl = () => {
+//     return `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/registrations?client_id=${KEYCLOAK_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid`;
+// };
 
 export default function LoginPage() {
     const { login, isAuthenticated, error, isLoading } = useAuth();
@@ -41,9 +41,9 @@ export default function LoginPage() {
         await login(username, password);
     };
 
-    const handleRegister = () => {
-        window.location.href = getRegistrationUrl();
-    };
+    // const handleRegister = () => {
+    //     window.location.href = getRegistrationUrl();
+    // };
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">

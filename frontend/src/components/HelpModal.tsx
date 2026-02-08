@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { Upload, Layers, Edit3, ArrowRight, ArrowLeft } from "lucide-react";
+import { Upload, Layers, Edit3, ArrowRight, ArrowLeft, User, Sparkles } from "lucide-react";
 
 export interface HelpModalProps {
     open: boolean;
@@ -29,6 +29,16 @@ export const steps = [
         title: "3. Manage & Edit",
         description: "Browse your decks, search for notes, edit fields, and manage tags. All changes are synchronized with your database.",
         icon: <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full mb-4"><Edit3 className="w-12 h-12 text-green-600 dark:text-green-400" /></div>
+    },
+    {
+        title: "4. Profile & Themes",
+        description: "Customize your experience. Click your avatar to access the Profile menu where you can change your theme color, update your bio, and manage your account settings.",
+        icon: <div className="p-4 bg-purple-100 dark:bg-purple-900/30 rounded-full mb-4"><User className="w-12 h-12 text-purple-600 dark:text-purple-400" /></div>
+    },
+    {
+        title: "5. AI Features",
+        description: "Power up your learning with AI. Use the 'Flashcard Factory' to automatically generate cards from text, or chat with your knowledge base for deeper insights.",
+        icon: <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-full mb-4"><Sparkles className="w-12 h-12 text-yellow-600 dark:text-yellow-400" /></div>
     }
 ];
 

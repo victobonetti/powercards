@@ -1,10 +1,11 @@
 package br.com.powercards.dto;
 
 public record ProfileResponse(
-                Long id,
-                String keycloakId,
-                String displayName,
-                String avatarUrl,
-                String bannerUrl,
-                String description) {
+        Long id,
+        String keycloakId,
+        String displayName,
+        String avatarUrl,
+        String bannerUrl,
+        String description,
+        String colorPalette) {
 }

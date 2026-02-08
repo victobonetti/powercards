@@ -1,6 +1,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback, useRef } from "react";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { getProfile, ProfileData } from "../api/profile";
 
 interface UserInfo {
     sub: string;
@@ -18,6 +19,8 @@ interface AuthContextType {
     error: string | null;
     isLoading: boolean;
     user: UserInfo | null;
+    profile: ProfileData | null;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -140,16 +143,23 @@ function setupAxiosInterceptor(onLogout: () => void) {
                 return Promise.reject(error);
             }
 
-            if (error.response?.status === 401) {
+            if (error.response?.status === 401 && !originalRequest.url?.includes('/auth/refresh') && !originalRequest.url?.includes('/auth/login')) {
                 originalRequest._retry = true;
                 console.log("Got 401, attempting token refresh...");
 
-                const newToken = await refreshAccessToken();
-                if (newToken) {
-                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                    return axios(originalRequest);
-                } else {
-                    // Refresh failed, logout
+                try {
+                    const newToken = await refreshAccessToken();
+                    if (newToken) {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                        return axios(originalRequest);
+                    }
+                } catch (refreshError) {
+                    console.error("Refresh token failed within interceptor", refreshError);
+                }
+
+                // Refresh failed or no token
+                // Only logout/redirect if NOT already on login page to avoid loops
+                if (window.location.pathname !== '/login') {
                     onLogout();
                 }
             }
@@ -164,6 +174,7 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!token);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [profile, setProfile] = useState<ProfileData | null>(null);
     const interceptorSetup = useRef(false);
 
     const user = useMemo(() => {
@@ -174,11 +185,27 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = useCallback(() => {
         localStorage.removeItem("auth_token");
         localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user-palette"); // Clear palette cache
         setToken(null);
+        setProfile(null);
         setIsAuthenticated(false);
         // Redirect to login
         window.location.href = '/login';
     }, []);
+
+    // Fetch profile
+    const refreshProfile = useCallback(async () => {
+        if (!token) return;
+        try {
+            const data = await getProfile();
+            setProfile(data);
+            if (data.colorPalette) {
+                localStorage.setItem("user-palette", data.colorPalette);
+            }
+        } catch (err) {
+            console.error("Failed to fetch profile", err);
+        }
+    }, [token]);
 
     // Setup axios interceptor once
     useEffect(() => {
@@ -211,7 +238,10 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         setIsAuthenticated(!!token);
-    }, [token]);
+        if (token) {
+            refreshProfile();
+        }
+    }, [token, refreshProfile]);
 
     const login = async (username: string, password: string) => {
         setIsLoading(true);
@@ -252,7 +282,7 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, token, error, isLoading, user }}>
+        <AuthContext.Provider value={{ isAuthenticated, login, logout, token, error, isLoading, user, profile, refreshProfile }}>
             {children}
         </AuthContext.Provider>
     );

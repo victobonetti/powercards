@@ -31,10 +31,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
             // Auto-select if none selected or invalid
             if (response.data.length > 0) {
-                if (!currentWorkspaceId || !response.data.find(w => w.id === currentWorkspaceId)) {
+                if (!currentWorkspaceId || !response.data.find(w => String(w.id) === currentWorkspaceId)) {
                     // Prefer one named "Default" or the first one
                     const defaultWs = response.data.find(w => w.name === "Default") || response.data[0];
-                    selectWorkspace(defaultWs.id!);
+                    selectWorkspace(String(defaultWs.id!));
                 }
             } else {
                 // No workspaces exist, maybe prompt to create one? 

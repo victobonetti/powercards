@@ -8,8 +8,9 @@ import { Button } from "./components/ui/button";
 import { Layers, FileText } from "lucide-react";
 import { Layout } from "./components/Layout";
 import { UploadAnki } from "./components/UploadAnki";
-import { ThemeProvider } from "./components/theme-provider";
+import { ThemeProvider, useTheme } from "./components/theme-provider";
 import { PageHeader } from "./components/ui/page-header";
+import { applyTheme } from "./lib/themes";
 
 import { WorkspaceProvider, useWorkspace } from "./context/WorkspaceContext"; // Ensure useWorkspace is exported and imported
 import { FlashcardFactoryProvider } from "./context/FlashcardFactoryContext";
@@ -112,6 +113,14 @@ import { useAuth } from "@/auth/AuthProvider";
 function ForceWorkspaceWrapper({ children }: { children: React.ReactNode }) {
   const { workspaces, isLoading } = useWorkspace();
   const auth = useAuth();
+  const { theme } = useTheme();
+
+  // Apply User Theme
+  useEffect(() => {
+    const palette = auth.profile?.colorPalette || localStorage.getItem("user-palette") || "tangerine";
+    const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    applyTheme(palette, isDark);
+  }, [auth.profile?.colorPalette, theme]);
 
   // Only force create if authenticated, loaded, and no workspaces
   const shouldForceCreate = auth.isAuthenticated && !isLoading && workspaces.length === 0;

@@ -8,13 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Camera, Pencil, Save, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Pencil, Save, X, Loader2, Check } from "lucide-react";
 import { markdownToHtml } from "@/lib/markdown";
+import { palettes, applyTheme } from "@/lib/themes";
+import { useTheme } from "@/components/theme-provider";
 
 export default function ProfilePage() {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const { toast } = useToast();
+    const { theme } = useTheme();
 
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -24,6 +27,7 @@ export default function ProfilePage() {
     // Edit form state
     const [displayName, setDisplayName] = useState("");
     const [description, setDescription] = useState("");
+    const [selectedPalette, setSelectedPalette] = useState("tangerine");
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -39,6 +43,7 @@ export default function ProfilePage() {
             setProfile(data);
             setDisplayName(data.displayName || "");
             setDescription(data.description || "");
+            setSelectedPalette(data.colorPalette || "tangerine");
         } catch (error) {
             console.error("Failed to load profile:", error);
             toast({ title: "Error", description: "Failed to load profile", variant: "destructive" });
@@ -50,8 +55,9 @@ export default function ProfilePage() {
     const handleSave = async () => {
         try {
             setSaving(true);
-            const updated = await updateProfile({ displayName, description });
+            const updated = await updateProfile({ displayName, description, colorPalette: selectedPalette });
             setProfile(updated);
+            await refreshProfile(); // Refresh global auth context to update theme app-wide
             setIsEditing(false);
             toast({ title: "Success", description: "Profile updated successfully" });
         } catch (error) {
@@ -65,7 +71,21 @@ export default function ProfilePage() {
     const handleCancel = () => {
         setDisplayName(profile?.displayName || "");
         setDescription(profile?.description || "");
+
+        // Revert theme
+        const originalPalette = profile?.colorPalette || "tangerine";
+        setSelectedPalette(originalPalette);
+        const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        applyTheme(originalPalette, isDark);
+
         setIsEditing(false);
+    };
+
+    const handlePaletteChange = (paletteValue: string) => {
+        setSelectedPalette(paletteValue);
+        // Instant Preview
+        const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        applyTheme(paletteValue, isDark);
     };
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +96,7 @@ export default function ProfilePage() {
             toast({ title: "Uploading...", description: "Please wait" });
             const updated = await uploadAvatar(file);
             setProfile(updated);
+            await refreshProfile();
             toast({ title: "Success", description: "Avatar updated" });
         } catch (error) {
             console.error("Failed to upload avatar:", error);
@@ -92,6 +113,7 @@ export default function ProfilePage() {
             toast({ title: "Uploading...", description: "Please wait" });
             const updated = await uploadBanner(file);
             setProfile(updated);
+            await refreshProfile();
             toast({ title: "Success", description: "Banner updated" });
         } catch (error) {
             console.error("Failed to upload banner:", error);
@@ -119,7 +141,7 @@ export default function ProfilePage() {
     return (
         <div className="h-full overflow-y-auto bg-background">
             {/* Banner Section - Full Width */}
-            <div className="relative h-48 md:h-64 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex-shrink-0 overflow-hidden group">
+            <div className="relative h-48 md:h-64 bg-gradient-to-br from-primary/80 via-primary to-primary/60 flex-shrink-0 overflow-hidden group">
                 {profile?.bannerUrl && (
                     <img
                         src={profile.bannerUrl}
@@ -170,7 +192,7 @@ export default function ProfilePage() {
                                     {/* Avatar - Pull up */}
                                     <div className="flex justify-center -mt-16 mb-6">
                                         <div className="relative group">
-                                            <div className="h-32 w-32 rounded-full border-4 border-background overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold shadow-md">
+                                            <div className="h-32 w-32 rounded-full border-4 border-background overflow-hidden bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-3xl font-bold shadow-md">
                                                 {profile?.avatarUrl ? (
                                                     <img
                                                         src={profile.avatarUrl}
@@ -262,15 +284,53 @@ export default function ProfilePage() {
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-muted-foreground">Days Streak</span>
-                                            <span className="font-bold text-orange-500">0 🔥</span>
+                                            <span className="font-bold text-primary">0 🔥</span>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
                         </div>
 
-                        {/* Right Content (About & Activity) */}
+                        {/* Right Content */}
                         <div className="lg:col-span-8 space-y-6">
+
+                            {/* Appearance Theme Picker - Only in Edit Mode */}
+                            {isEditing && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Appearance</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-4">
+                                            <Label>Color Palette</Label>
+                                            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-3">
+                                                {palettes.map((palette) => (
+                                                    <button
+                                                        key={palette.value}
+                                                        onClick={() => handlePaletteChange(palette.value)}
+                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${selectedPalette === palette.value
+                                                            ? "ring-2 ring-offset-2 ring-primary scale-110"
+                                                            : "hover:scale-105"
+                                                            }`}
+                                                        style={{
+                                                            backgroundColor: `hsl(${palette.light.primary})`
+                                                        }}
+                                                        title={palette.name}
+                                                    >
+                                                        {selectedPalette === palette.value && (
+                                                            <Check className="h-5 w-5 text-white drop-shadow-md" />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Select a color theme for your interface.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
                             {/* About Me */}
                             <Card className="h-full">
                                 <CardHeader>
@@ -304,16 +364,6 @@ export default function ProfilePage() {
                                             )}
                                         </div>
                                     )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Recent Activity Placeholder */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Recent Activity</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-sm text-muted-foreground italic">No recent activity.</p>
                                 </CardContent>
                             </Card>
                         </div>

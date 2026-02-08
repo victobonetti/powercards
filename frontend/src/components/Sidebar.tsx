@@ -32,7 +32,7 @@ function SidebarButton({ icon: Icon, label, isActive, isExpanded, onClick, class
             variant={isActive ? "secondary" : "ghost"}
             className={cn(
                 "w-full justify-start transition-all duration-200 font-serif",
-                isActive ? "bg-orange-100/50 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-950/30 dark:text-orange-400" : "hover:bg-muted/50",
+                isActive ? "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary" : "hover:bg-muted/50",
                 !isExpanded && "justify-center px-2",
                 className
             )}
@@ -128,11 +128,15 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
             <div className="space-y-4 py-6 flex-1">
                 <div className={cn("px-4 py-2 flex items-start mb-4 select-none", isExpanded ? "justify-between" : "justify-center", getDimClass())}>
                     {isExpanded ? (
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <img src={logo} alt="PowerCards Logo" className="h-32 w-full object-contain" />
+                        <div className="flex items-center gap-3 overflow-hidden relative group">
+                            <img src={logo} alt="PowerCards Logo" className="h-32 w-full object-contain grayscale opacity-90 transition-opacity group-hover:opacity-100" />
+                            <div className="absolute inset-0 bg-primary/80 mix-blend-color pointer-events-none" />
                         </div>
                     ) : (
-                        <img src={logo_collapsed} alt="PowerCards Logo" className="h-16 w-16 object-contain" />
+                        <div className="relative group">
+                            <img src={logo_collapsed} alt="PowerCards Logo" className="h-16 w-16 object-contain grayscale opacity-90 transition-opacity group-hover:opacity-100" />
+                            <div className="absolute inset-0 bg-primary/80 mix-blend-color pointer-events-none" />
+                        </div>
                     )}
                     {isExpanded && (
                         <Button
@@ -175,7 +179,7 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                             onClick={() => onNavigate("tags")}
                         />
                     </div>
-                    <div className={cn("transition-all duration-300", getItemClass(3))}>
+                    <div className={cn("transition-all duration-300", getItemClass(5))}>
                         <SidebarButton
                             icon={AnimatedFactoryIcon}
                             label={isProcessing ? "Thinking..." : (notificationChatIds.size > 0 && currentView !== "factory" ? "Response Ready" : "Flashcard Factory")}
@@ -208,7 +212,10 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() => setShowHelp(true)}
-                        className="rounded-full"
+                        className={cn(
+                            "rounded-full transition-all",
+                            showHelp ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary ring-offset-2" : "text-muted-foreground hover:text-primary"
+                        )}
                         title="Help & Walkthrough"
                     >
                         <HelpCircle className="h-[1.2rem] w-[1.2rem]" />

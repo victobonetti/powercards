@@ -24,6 +24,9 @@ public class User extends PanacheEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     public String description;
 
+    @Column(name = "color_palette", columnDefinition = "varchar(255) default 'tangerine'")
+    public String colorPalette = "tangerine";
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     public List<Workspace> workspaces;

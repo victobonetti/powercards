@@ -34,13 +34,16 @@ public class ProfileService {
     }
 
     @Transactional
-    public User updateProfile(String keycloakId, String displayName, String description) {
+    public User updateProfile(String keycloakId, String displayName, String description, String colorPalette) {
         User user = User.findOrCreate(keycloakId);
         if (displayName != null) {
             user.displayName = displayName;
         }
         if (description != null) {
             user.description = description;
+        }
+        if (colorPalette != null) {
+            user.colorPalette = colorPalette;
         }
         return user;
     }

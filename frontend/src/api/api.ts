@@ -836,6 +836,12 @@ export interface ProfileRequest {
      * @memberof ProfileRequest
      */
     'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileRequest
+     */
+    'colorPalette'?: string;
 }
 /**
  * 
@@ -879,6 +885,12 @@ export interface ProfileResponse {
      * @memberof ProfileResponse
      */
     'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileResponse
+     */
+    'colorPalette'?: string;
 }
 /**
  * 

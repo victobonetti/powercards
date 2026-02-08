@@ -64,7 +64,7 @@ export function ProfileModal({ open, onOpenChange, profile, onProfileUpdate }: P
 
             // Update display name if changed
             if (displayName !== profile?.displayName) {
-                updatedProfile = await updateProfile(displayName);
+                updatedProfile = await updateProfile({ displayName });
             }
 
             if (updatedProfile) {
@@ -102,7 +102,7 @@ export function ProfileModal({ open, onOpenChange, profile, onProfileUpdate }: P
                 <div className="flex flex-col items-center gap-6 py-4">
                     {/* Avatar Upload */}
                     <div className="relative group">
-                        <div className="h-24 w-24 rounded-full overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg ring-4 ring-orange-400/30">
+                        <div className="h-24 w-24 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground text-2xl font-bold shadow-lg ring-4 ring-primary/30">
                             {currentAvatar ? (
                                 <img
                                     src={currentAvatar}

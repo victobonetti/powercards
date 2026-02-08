@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useWorkspace } from "./WorkspaceContext";
@@ -87,15 +88,12 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
         if (!currentWorkspaceId) return;
         setItemsLoading(true);
         try {
-            const response = await fetch("http://localhost:8088/v1/chats", {
+            const response = await axios.get("/api/v1/chats", {
                 headers: {
                     "X-Workspace-Id": currentWorkspaceId
                 }
             });
-            if (response.ok) {
-                const data = await response.json();
-                setChats(data);
-            }
+            setChats(response.data);
         } catch (error) {
             console.error("Error fetching chats:", error);
         } finally {
@@ -106,19 +104,14 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
     const createNewChat = async () => {
         if (!currentWorkspaceId) return;
         try {
-            const response = await fetch("http://localhost:8088/v1/chats", {
-                method: "POST",
+            const response = await axios.post("/api/v1/chats", { name: "New Chat" }, {
                 headers: {
-                    "Content-Type": "application/json",
                     "X-Workspace-Id": currentWorkspaceId
-                },
-                body: JSON.stringify({ name: "New Chat" })
+                }
             });
-            if (response.ok) {
-                const newChat = await response.json();
-                setChats(prev => [newChat, ...prev]);
-                setCurrentChatId(newChat.id);
-            }
+            const newChat = response.data;
+            setChats(prev => [newChat, ...prev]);
+            setCurrentChatId(newChat.id);
         } catch (error) {
             console.error("Error creating chat:", error);
             toast({
@@ -132,18 +125,15 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
     const deleteChat = async (chatId: string) => {
         if (!currentWorkspaceId) return;
         try {
-            const response = await fetch(`http://localhost:8088/v1/chats/${chatId}`, {
-                method: "DELETE",
+            await axios.delete(`/api/v1/chats/${chatId}`, {
                 headers: {
                     "X-Workspace-Id": currentWorkspaceId
                 }
             });
-            if (response.ok) {
-                setChats(prev => prev.filter(c => c.id !== chatId));
-                if (currentChatId === chatId) {
-                    setCurrentChatId(null);
-                    setMessages([]);
-                }
+            setChats(prev => prev.filter(c => c.id !== chatId));
+            if (currentChatId === chatId) {
+                setCurrentChatId(null);
+                setMessages([]);
             }
         } catch (error) {
             console.error("Error deleting chat:", error);
@@ -158,18 +148,12 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
     const fetchMessages = async (chatId: string) => {
         if (!currentWorkspaceId) return;
         try {
-            const response = await fetch(`http://localhost:8088/v1/chats/${chatId}/history`, {
+            const response = await axios.get(`/api/v1/chats/${chatId}/history`, {
                 headers: {
                     "X-Workspace-Id": currentWorkspaceId
                 }
             });
-            if (response.ok) {
-                const data = await response.json();
-                // Map backend history to frontend message structure if needed
-                // Backend: id, role, content, createdAt
-                // Frontend: Same
-                setMessages(data);
-            }
+            setMessages(response.data);
         } catch (error) {
             console.error("Error fetching history:", error);
         }
@@ -201,21 +185,14 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
         setIsProcessing(true);
 
         try {
-            const response = await fetch(`http://localhost:8088/v1/chats/${currentChatId}/messages`, {
-                method: "POST",
+            const response = await axios.post(`/api/v1/chats/${currentChatId}/messages`, userMessage.content, {
                 headers: {
-                    "Content-Type": "text/plain", // Just sending content string as body
+                    "Content-Type": "text/plain",
                     "X-Workspace-Id": currentWorkspaceId
-                },
-                body: userMessage.content
+                }
             });
 
-            if (!response.ok) {
-                throw new Error("Failed to get response from AI");
-            }
-
-            const aiMessageData = await response.json();
-            // Expected aiMessageData is the saved ChatHistory object
+            const aiMessageData = response.data;
 
             const aiMessage: Message = {
                 id: aiMessageData.id || (Date.now() + 1).toString(),
@@ -232,7 +209,6 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
             }
 
             // Notify if not on the factory page
-            // Use locationRef to get fresh location avoiding closure staleness
             if (locationRef.current.pathname !== "/factory") {
                 setNotificationChatIds(prev => new Set(prev).add(currentChatId));
 
@@ -244,8 +220,6 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
                             className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 rounded-md flex items-center justify-center text-xs cursor-pointer"
                             onClick={() => {
                                 navigate("/factory");
-                                // We don't automatically select the chat here, but we could if we passed the ID
-                                // The user will see the notification in the list
                             }}
                         >
                             View

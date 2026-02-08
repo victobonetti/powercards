@@ -48,7 +48,7 @@ export function UserHeader() {
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 h-auto">
                         {/* Avatar */}
-                        <div className="relative h-9 w-9 rounded-full overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-semibold shadow-md ring-2 ring-orange-400/30">
+                        <div className="relative h-9 w-9 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground text-sm font-semibold shadow-md ring-2 ring-primary/30">
                             {avatarUrl ? (
                                 <img
                                     src={avatarUrl}

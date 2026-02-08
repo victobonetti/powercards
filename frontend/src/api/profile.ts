@@ -9,11 +9,13 @@ export interface ProfileData {
     avatarUrl: string | null;
     bannerUrl: string | null;
     description: string | null;
+    colorPalette: string | null;
 }
 
 export interface ProfileUpdateRequest {
     displayName?: string;
     description?: string;
+    colorPalette?: string;
 }
 
 // Note: Auth headers are automatically added by axios interceptor in AuthProvider

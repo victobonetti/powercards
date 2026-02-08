@@ -1315,6 +1315,8 @@ components:
           type: string
         description:
           type: string
+        colorPalette:
+          type: string
     ProfileResponse:
       type: object
       properties:
@@ -1330,6 +1332,8 @@ components:
         bannerUrl:
           type: string
         description:
+          type: string
+        colorPalette:
           type: string
     Tag:
       type: object

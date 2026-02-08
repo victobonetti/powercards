@@ -35,7 +35,8 @@ public class ProfileResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public ProfileResponse updateProfile(ProfileRequest request) {
         String keycloakId = identity.getPrincipal().getName();
-        User user = profileService.updateProfile(keycloakId, request.displayName(), request.description());
+        User user = profileService.updateProfile(keycloakId, request.displayName(), request.description(),
+                request.colorPalette());
         return toResponse(user);
     }
 
@@ -92,6 +93,7 @@ public class ProfileResource {
                 user.displayName,
                 user.avatarUrl,
                 user.bannerUrl,
-                user.description);
+                user.description,
+                user.colorPalette);
     }
 }
