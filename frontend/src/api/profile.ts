@@ -10,12 +10,16 @@ export interface ProfileData {
     bannerUrl: string | null;
     description: string | null;
     colorPalette: string | null;
+    aiProvider: string | null;
+    hasAiApiKey: boolean;
 }
 
 export interface ProfileUpdateRequest {
     displayName?: string;
     description?: string;
     colorPalette?: string;
+    aiProvider?: string;
+    aiApiKey?: string;
 }
 
 // Note: Auth headers are automatically added by axios interceptor in AuthProvider
@@ -29,6 +33,15 @@ export async function updateProfile(data: ProfileUpdateRequest): Promise<Profile
     const response = await axios.put(
         `${API_BASE}/profile`,
         data,
+        { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
+}
+
+export async function updateAiSettings(provider: string, apiKey: string): Promise<ProfileData> {
+    const response = await axios.put(
+        `${API_BASE}/profile`,
+        { aiProvider: provider, aiApiKey: apiKey },
         { headers: { "Content-Type": "application/json" } }
     );
     return response.data;
@@ -53,3 +66,4 @@ export async function uploadBanner(file: File): Promise<ProfileData> {
     });
     return response.data;
 }
+

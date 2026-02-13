@@ -144,6 +144,29 @@ export interface Translations {
         success: string;
         error: string;
     };
+    aiSettings: {
+        title: string;
+        provider: string;
+        providerPlaceholder: string;
+        apiKey: string;
+        apiKeyPlaceholder: string;
+        saveKey: string;
+        configured: string;
+        notConfigured: string;
+        saved: string;
+        saveFailed: string;
+        openai: string;
+        gemini: string;
+        deepseek: string;
+        description: string;
+        removeKey: string;
+        keyRemoved: string;
+    };
+    aiModal: {
+        title: string;
+        description: string;
+        configureNow: string;
+    };
     upload: {
         title: string;
         description: string;
@@ -310,6 +333,29 @@ export const translations: Record<Language, Translations> = {
             success: "Success",
             error: "Error",
         },
+        aiSettings: {
+            title: "AI Settings",
+            provider: "AI Provider",
+            providerPlaceholder: "Select a provider",
+            apiKey: "API Key",
+            apiKeyPlaceholder: "Paste your API key here",
+            saveKey: "Save AI Settings",
+            configured: "Configured",
+            notConfigured: "Not configured",
+            saved: "AI settings saved successfully",
+            saveFailed: "Failed to save AI settings",
+            openai: "OpenAI (GPT-4o Mini)",
+            gemini: "Google Gemini (2.0 Flash)",
+            deepseek: "DeepSeek (Chat)",
+            description: "Configure your own API key to power AI features like note enhancement.",
+            removeKey: "Remove Key",
+            keyRemoved: "API key removed",
+        },
+        aiModal: {
+            title: "API Key Required",
+            description: "To use AI features, you need to configure an API key. Go to your profile settings to set up your preferred AI provider.",
+            configureNow: "Configure Now",
+        },
         upload: {
             title: "Upload Anki Collection",
             description: "Import your existing .apkg files to start studying.",
@@ -473,6 +519,29 @@ export const translations: Record<Language, Translations> = {
             uploading: "Enviando...",
             success: "Sucesso",
             error: "Erro",
+        },
+        aiSettings: {
+            title: "Configurações de IA",
+            provider: "Provedor de IA",
+            providerPlaceholder: "Selecione um provedor",
+            apiKey: "Chave de API",
+            apiKeyPlaceholder: "Cole sua chave de API aqui",
+            saveKey: "Salvar Configurações de IA",
+            configured: "Configurado",
+            notConfigured: "Não configurado",
+            saved: "Configurações de IA salvas com sucesso",
+            saveFailed: "Falha ao salvar configurações de IA",
+            openai: "OpenAI (GPT-4o Mini)",
+            gemini: "Google Gemini (2.0 Flash)",
+            deepseek: "DeepSeek (Chat)",
+            description: "Configure sua própria chave de API para usar recursos de IA como aprimoramento de notas.",
+            removeKey: "Remover Chave",
+            keyRemoved: "Chave de API removida",
+        },
+        aiModal: {
+            title: "Chave de API Necessária",
+            description: "Para usar recursos de IA, você precisa configurar uma chave de API. Acesse as configurações do seu perfil para configurar seu provedor de IA preferido.",
+            configureNow: "Configurar Agora",
         },
         upload: {
             title: "Enviar Coleção Anki",

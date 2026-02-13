@@ -22,6 +22,7 @@ interface AuthContextType {
     user: UserInfo | null;
     profile: ProfileData | null;
     refreshProfile: () => Promise<void>;
+    updateProfileLocally: (data: ProfileData) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -294,8 +295,18 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const updateProfileLocally = useCallback((data: ProfileData) => {
+        setProfile(data);
+        if (data.colorPalette) {
+            const theme = localStorage.getItem("vite-ui-theme") || "system";
+            const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+            applyTheme(data.colorPalette, isDark);
+            localStorage.setItem("user-palette", data.colorPalette);
+        }
+    }, []);
+
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, token, error, isLoading, user, profile, refreshProfile }}>
+        <AuthContext.Provider value={{ isAuthenticated, login, logout, token, error, isLoading, user, profile, refreshProfile, updateProfileLocally }}>
             {children}
         </AuthContext.Provider>
     );

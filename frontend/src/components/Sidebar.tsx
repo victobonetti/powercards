@@ -1,4 +1,4 @@
-import { Layers, Upload, Moon, Sun, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell } from "lucide-react";
+import { Layers, Upload, Moon, Sun, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell, Settings } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useTheme } from "./theme-provider";
@@ -9,6 +9,7 @@ import { WorkspaceSelector } from "./WorkspaceSelector";
 import { HelpModal } from "./HelpModal";
 import { useFlashcardFactory } from "@/context/FlashcardFactoryContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface SidebarProps {
     currentView: "upload" | "decks" | "tags" | "factory";
@@ -246,6 +247,8 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                         <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
                     </Button>
 
+                    <SettingsButton />
+
                     <Button
                         variant="ghost"
                         size="icon"
@@ -264,3 +267,19 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
     );
 }
 
+function SettingsButton() {
+    const navigate = useNavigate();
+    const { lang } = useParams();
+
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/${lang}/profile`)}
+            className="rounded-full text-muted-foreground hover:text-primary transition-all"
+            title="Settings"
+        >
+            <Settings className="h-[1.2rem] w-[1.2rem]" />
+        </Button>
+    );
+}

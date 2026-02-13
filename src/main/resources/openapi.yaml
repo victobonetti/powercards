@@ -43,10 +43,7 @@ paths:
           description: OK
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  type: string
+              schema: {}
         "400":
           description: Bad Request
       summary: Enhance Model
@@ -1341,6 +1338,10 @@ components:
           type: string
         colorPalette:
           type: string
+        aiProvider:
+          type: string
+        aiApiKey:
+          type: string
     ProfileResponse:
       type: object
       properties:
@@ -1359,6 +1360,10 @@ components:
           type: string
         colorPalette:
           type: string
+        aiProvider:
+          type: string
+        hasAiApiKey:
+          type: boolean
     Tag:
       type: object
       properties:

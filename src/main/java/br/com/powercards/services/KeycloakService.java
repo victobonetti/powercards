@@ -8,11 +8,15 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class KeycloakService {
@@ -56,9 +60,51 @@ public class KeycloakService {
         return keycloak;
     }
 
+    private UsersResource getUsersResource() {
+        return getKeycloak().realm(targetRealm).users();
+    }
+
+    /**
+     * Resolve a Keycloak user by ID. First tries direct UUID lookup,
+     * then falls back to username search.
+     */
+    UserRepresentation resolveUser(String keycloakId) {
+        UsersResource usersResource = getUsersResource();
+
+        // Try direct UUID lookup first
+        try {
+            UserRepresentation user = usersResource.get(keycloakId).toRepresentation();
+            if (user != null) {
+                return user;
+            }
+        } catch (Exception e) {
+            LOGGER.debug("Direct lookup failed for {}, trying username search: {}", keycloakId, e.getMessage());
+        }
+
+        // Fallback: search by username
+        List<UserRepresentation> users = usersResource.searchByUsername(keycloakId, true);
+        if (users != null && !users.isEmpty()) {
+            LOGGER.debug("Found user by username search: {}", keycloakId);
+            // Must fetch full representation by ID to get attributes!
+            String foundId = users.get(0).getId();
+            try {
+                UserRepresentation fullUser = usersResource.get(foundId).toRepresentation();
+                LOGGER.info("Resolved user {} via username search. ID: {}. Attributes present: {}",
+                        keycloakId, foundId,
+                        (fullUser.getAttributes() != null ? fullUser.getAttributes().keySet() : "null"));
+                return fullUser;
+            } catch (Exception e) {
+                LOGGER.error("Failed to fetch full user representation for found ID {}: {}", foundId, e.getMessage());
+            }
+        }
+
+        LOGGER.warn("User not found in Keycloak by UUID or username: {}", keycloakId);
+        return null;
+    }
+
     public void registerUser(UserRegistrationRequest request) {
         LOGGER.info("Attempting to register user: {}", request.username());
-        UsersResource usersResource = getKeycloak().realm(targetRealm).users();
+        UsersResource usersResource = getUsersResource();
 
         UserRepresentation user = new UserRepresentation();
         user.setUsername(request.username());
@@ -92,5 +138,88 @@ public class KeycloakService {
             throw new WebApplicationException("Failed to create user", response.getStatus());
         }
 
+    }
+
+    /**
+     * Get a user attribute from Keycloak.
+     * Returns null if the attribute is not set.
+     */
+    public String getUserAttribute(String keycloakId, String attributeName) {
+        try {
+            UserRepresentation user = resolveUser(keycloakId);
+            if (user == null) {
+                return null;
+            }
+            var attributes = user.getAttributes();
+            if (attributes != null && attributes.containsKey(attributeName)) {
+                var values = attributes.get(attributeName);
+                return (values != null && !values.isEmpty()) ? values.get(0) : null;
+            }
+            return null;
+        } catch (Exception e) {
+            LOGGER.error("Failed to get user attribute {} for {}: {}", attributeName, keycloakId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Set a user attribute in Keycloak.
+     */
+    public void setUserAttribute(String keycloakId, String attributeName, String value) {
+        try {
+            // 1. Resolve user first to handle both UUID and username
+            UserRepresentation resolvedUser = resolveUser(keycloakId);
+            if (resolvedUser == null) {
+                throw new RuntimeException("User not found in Keycloak: " + keycloakId);
+            }
+            String uuid = resolvedUser.getId();
+
+            // 2. Fetch a FRESH user representation directly by UUID to ensure we have the
+            // latest state/version
+            UserResource userResource = getUsersResource().get(uuid);
+            UserRepresentation user = userResource.toRepresentation();
+
+            // 2. Prepare mutable attributes map
+            Map<String, List<String>> attributes = user.getAttributes();
+            if (attributes == null) {
+                attributes = new java.util.HashMap<>();
+            } else {
+                attributes = new java.util.HashMap<>(attributes);
+            }
+
+            // 3. Update the specific attribute
+            if (value != null && !value.isBlank()) {
+                // Use mutable list to be safe
+                attributes.put(attributeName, new java.util.ArrayList<>(java.util.List.of(value)));
+            } else {
+                attributes.remove(attributeName);
+            }
+
+            // 4. Set attributes back to user object
+            user.setAttributes(attributes);
+
+            LOGGER.info("Updating user {} (id: {}) with attributes: {}", keycloakId, user.getId(), attributes);
+
+            // 5. Perform the update using the same UserResource
+            userResource.update(user);
+
+            // 6. Verify immediately
+            UserRepresentation updatedUser = userResource.toRepresentation();
+            var updatedAttrs = updatedUser.getAttributes();
+            LOGGER.info("Immediate verification for user {}: Attributes present: {}",
+                    user.getId(), (updatedAttrs != null ? updatedAttrs : "null"));
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to set user attribute {} for {}: {}", attributeName, keycloakId, e.getMessage());
+            throw new RuntimeException("Failed to update Keycloak user attribute", e);
+        }
+    }
+
+    /**
+     * Check if a user attribute exists and has a non-empty value.
+     */
+    public boolean hasUserAttribute(String keycloakId, String attributeName) {
+        String value = getUserAttribute(keycloakId, attributeName);
+        return value != null && !value.isBlank();
     }
 }

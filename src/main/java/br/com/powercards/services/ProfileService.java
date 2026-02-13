@@ -9,6 +9,8 @@ import io.minio.SetBucketPolicyArgs;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+
+import java.util.Set;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,11 @@ public class ProfileService {
     @Inject
     MinioClient minioClient;
 
+    @Inject
+    KeycloakService keycloakService;
+
+    private static final Set<String> VALID_AI_PROVIDERS = Set.of("openai", "gemini", "deepseek");
+
     @ConfigProperty(name = "quarkus.minio.url")
     String minioUrl;
 
@@ -34,7 +41,8 @@ public class ProfileService {
     }
 
     @Transactional
-    public User updateProfile(String keycloakId, String displayName, String description, String colorPalette) {
+    public User updateProfile(String keycloakId, String displayName, String description, String colorPalette,
+            String aiProvider) {
         User user = User.findOrCreate(keycloakId);
         if (displayName != null) {
             user.displayName = displayName;
@@ -45,7 +53,42 @@ public class ProfileService {
         if (colorPalette != null) {
             user.colorPalette = colorPalette;
         }
+        // AI Provider (stored in DB)
+        if (aiProvider != null) {
+            if (aiProvider.isBlank()) {
+                user.aiProvider = null;
+            } else if (VALID_AI_PROVIDERS.contains(aiProvider)) {
+                user.aiProvider = aiProvider;
+            } else {
+                LOGGER.warn("Invalid AI provider: {}", aiProvider);
+            }
+        }
         return user;
+    }
+
+    /**
+     * Save the AI API key to Keycloak (non-transactional, separate from DB).
+     * Returns true if successful, false on failure.
+     */
+    public boolean saveAiApiKey(String keycloakId, String aiApiKey) {
+        if (aiApiKey == null) {
+            return true; // nothing to do
+        }
+        try {
+            keycloakService.setUserAttribute(keycloakId, "ai_api_key", aiApiKey);
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to save AI API key to Keycloak for {}: {}", keycloakId, e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean hasAiApiKey(String keycloakId) {
+        return keycloakService.hasUserAttribute(keycloakId, "ai_api_key");
+    }
+
+    public String getAiApiKey(String keycloakId) {
+        return keycloakService.getUserAttribute(keycloakId, "ai_api_key");
     }
 
     @Transactional

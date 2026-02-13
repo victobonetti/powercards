@@ -200,4 +200,78 @@ public class ProfileResourceTest {
                                 .body("avatarUrl", notNullValue())
                                 .body("avatarUrl", containsString("user-avatars/avatar-"));
         }
+
+        // ======= AI Settings tests =======
+
+        @Test
+        public void testProfileResponseIncludesAiFields() {
+                given()
+                                .when().get("/v1/profile")
+                                .then()
+                                .statusCode(200)
+                                .body("$", hasKey("aiProvider"))
+                                .body("$", hasKey("hasAiApiKey"));
+        }
+
+        @Test
+        public void testUpdateProfileWithAiProvider() {
+                // Set AI provider (without API key - that goes to Keycloak)
+                given()
+                                .contentType(ContentType.JSON)
+                                .body("{\"aiProvider\": \"openai\"}")
+                                .when().put("/v1/profile")
+                                .then()
+                                .statusCode(200)
+                                .body("aiProvider", equalTo("openai"));
+
+                // Verify persistence
+                given()
+                                .when().get("/v1/profile")
+                                .then()
+                                .statusCode(200)
+                                .body("aiProvider", equalTo("openai"));
+        }
+
+        @Test
+        public void testUpdateProfileWithInvalidAiProvider() {
+                // Invalid provider should be ignored
+                given()
+                                .contentType(ContentType.JSON)
+                                .body("{\"aiProvider\": \"invalid-provider\"}")
+                                .when().put("/v1/profile")
+                                .then()
+                                .statusCode(200);
+                // aiProvider should not be set to the invalid value
+        }
+
+        @Test
+        public void testClearAiProvider() {
+                // First set a valid provider
+                given()
+                                .contentType(ContentType.JSON)
+                                .body("{\"aiProvider\": \"gemini\"}")
+                                .when().put("/v1/profile")
+                                .then()
+                                .statusCode(200)
+                                .body("aiProvider", equalTo("gemini"));
+
+                // Clear it
+                given()
+                                .contentType(ContentType.JSON)
+                                .body("{\"aiProvider\": \"\"}")
+                                .when().put("/v1/profile")
+                                .then()
+                                .statusCode(200)
+                                .body("aiProvider", nullValue());
+        }
+
+        @Test
+        public void testHasAiApiKeyDefaultsFalse() {
+                // Without Keycloak running in test, hasAiApiKey should default to false
+                given()
+                                .when().get("/v1/profile")
+                                .then()
+                                .statusCode(200)
+                                .body("hasAiApiKey", equalTo(false));
+        }
 }

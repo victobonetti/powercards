@@ -1,13 +1,17 @@
 package br.com.powercards.resources;
 
-import br.com.powercards.services.AIEnhancementService;
+import java.util.List;
+
 import br.com.powercards.services.AIService;
+import br.com.powercards.services.UserAIProxyService;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @Path("/v1/ai")
 public class AIResource {
@@ -16,7 +20,10 @@ public class AIResource {
     AIService aiService;
 
     @Inject
-    AIEnhancementService enhancementService;
+    UserAIProxyService userAIProxyService;
+
+    @Inject
+    SecurityIdentity identity;
 
     @POST
     @Path("/chat")
@@ -30,15 +37,33 @@ public class AIResource {
     @Path("/enhance-model")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public java.util.List<String> enhanceModel(java.util.List<String> contents) {
-        String input = contents.toString();
-        io.quarkus.logging.Log.info("Enhancing model input: " + input);
+    public Response enhanceModel(java.util.List<String> contents) {
+        String keycloakId = identity.getPrincipal().getName();
+        io.quarkus.logging.Log.info("Enhancing model for user: " + keycloakId + ", input: " + contents);
 
-        java.util.List<String> result = enhancementService.enhanceModel(contents);
+        try {
+            List<String> result = userAIProxyService.enhanceModel(keycloakId, contents);
 
-        String output = result != null ? result.toString() : "null";
-        io.quarkus.logging.Log.info("Enhancing model output: " + output);
+            if (result.size() == contents.size()) {
+                return Response.ok(result).build();
+            }
 
-        return result;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(java.util.Map.of("error", "AI_RESPONSE_MISMATCH",
+                            "message", "AI returned " + result.size() + " fields, expected " + contents.size()))
+                    .build();
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && (e.getMessage().contains("not configured"))) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(java.util.Map.of("error", "AI_KEY_NOT_CONFIGURED",
+                                "message", "Please configure your AI API key in Profile Settings."))
+                        .build();
+            }
+            io.quarkus.logging.Log.error("AI enhancement failed: " + e.getMessage(), e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(java.util.Map.of("error", "AI_ENHANCEMENT_FAILED",
+                            "message", e.getMessage()))
+                    .build();
+        }
     }
 }

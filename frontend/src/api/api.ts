@@ -842,6 +842,18 @@ export interface ProfileRequest {
      * @memberof ProfileRequest
      */
     'colorPalette'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileRequest
+     */
+    'aiProvider'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileRequest
+     */
+    'aiApiKey'?: string;
 }
 /**
  * 
@@ -891,6 +903,18 @@ export interface ProfileResponse {
      * @memberof ProfileResponse
      */
     'colorPalette'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileResponse
+     */
+    'aiProvider'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProfileResponse
+     */
+    'hasAiApiKey'?: boolean;
 }
 /**
  * 
@@ -1139,7 +1163,7 @@ export const AIResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<string>>> {
+        async v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1AiEnhanceModelPost(requestBody, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AIResourceApi.v1AiEnhanceModelPost']?.[localVarOperationServerIndex]?.url;
@@ -1172,7 +1196,7 @@ export const AIResourceApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig): AxiosPromise<Array<string>> {
+        v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig): AxiosPromise<any> {
             return localVarFp.v1AiEnhanceModelPost(requestBody, options).then((request) => request(axios, basePath));
         },
     };

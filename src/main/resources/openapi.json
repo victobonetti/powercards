@@ -61,12 +61,7 @@
             "description" : "OK",
             "content" : {
               "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                }
+                "schema" : { }
               }
             }
           },
@@ -1948,6 +1943,12 @@
           },
           "colorPalette" : {
             "type" : "string"
+          },
+          "aiProvider" : {
+            "type" : "string"
+          },
+          "aiApiKey" : {
+            "type" : "string"
           }
         }
       },
@@ -1975,6 +1976,12 @@
           },
           "colorPalette" : {
             "type" : "string"
+          },
+          "aiProvider" : {
+            "type" : "string"
+          },
+          "hasAiApiKey" : {
+            "type" : "boolean"
           }
         }
       },

@@ -35,9 +35,26 @@ public class ProfileResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public ProfileResponse updateProfile(ProfileRequest request) {
         String keycloakId = identity.getPrincipal().getName();
+        // Step 1: Save DB fields (transactional)
         User user = profileService.updateProfile(keycloakId, request.displayName(), request.description(),
-                request.colorPalette());
-        return toResponse(user);
+                request.colorPalette(), request.aiProvider());
+
+        // Step 2: Save AI API key to Keycloak (non-transactional, won't roll back DB)
+        Boolean explicitHasKey = null;
+        if (request.aiApiKey() != null) {
+            boolean keySaved = profileService.saveAiApiKey(keycloakId, request.aiApiKey());
+            // If save succeeded (and key implies non-empty), we force hasKey=true in
+            // response
+            // If save failed, we let toResponse() check (which may return false)
+            if (keySaved && !request.aiApiKey().isBlank()) {
+                explicitHasKey = true;
+            } else if (keySaved && request.aiApiKey().isBlank()) {
+                // Key cleared successfully
+                explicitHasKey = false;
+            }
+        }
+
+        return toResponse(user, explicitHasKey);
     }
 
     @POST
@@ -87,6 +104,16 @@ public class ProfileResource {
     }
 
     private ProfileResponse toResponse(User user) {
+        return toResponse(user, null);
+    }
+
+    private ProfileResponse toResponse(User user, Boolean hasKeyOverride) {
+        boolean hasKey;
+        if (hasKeyOverride != null) {
+            hasKey = hasKeyOverride;
+        } else {
+            hasKey = profileService.hasAiApiKey(user.keycloakId);
+        }
         return new ProfileResponse(
                 user.id,
                 user.keycloakId,
@@ -94,6 +121,8 @@ public class ProfileResource {
                 user.avatarUrl,
                 user.bannerUrl,
                 user.description,
-                user.colorPalette);
+                user.colorPalette,
+                user.aiProvider,
+                hasKey);
     }
 }
