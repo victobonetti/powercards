@@ -181,4 +181,31 @@ public class AnkiResourceTest {
                                 .body("updatedNotes", is(1))
                                 .body("skippedNotes", is(0));
         }
+
+        @Test
+        public void testExport() {
+                // 1. Upload first to have data
+                io.restassured.response.ExtractableResponse<io.restassured.response.Response> response = given()
+                                .header("X-Workspace-Id", workspace.id)
+                                .multiPart("file", apkgFile)
+                                .when()
+                                .post("/v1/anki/upload")
+                                .then()
+                                .statusCode(200)
+                                .extract();
+
+                Integer deckId = response.path("decks[0].id");
+
+                // 2. Export
+                given()
+                                .header("X-Workspace-Id", workspace.id)
+                                .contentType(io.restassured.http.ContentType.JSON)
+                                .body(java.util.Collections.singletonList(deckId))
+                                .when()
+                                .post("/v1/anki/export")
+                                .then()
+                                .statusCode(200)
+                                .header("Content-Disposition", org.hamcrest.Matchers.containsString("export.apkg"))
+                                .body(org.hamcrest.Matchers.notNullValue());
+        }
 }

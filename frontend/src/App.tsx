@@ -22,6 +22,7 @@ import { AppAuthProvider } from "./auth/AuthProvider";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
+import { AnkiExportPage } from "./pages/AnkiExportPage";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import { PaperBackground } from "./components/PaperBackground";
@@ -76,6 +77,7 @@ function App() {
                         <Route path="upload" element={<Navigate to="../" replace />} />
                         <Route path="tags" element={<TagsView />} />
                         <Route path="decks" element={<DecksWrapper />} />
+                        <Route path="export" element={<AnkiExportPage />} />
                         <Route path="factory" element={<FlashcardFactory />} />
                         <Route path="notes" element={<NotesWrapper />} />
                         <Route path="profile" element={<ProfilePage />} />
@@ -98,7 +100,7 @@ function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang } = useParams();
-  const [currentView, setCurrentView] = useState<"upload" | "decks" | "tags" | "factory">("upload");
+  const [currentView, setCurrentView] = useState<"upload" | "decks" | "tags" | "factory" | "export">("upload");
 
   useEffect(() => {
     // pathname includes /en/ or /pt/
@@ -114,17 +116,20 @@ function AppLayout() {
       setCurrentView("tags");
     } else if (path === "/factory") {
       setCurrentView("factory");
+    } else if (path === "/export") {
+      setCurrentView("export");
     } else {
       setCurrentView("decks");
     }
   }, [location.pathname]);
 
-  const handleNavigate = (view: "upload" | "decks" | "tags" | "factory") => {
+  const handleNavigate = (view: "upload" | "decks" | "tags" | "factory" | "export") => {
     const prefix = `/${lang}`;
     if (view === "upload") navigate(`${prefix}/`);
     else if (view === "decks") navigate(`${prefix}/decks`);
     else if (view === "tags") navigate(`${prefix}/tags`);
     else if (view === "factory") navigate(`${prefix}/factory`);
+    else if (view === "export") navigate(`${prefix}/export`);
   };
 
   return <Layout currentView={currentView} onNavigate={handleNavigate} />;

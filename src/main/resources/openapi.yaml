@@ -49,6 +49,28 @@ paths:
       summary: Enhance Model
       tags:
       - AI Resource
+  /v1/anki/export:
+    post:
+      summary: Export Anki package
+      description: Exports selected decks to an .apkg file.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream: {}
+        "400":
+          description: Bad Request
+      tags:
+      - Anki Resource
   /v1/anki/upload:
     post:
       summary: Upload Anki package

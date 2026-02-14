@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.util.List;
 
 @Path("/v1/anki")
 public class AnkiResource {
@@ -42,5 +43,24 @@ public class AnkiResource {
 
         logger.info("Upload e processamento do arquivo .apkg finalizados com sucesso.");
         return response;
+    }
+
+    @POST
+    @Path("/export")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Export Anki package", description = "Exports selected decks to an .apkg file.")
+    public Response export(List<Long> deckIds) {
+        logger.info("Exporting decks with IDs: " + deckIds);
+        try {
+            java.io.File apkgFile = anki.exportDecks(deckIds);
+
+            return Response.ok(apkgFile)
+                    .header("Content-Disposition", "attachment; filename=\"export.apkg\"")
+                    .build();
+        } catch (Exception e) {
+            logger.error("Error exporting decks", e);
+            return Response.serverError().entity("Failed to export decks: " + e.getMessage()).build();
+        }
     }
 }

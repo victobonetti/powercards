@@ -1,4 +1,4 @@
-import { Layers, Upload, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell, Settings } from "lucide-react";
+import { Layers, Upload, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell, Settings, Download } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 
@@ -12,8 +12,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSettings } from "@/context/SettingsContext";
 
 interface SidebarProps {
-    currentView: "upload" | "decks" | "tags" | "factory";
-    onNavigate: (view: "upload" | "decks" | "tags" | "factory") => void;
+    currentView: "upload" | "decks" | "tags" | "factory" | "export";
+    onNavigate: (view: "upload" | "decks" | "tags" | "factory" | "export") => void;
     className?: string;
 }
 
@@ -198,6 +198,16 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                             onClick={() => onNavigate("decks")}
                         />
                     </div>
+                    <div className={cn("transition-all duration-300", getItemClass([3]))}>
+                        <SidebarButton
+                            icon={Download}
+                            label="Download Anki"
+                            isActive={currentView === "export"}
+                            isExpanded={isExpanded}
+                            onClick={() => onNavigate("export")}
+                        />
+                    </div>
+
                     <div className={cn("transition-all duration-300", getItemClass(3))}>
                         <SidebarButton
                             icon={Tag}

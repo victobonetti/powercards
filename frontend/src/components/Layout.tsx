@@ -7,8 +7,8 @@ import { SettingsModal } from "./SettingsModal";
 
 interface LayoutProps {
     children?: ReactNode;
-    currentView: "upload" | "decks" | "tags" | "factory";
-    onNavigate: (view: "upload" | "decks" | "tags" | "factory") => void;
+    currentView: "upload" | "decks" | "tags" | "factory" | "export";
+    onNavigate: (view: "upload" | "decks" | "tags" | "factory" | "export") => void;
 }
 
 function LayoutContent({ children, currentView, onNavigate }: LayoutProps) {
