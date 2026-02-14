@@ -28,7 +28,7 @@ public class ProfileService {
     MinioClient minioClient;
 
     @Inject
-    KeycloakService keycloakService;
+    VaultService vaultService;
 
     private static final Set<String> VALID_AI_PROVIDERS = Set.of("openai", "gemini", "deepseek");
 
@@ -70,7 +70,7 @@ public class ProfileService {
     }
 
     /**
-     * Save the AI API key to Keycloak (non-transactional, separate from DB).
+     * Save the AI API key to Vault (non-transactional, separate from DB).
      * Returns true if successful, false on failure.
      */
     public boolean saveAiApiKey(String keycloakId, String aiApiKey) {
@@ -78,20 +78,21 @@ public class ProfileService {
             return true; // nothing to do
         }
         try {
-            keycloakService.setUserAttribute(keycloakId, "ai_api_key", aiApiKey);
+            vaultService.writeSecret(keycloakId, "ai_api_key", aiApiKey);
             return true;
         } catch (Exception e) {
-            LOGGER.error("Failed to save AI API key to Keycloak for {}: {}", keycloakId, e.getMessage());
+            LOGGER.error("Failed to save AI API key to Vault for {}: {}", keycloakId, e.getMessage());
             return false;
         }
     }
 
     public boolean hasAiApiKey(String keycloakId) {
-        return keycloakService.hasUserAttribute(keycloakId, "ai_api_key");
+        String key = vaultService.readSecret(keycloakId, "ai_api_key");
+        return key != null && !key.isBlank();
     }
 
     public String getAiApiKey(String keycloakId) {
-        return keycloakService.getUserAttribute(keycloakId, "ai_api_key");
+        return vaultService.readSecret(keycloakId, "ai_api_key");
     }
 
     @Transactional
