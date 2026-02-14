@@ -211,7 +211,8 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
             if (data.colorPalette) {
                 // Apply theme globally
                 const theme = localStorage.getItem("vite-ui-theme") || "system";
-                const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+                // Use user preference for dark mode if set, otherwise fallback to system/theme
+                const isDark = data.darkMode ?? (theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches));
                 applyTheme(data.colorPalette, isDark);
 
                 localStorage.setItem("user-palette", data.colorPalette);
@@ -299,7 +300,7 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(data);
         if (data.colorPalette) {
             const theme = localStorage.getItem("vite-ui-theme") || "system";
-            const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+            const isDark = data.darkMode ?? (theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches));
             applyTheme(data.colorPalette, isDark);
             localStorage.setItem("user-palette", data.colorPalette);
         }

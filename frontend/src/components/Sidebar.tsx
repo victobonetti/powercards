@@ -1,4 +1,4 @@
-import { Layers, Upload, Moon, Sun, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell, Settings } from "lucide-react";
+import { Layers, Upload, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell, Settings } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useTheme } from "./theme-provider";
@@ -7,6 +7,7 @@ import logo from "@/assets/logo.png";
 import logo_collapsed from "@/assets/logo_collapsed.png"
 import { WorkspaceSelector } from "./WorkspaceSelector";
 import { HelpModal } from "./HelpModal";
+import { SettingsModal } from "./SettingsModal";
 import { useFlashcardFactory } from "@/context/FlashcardFactoryContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useNavigate, useParams } from "react-router-dom";
@@ -49,10 +50,11 @@ function SidebarButton({ icon: Icon, label, isActive, isExpanded, onClick, class
 
 export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
     const { theme, setTheme } = useTheme();
-    const { t, language, setLanguage } = useLanguage();
+    const { t, language } = useLanguage();
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isPinned, setIsPinned] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
     const [helpStep, setHelpStep] = useState(0);
 
     const { isProcessing, notificationChatIds } = useFlashcardFactory();
@@ -206,6 +208,15 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                             onClick={() => onNavigate("tags")}
                         />
                     </div>
+                    <div className={cn("transition-all duration-300", getItemClass(4))}>
+                        <SidebarButton
+                            icon={Settings}
+                            label={language === 'pt' ? "Configurações" : "Settings"}
+                            isActive={showSettings}
+                            isExpanded={isExpanded}
+                            onClick={() => setShowSettings(true)}
+                        />
+                    </div>
                     <div className={cn("transition-all duration-300", getItemClass(5))}>
                         <SidebarButton
                             icon={AnimatedFactoryIcon}
@@ -247,39 +258,12 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                         <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
                     </Button>
 
-                    <SettingsButton />
-
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className="rounded-full"
-                        title="Toggle theme"
-                    >
-                        <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                        <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                        <span className="sr-only">Toggle theme</span>
-                    </Button>
                 </div>
             </div>
             <HelpModal open={showHelp} onOpenChange={setShowHelp} currentStep={helpStep} onStepChange={setHelpStep} />
+            <SettingsModal open={showSettings} onOpenChange={setShowSettings} />
         </div >
     );
 }
 
-function SettingsButton() {
-    const navigate = useNavigate();
-    const { lang } = useParams();
 
-    return (
-        <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/${lang}/profile`)}
-            className="rounded-full text-muted-foreground hover:text-primary transition-all"
-            title="Settings"
-        >
-            <Settings className="h-[1.2rem] w-[1.2rem]" />
-        </Button>
-    );
-}

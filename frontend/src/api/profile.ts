@@ -10,6 +10,7 @@ export interface ProfileData {
     bannerUrl: string | null;
     description: string | null;
     colorPalette: string | null;
+    darkMode: boolean | null;
     aiProvider: string | null;
     hasAiApiKey: boolean;
 }
@@ -18,6 +19,7 @@ export interface ProfileUpdateRequest {
     displayName?: string;
     description?: string;
     colorPalette?: string;
+    darkMode?: boolean;
     aiProvider?: string;
     aiApiKey?: string;
 }

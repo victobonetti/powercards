@@ -844,6 +844,12 @@ export interface ProfileRequest {
     'colorPalette'?: string;
     /**
      * 
+     * @type {boolean}
+     * @memberof ProfileRequest
+     */
+    'darkMode'?: boolean;
+    /**
+     * 
      * @type {string}
      * @memberof ProfileRequest
      */
@@ -903,6 +909,12 @@ export interface ProfileResponse {
      * @memberof ProfileResponse
      */
     'colorPalette'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProfileResponse
+     */
+    'darkMode'?: boolean;
     /**
      * 
      * @type {string}

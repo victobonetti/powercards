@@ -8,17 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Camera, Pencil, Save, X, Loader2, Check, KeyRound, Eye, EyeOff, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, Pencil, Save, X, Loader2 } from "lucide-react";
 import { markdownToHtml } from "@/lib/markdown";
-import { palettes, applyTheme } from "@/lib/themes";
-import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function ProfilePage() {
     const navigate = useNavigate();
-    const { user, refreshProfile, updateProfileLocally } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const { toast } = useToast();
-    const { theme } = useTheme();
     const { t } = useLanguage();
 
     const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -29,16 +26,9 @@ export default function ProfilePage() {
     // Edit form state
     const [displayName, setDisplayName] = useState("");
     const [description, setDescription] = useState("");
-    const [selectedPalette, setSelectedPalette] = useState("tangerine");
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
-
-    // AI Settings state
-    const [aiProvider, setAiProvider] = useState("");
-    const [aiApiKey, setAiApiKey] = useState("");
-    const [showApiKey, setShowApiKey] = useState(false);
-    const [savingAi, setSavingAi] = useState(false);
 
     useEffect(() => {
         loadProfile();
@@ -51,8 +41,6 @@ export default function ProfilePage() {
             setProfile(data);
             setDisplayName(data.displayName || "");
             setDescription(data.description || "");
-            setSelectedPalette(data.colorPalette || "tangerine");
-            setAiProvider(data.aiProvider || "");
         } catch (error) {
             console.error("Failed to load profile:", error);
             toast({ title: "Error", description: "Failed to load profile", variant: "destructive" });
@@ -64,7 +52,7 @@ export default function ProfilePage() {
     const handleSave = async () => {
         try {
             setSaving(true);
-            const updated = await updateProfile({ displayName, description, colorPalette: selectedPalette });
+            const updated = await updateProfile({ displayName, description });
             setProfile(updated);
             await refreshProfile(); // Refresh global auth context to update theme app-wide
             setIsEditing(false);
@@ -80,21 +68,7 @@ export default function ProfilePage() {
     const handleCancel = () => {
         setDisplayName(profile?.displayName || "");
         setDescription(profile?.description || "");
-
-        // Revert theme
-        const originalPalette = profile?.colorPalette || "tangerine";
-        setSelectedPalette(originalPalette);
-        const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        applyTheme(originalPalette, isDark);
-
         setIsEditing(false);
-    };
-
-    const handlePaletteChange = (paletteValue: string) => {
-        setSelectedPalette(paletteValue);
-        // Instant Preview
-        const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        applyTheme(paletteValue, isDark);
     };
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -303,60 +277,7 @@ export default function ProfilePage() {
                         {/* Right Content */}
                         <div className="lg:col-span-8 space-y-6">
 
-                            {/* Appearance Theme Picker - Only in Edit Mode */}
-                            {isEditing && (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>{t.profile.appearance}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4">
-                                            <Label>{t.profile.colorPalette}</Label>
-                                            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-3">
-                                                {palettes.map((palette) => (
-                                                    <button
-                                                        key={palette.value}
-                                                        onClick={() => handlePaletteChange(palette.value)}
-                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${selectedPalette === palette.value
-                                                            ? "ring-2 ring-offset-2 ring-primary scale-110"
-                                                            : "hover:scale-105"
-                                                            }`}
-                                                        style={{
-                                                            backgroundColor: `hsl(${palette.light.primary})`
-                                                        }}
-                                                        title={palette.name}
-                                                    >
-                                                        {selectedPalette === palette.value && (
-                                                            <Check className="h-5 w-5 text-white drop-shadow-md" />
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">
-                                                {t.profile.themeDescription}
-                                            </p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
 
-                            {/* AI Settings - Always visible */}
-                            <AISettingsCard
-                                t={t}
-                                profile={profile}
-                                aiProvider={aiProvider}
-                                setAiProvider={setAiProvider}
-                                aiApiKey={aiApiKey}
-                                setAiApiKey={setAiApiKey}
-                                showApiKey={showApiKey}
-                                setShowApiKey={setShowApiKey}
-                                savingAi={savingAi}
-                                setSavingAi={setSavingAi}
-                                toast={toast}
-                                setProfile={setProfile}
-                                refreshProfile={refreshProfile}
-                                updateProfileLocally={updateProfileLocally}
-                            />
 
                             {/* About Me */}
                             <Card className="h-full">
@@ -402,167 +323,4 @@ export default function ProfilePage() {
     );
 }
 
-interface AISettingsCardProps {
-    t: any;
-    profile: ProfileData | null;
-    aiProvider: string;
-    setAiProvider: (v: string) => void;
-    aiApiKey: string;
-    setAiApiKey: (v: string) => void;
-    showApiKey: boolean;
-    setShowApiKey: (v: boolean) => void;
-    savingAi: boolean;
-    setSavingAi: (v: boolean) => void;
-    toast: any;
-    setProfile: (p: ProfileData) => void;
-    refreshProfile: () => Promise<void>;
-    updateProfileLocally: (p: ProfileData) => void;
-}
 
-function AISettingsCard({
-    t, profile, aiProvider, setAiProvider, aiApiKey, setAiApiKey,
-    showApiKey, setShowApiKey, savingAi, setSavingAi, toast, setProfile, refreshProfile, updateProfileLocally
-}: AISettingsCardProps) {
-
-    const providers = [
-        { value: "openai", label: t.aiSettings.openai },
-        { value: "gemini", label: t.aiSettings.gemini },
-        { value: "deepseek", label: t.aiSettings.deepseek },
-    ];
-
-    const handleSaveAiSettings = async () => {
-        if (!aiProvider) {
-            toast({ title: t.profile.error, description: "Please select a provider", variant: "destructive" });
-            return;
-        }
-        if (!aiApiKey && !profile?.hasAiApiKey) {
-            toast({ title: t.profile.error, description: "Please enter an API key", variant: "destructive" });
-            return;
-        }
-
-        setSavingAi(true);
-        try {
-            const updated = await updateAiSettings(aiProvider, aiApiKey);
-            setProfile(updated); // Update local profile state
-            updateProfileLocally(updated); // Update global auth state immediately
-            setAiApiKey("");
-            toast({ title: t.profile.success, description: t.aiSettings.saved });
-        } catch (error) {
-            console.error("Failed to save AI settings:", error);
-            toast({ title: t.profile.error, description: t.aiSettings.saveFailed, variant: "destructive" });
-        } finally {
-            setSavingAi(false);
-        }
-    };
-
-    const handleRemoveKey = async () => {
-        setSavingAi(true);
-        try {
-            const updated = await updateAiSettings("", "");
-            setProfile(updated); // Update local profile state
-            updateProfileLocally(updated); // Update global auth state immediately
-            setAiProvider("");
-            setAiApiKey("");
-            toast({ title: t.profile.success, description: t.aiSettings.keyRemoved });
-        } catch (error) {
-            console.error("Failed to remove AI key:", error);
-            toast({ title: t.profile.error, description: t.aiSettings.saveFailed, variant: "destructive" });
-        } finally {
-            setSavingAi(false);
-        }
-    };
-
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                        <CardTitle>{t.aiSettings.title}</CardTitle>
-                    </div>
-                    {profile?.hasAiApiKey ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-400">
-                            <KeyRound className="h-3 w-3" />
-                            {t.aiSettings.configured}
-                        </span>
-                    ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:text-yellow-400">
-                            {t.aiSettings.notConfigured}
-                        </span>
-                    )}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">{t.aiSettings.description}</p>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    {/* Provider Select */}
-                    <div className="space-y-2">
-                        <Label htmlFor="aiProvider">{t.aiSettings.provider}</Label>
-                        <select
-                            id="aiProvider"
-                            value={aiProvider}
-                            onChange={(e) => setAiProvider(e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <option value="">{t.aiSettings.providerPlaceholder}</option>
-                            {providers.map((p) => (
-                                <option key={p.value} value={p.value}>{p.label}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* API Key Input */}
-                    <div className="space-y-2">
-                        <Label htmlFor="aiApiKey">{t.aiSettings.apiKey}</Label>
-                        <div className="relative">
-                            <Input
-                                id="aiApiKey"
-                                type={showApiKey ? "text" : "password"}
-                                value={aiApiKey}
-                                onChange={(e) => setAiApiKey(e.target.value)}
-                                placeholder={profile?.hasAiApiKey ? "••••••••••••••••" : t.aiSettings.apiKeyPlaceholder}
-                                className="pr-10"
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
-                                onClick={() => setShowApiKey(!showApiKey)}
-                            >
-                                {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={handleSaveAiSettings}
-                            disabled={savingAi || (!aiProvider && !aiApiKey)}
-                            className="flex-1"
-                        >
-                            {savingAi ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                                <Save className="h-4 w-4 mr-2" />
-                            )}
-                            {t.aiSettings.saveKey}
-                        </Button>
-                        {profile?.hasAiApiKey && (
-                            <Button
-                                variant="outline"
-                                onClick={handleRemoveKey}
-                                disabled={savingAi}
-                                className="text-destructive hover:text-destructive"
-                            >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                {t.aiSettings.removeKey}
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}

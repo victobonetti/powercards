@@ -188,9 +188,21 @@ function ForceWorkspaceWrapper({ children }: { children: React.ReactNode }) {
   // Apply User Theme
   useEffect(() => {
     const palette = auth.profile?.colorPalette || localStorage.getItem("user-palette") || "tangerine";
-    const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const userPrefersDark = auth.profile?.darkMode;
+    const isDark = userPrefersDark ?? (theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches));
+
+    // Check if we need to sync theme state
+    // This is tricky because theme provider thinks it's strictly "dark" or "light" or "system"
+    // But we just want to ensure class is applied. applyTheme handles palette.
+    // For dark mode, we might need to set it in provider if it differs?
+
     applyTheme(palette, isDark);
-  }, [auth.profile?.colorPalette, theme]);
+
+    // Optional: Sync provider state if we have a definitive user preference
+    // if (userPrefersDark !== undefined && userPrefersDark !== (theme === 'dark')) {
+    // setTheme(userPrefersDark ? 'dark' : 'light'); 
+    // }
+  }, [auth.profile?.colorPalette, auth.profile?.darkMode, theme]);
 
   // Only force create if authenticated, loaded, and no workspaces
   const shouldForceCreate = auth.isAuthenticated && !isLoading && workspaces.length === 0;

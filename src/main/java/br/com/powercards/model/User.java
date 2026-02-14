@@ -27,6 +27,9 @@ public class User extends PanacheEntity {
     @Column(name = "color_palette", columnDefinition = "varchar(255) default 'tangerine'")
     public String colorPalette = "tangerine";
 
+    @Column(name = "dark_mode")
+    public Boolean darkMode;
+
     @Column(name = "ai_provider")
     public String aiProvider; // "openai", "gemini", "deepseek", or null
 

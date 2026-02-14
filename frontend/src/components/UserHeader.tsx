@@ -10,16 +10,15 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { User, LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { getProfile, ProfileData } from "@/api/profile";
 import { useLanguage } from "@/context/LanguageContext";
-import { cn } from "@/lib/utils";
 
 export function UserHeader() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const [profile, setProfile] = useState<ProfileData | null>(null);
-    const { language, setLanguage, t } = useLanguage();
+    const { language, t } = useLanguage();
 
     useEffect(() => {
         loadProfile();
@@ -47,28 +46,6 @@ export function UserHeader() {
 
     return (
         <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 mr-2">
-                <Button
-                    variant={language === 'en' ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => setLanguage('en')}
-                    className={cn("text-xs h-7 px-2", language === 'en' ? "font-bold" : "opacity-70")}
-                    title="English"
-                >
-                    EN
-                </Button>
-                <div className="h-4 w-[1px] bg-border mx-1" />
-                <Button
-                    variant={language === 'pt' ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => setLanguage('pt')}
-                    className={cn("text-xs h-7 px-2", language === 'pt' ? "font-bold" : "opacity-70")}
-                    title="Português"
-                >
-                    PT
-                </Button>
-            </div>
-
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 h-auto">

@@ -1338,6 +1338,8 @@ components:
           type: string
         colorPalette:
           type: string
+        darkMode:
+          type: boolean
         aiProvider:
           type: string
         aiApiKey:
@@ -1360,6 +1362,8 @@ components:
           type: string
         colorPalette:
           type: string
+        darkMode:
+          type: boolean
         aiProvider:
           type: string
         hasAiApiKey:

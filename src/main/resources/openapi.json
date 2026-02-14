@@ -1944,6 +1944,9 @@
           "colorPalette" : {
             "type" : "string"
           },
+          "darkMode" : {
+            "type" : "boolean"
+          },
           "aiProvider" : {
             "type" : "string"
           },
@@ -1976,6 +1979,9 @@
           },
           "colorPalette" : {
             "type" : "string"
+          },
+          "darkMode" : {
+            "type" : "boolean"
           },
           "aiProvider" : {
             "type" : "string"

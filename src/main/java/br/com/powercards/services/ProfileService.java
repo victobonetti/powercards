@@ -42,7 +42,7 @@ public class ProfileService {
 
     @Transactional
     public User updateProfile(String keycloakId, String displayName, String description, String colorPalette,
-            String aiProvider) {
+            Boolean darkMode, String aiProvider) {
         User user = User.findOrCreate(keycloakId);
         if (displayName != null) {
             user.displayName = displayName;
@@ -52,6 +52,9 @@ public class ProfileService {
         }
         if (colorPalette != null) {
             user.colorPalette = colorPalette;
+        }
+        if (darkMode != null) {
+            user.darkMode = darkMode;
         }
         // AI Provider (stored in DB)
         if (aiProvider != null) {
