@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthProvider";
-import { getProfile, updateProfile, uploadAvatar, uploadBanner, updateAiSettings, ProfileData } from "@/api/profile";
+import { getProfile, updateProfile, uploadAvatar, uploadBanner, ProfileData } from "@/api/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

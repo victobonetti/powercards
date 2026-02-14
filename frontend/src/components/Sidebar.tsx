@@ -1,16 +1,15 @@
 import { Layers, Upload, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell, Settings } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { useTheme } from "./theme-provider";
+
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import logo_collapsed from "@/assets/logo_collapsed.png"
 import { WorkspaceSelector } from "./WorkspaceSelector";
 import { HelpModal } from "./HelpModal";
-import { SettingsModal } from "./SettingsModal";
 import { useFlashcardFactory } from "@/context/FlashcardFactoryContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useSettings } from "@/context/SettingsContext";
 
 interface SidebarProps {
     currentView: "upload" | "decks" | "tags" | "factory";
@@ -49,12 +48,12 @@ function SidebarButton({ icon: Icon, label, isActive, isExpanded, onClick, class
 }
 
 export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
-    const { theme, setTheme } = useTheme();
+
     const { t, language } = useLanguage();
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isPinned, setIsPinned] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
-    const [showSettings, setShowSettings] = useState(false);
+    const { isOpen: isSettingsOpen, openSettings } = useSettings();
     const [helpStep, setHelpStep] = useState(0);
 
     const { isProcessing, notificationChatIds } = useFlashcardFactory();
@@ -212,9 +211,9 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                         <SidebarButton
                             icon={Settings}
                             label={language === 'pt' ? "Configurações" : "Settings"}
-                            isActive={showSettings}
+                            isActive={isSettingsOpen}
                             isExpanded={isExpanded}
-                            onClick={() => setShowSettings(true)}
+                            onClick={() => openSettings()}
                         />
                     </div>
                     <div className={cn("transition-all duration-300", getItemClass(5))}>
@@ -261,7 +260,6 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                 </div>
             </div>
             <HelpModal open={showHelp} onOpenChange={setShowHelp} currentStep={helpStep} onStepChange={setHelpStep} />
-            <SettingsModal open={showSettings} onOpenChange={setShowSettings} />
         </div >
     );
 }

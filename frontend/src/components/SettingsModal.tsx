@@ -18,22 +18,30 @@ import { Loader2, Save, Moon, Sun, Check, Sparkles, Eye, EyeOff, Trash2, Languag
 import { palettes, applyTheme } from "@/lib/themes";
 import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/context/LanguageContext";
-import { Switch } from "@/components/ui/switch"; // Assuming we have a Switch component, if not I'll check or use checkboxes
+
 import { cn } from "@/lib/utils";
 
 interface SettingsModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    defaultTab?: string;
 }
 
-export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
+export function SettingsModal({ open, onOpenChange, defaultTab = "general" }: SettingsModalProps) {
     const { user, profile, updateProfileLocally } = useAuth();
     const { toast } = useToast();
     const { theme, setTheme } = useTheme();
     const { t, language, setLanguage } = useLanguage();
 
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState("general");
+    const [activeTab, setActiveTab] = useState(defaultTab);
+
+    // Update active tab when defaultTab changes or modal opens
+    useEffect(() => {
+        if (open) {
+            setActiveTab(defaultTab);
+        }
+    }, [open, defaultTab]);
 
     // General Settings
     const [selectedPalette, setSelectedPalette] = useState("tangerine");

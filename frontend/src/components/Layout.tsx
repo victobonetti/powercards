@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { Outlet } from "react-router-dom";
 import { UserHeader } from "./UserHeader";
+import { SettingsProvider, useSettings } from "@/context/SettingsContext";
+import { SettingsModal } from "./SettingsModal";
 
 interface LayoutProps {
     children?: ReactNode;
@@ -9,7 +11,9 @@ interface LayoutProps {
     onNavigate: (view: "upload" | "decks" | "tags" | "factory") => void;
 }
 
-export function Layout({ children, currentView, onNavigate }: LayoutProps) {
+function LayoutContent({ children, currentView, onNavigate }: LayoutProps) {
+    const { isOpen, closeSettings, activeTab } = useSettings();
+
     return (
         <div className="flex h-screen overflow-hidden font-sans antialiased text-neutral-900 dark:text-neutral-50">
             <Sidebar currentView={currentView} onNavigate={onNavigate} />
@@ -23,7 +27,16 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
                     {children || <Outlet />}
                 </main>
             </div>
+            <SettingsModal open={isOpen} onOpenChange={(open) => !open && closeSettings()} defaultTab={activeTab} />
         </div>
+    );
+}
+
+export function Layout(props: LayoutProps) {
+    return (
+        <SettingsProvider>
+            <LayoutContent {...props} />
+        </SettingsProvider>
     );
 }
 

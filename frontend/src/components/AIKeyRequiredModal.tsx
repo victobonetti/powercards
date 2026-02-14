@@ -1,4 +1,3 @@
-import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "./ui/button";
 import {
     Dialog,
@@ -10,6 +9,7 @@ import {
 } from "./ui/dialog";
 import { KeyRound, Settings } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSettings } from "@/context/SettingsContext";
 
 interface AIKeyRequiredModalProps {
     open: boolean;
@@ -17,13 +17,12 @@ interface AIKeyRequiredModalProps {
 }
 
 export function AIKeyRequiredModal({ open, onOpenChange }: AIKeyRequiredModalProps) {
-    const navigate = useNavigate();
-    const { lang } = useParams();
     const { t } = useLanguage();
+    const { openSettings } = useSettings();
 
     const handleConfigureNow = () => {
         onOpenChange(false);
-        navigate(`/${lang}/profile`);
+        openSettings("ai");
     };
 
     return (

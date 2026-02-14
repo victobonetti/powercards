@@ -23,6 +23,7 @@ public class VaultService {
      */
     public void writeSecret(String userId, String key, String value) {
         try {
+            LOGGER.info("Writing secret to Vault for user: {}, key: {}", userId, key);
             String path = "users/" + userId;
             Map<String, String> secrets = new HashMap<>();
 
@@ -39,18 +40,16 @@ public class VaultService {
 
             if (value == null) {
                 secrets.remove(key);
+                LOGGER.info("Removing secret key {} for user {}", key, userId);
             } else {
                 secrets.put(key, value);
             }
 
             if (!secrets.isEmpty()) {
                 kvSecretEngine.writeSecret(path, secrets);
-                LOGGER.info("Secret {} updated for user {}", key, userId);
+                LOGGER.info("Secret {} successfully updated for user {}", key, userId);
             } else {
-                // If map is empty, maybe we should delete the secret path?
-                // kvSecretEngine.deleteSecret(path); // check if this method exists or exposed
-                // For now, writing empty map or leaving it is fine.
-                // Assuming writeSecret handles it.
+                LOGGER.info("No secrets to write for user {} (map empty)", userId);
             }
 
         } catch (Exception e) {
@@ -64,11 +63,18 @@ public class VaultService {
      */
     public String readSecret(String userId, String key) {
         try {
+            LOGGER.info("Reading secret from Vault for user: {}, key: {}", userId, key);
             String path = "users/" + userId;
             Map<String, String> secrets = kvSecretEngine.readSecret(path);
-            return secrets != null ? secrets.get(key) : null;
+            if (secrets != null && secrets.containsKey(key)) {
+                LOGGER.info("Secret found for user: {}, key: {}", userId, key);
+                return secrets.get(key);
+            } else {
+                LOGGER.warn("Secret not found for user: {}, key: {}", userId, key);
+                return null;
+            }
         } catch (Exception e) {
-            LOGGER.debug("Failed to read secret for user {} (might not exist): {}", userId, e.getMessage());
+            LOGGER.error("Failed to read secret for user {} (might not exist): {}", userId, e.getMessage());
             return null;
         }
     }
