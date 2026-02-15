@@ -7,6 +7,8 @@ export interface RegistrationData {
     password: string;
     firstName: string;
     lastName: string;
+    studyGoal?: string;
+    newsletterOptIn?: boolean;
 }
 
 const API_BASE = "/api/v1/auth";

@@ -62,7 +62,7 @@ public class KeycloakServiceTest {
     @Test
     public void testRegisterUserSuccess() {
         UserRegistrationRequest request = new UserRegistrationRequest(
-                "testuser", "test@example.com", "password", "Test", "User");
+                "testuser", "test@example.com", "password", "Test", "User", null, null);
 
         // Mock response for create
         Response createResponse = Response.created(URI.create("http://localhost/users/123")).build();
@@ -86,7 +86,7 @@ public class KeycloakServiceTest {
     @Test
     public void testRegisterUserAlreadyExists() {
         UserRegistrationRequest request = new UserRegistrationRequest(
-                "existing", "test@example.com", "password", "Test", "User");
+                "existing", "test@example.com", "password", "Test", "User", null, null);
 
         Response conflictResponse = Response.status(409).build();
         when(usersResourceMock.create(any(UserRepresentation.class))).thenReturn(conflictResponse);
