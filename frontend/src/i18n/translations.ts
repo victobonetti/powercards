@@ -180,6 +180,21 @@ export interface Translations {
         mfaSetupSuccess: string;
         mfaSkip: string;
         mfaRequired: string;
+        searchDecks: string;
+        ankiBridge: string;
+        yourLibrary: string;
+        importAnki: string;
+        exportAnki: string;
+        exportAll: string;
+        importDescription: string;
+        importSuccess: string;
+        importStats: string;
+        whatsNext: string;
+        studyNow: string;
+        viewDecks: string;
+        conflictDetected: string;
+        mergeDecks: string;
+        keepSeparate: string;
     };
     tags: {
         title: string;
@@ -446,6 +461,21 @@ export const translations: Record<Language, Translations> = {
             mfaSetupSuccess: "Two-factor authentication has been enabled!",
             mfaSkip: "Skip for now",
             mfaRequired: "Set up two-factor authentication to secure your account.",
+            searchDecks: "Search decks...",
+            ankiBridge: "Anki Bridge",
+            yourLibrary: "Your Library",
+            importAnki: "Import from Anki",
+            exportAnki: "Export to Anki",
+            exportAll: "Export All Decks",
+            importDescription: "Drag and drop your .apkg file here or click to browse.",
+            importSuccess: "Successfully imported!",
+            importStats: "{n} cards added, {t} tags organized",
+            whatsNext: "What's next?",
+            studyNow: "Study This Deck",
+            viewDecks: "View All Decks",
+            conflictDetected: "Conflict detected: {name}",
+            mergeDecks: "Merge with existing",
+            keepSeparate: "Keep separate",
         },
         tags: {
             title: "Tags",
@@ -710,6 +740,21 @@ export const translations: Record<Language, Translations> = {
             mfaSetupSuccess: "Autenticação em dois fatores ativada com sucesso!",
             mfaSkip: "Pular por enquanto",
             mfaRequired: "Configure a autenticação em dois fatores para proteger sua conta.",
+            searchDecks: "Procurar baralhos...",
+            ankiBridge: "Anki Bridge",
+            yourLibrary: "Sua Coleção",
+            importAnki: "Importar do Anki",
+            exportAnki: "Exportar para Anki",
+            exportAll: "Exportar Todos",
+            importDescription: "Arraste seu arquivo .apkg aqui ou clique para procurar.",
+            importSuccess: "Importado com sucesso!",
+            importStats: "{n} cartões adicionados, {t} etiquetas organizadas",
+            whatsNext: "O que deseja fazer agora?",
+            studyNow: "Estudar Este Baralho",
+            viewDecks: "Ver Todos os Baralhos",
+            conflictDetected: "Conflito detectado: {name}",
+            mergeDecks: "Mesclar com existente",
+            keepSeparate: "Manter separado",
         },
         tags: {
             title: "Etiquetas",

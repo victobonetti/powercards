@@ -1,0 +1,46 @@
+---
+- name: Deploy Data Node
+  hosts: data_node
+  become: false # User is in docker group
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Copy docker-compose-data.yaml
+      copy:
+        src: ../docker-compose-data.yaml
+        dest: /home/{{ ansible_user }}/docker-compose.yaml
+
+    - name: Login to GHCR
+      docker_login:
+        registry: ghcr.io
+        username: "{{ github_actor }}"
+        password: "{{ github_token }}"
+
+    - name: Pull images
+      command: docker compose pull
+
+    - name: Start services
+      command: docker compose up -d --remove-orphans
+
+- name: Deploy App Node
+  hosts: app_node
+  become: false
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Copy docker-compose-app.yaml
+      copy:
+        src: ../docker-compose-app.yaml
+        dest: /home/{{ ansible_user }}/docker-compose.yaml
+
+    - name: Login to GHCR
+      docker_login:
+        registry: ghcr.io
+        username: "{{ github_actor }}"
+        password: "{{ github_token }}"
+
+    - name: Pull images
+      command: docker compose pull
+
+    - name: Start services
+      command: docker compose up -d --remove-orphans

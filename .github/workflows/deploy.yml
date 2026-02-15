@@ -1,0 +1,33 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'INFRA/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
+
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: 'false'
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          INVENTORY: ${{ secrets.ANSIBLE_INVENTORY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          echo "$INVENTORY" > INFRA/ansible/inventory
+          
+          ansible-playbook -i INFRA/ansible/inventory INFRA/ansible/deploy.yml \
+            --extra-vars "github_actor=${{ github.actor }} github_token=${{ secrets.GITHUB_TOKEN }}"

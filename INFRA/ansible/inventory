@@ -1,0 +1,5 @@
+[app_node]
+# 1.2.3.4 ansible_user=opc ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[data_node]
+# 5.6.7.8 ansible_user=opc ansible_ssh_private_key_file=~/.ssh/id_rsa

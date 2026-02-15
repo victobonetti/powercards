@@ -1,4 +1,4 @@
-import { Layers, Upload, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell, Settings, Download } from "lucide-react";
+import { Layers, Pin, Tag, HelpCircle, Sparkles, Loader2, Bell, Settings, ArrowRightLeft } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 
@@ -12,8 +12,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSettings } from "@/context/SettingsContext";
 
 interface SidebarProps {
-    currentView: "upload" | "decks" | "tags" | "factory" | "export";
-    onNavigate: (view: "upload" | "decks" | "tags" | "factory" | "export") => void;
+    currentView: "bridge" | "decks" | "tags" | "factory";
+    onNavigate: (view: "bridge" | "decks" | "tags" | "factory") => void;
     className?: string;
 }
 
@@ -220,24 +220,12 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                     </div>
 
                     <div className={cn("transition-all duration-300", getItemClass([1, 6]))}>
-                        {/* We can use a dropdown or just keep them separate but grouped. 
-                             Plan says: "Consolidate... through a submenu or expandable section".
-                             For simplicity and due to "Import" being a main view ("upload"), I'll keep them but grouped under "DATA".
-                             Actually, let's group Import/Export.
-                          */}
                         <SidebarButton
-                            icon={Upload}
-                            label={t.navigation.upload} // "Import .Apkg"
-                            isActive={currentView === "upload"}
+                            icon={ArrowRightLeft}
+                            label={t.auth.ankiBridge}
+                            isActive={currentView === "bridge"}
                             isExpanded={isExpanded}
-                            onClick={() => onNavigate("upload")}
-                        />
-                        <SidebarButton
-                            icon={Download}
-                            label="Export Anki"
-                            isActive={currentView === "export"}
-                            isExpanded={isExpanded}
-                            onClick={() => onNavigate("export")}
+                            onClick={() => onNavigate("bridge")}
                         />
                     </div>
 

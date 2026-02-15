@@ -7,10 +7,10 @@ import { FlashcardFactory } from "./components/FlashcardFactory";
 import { Button } from "./components/ui/button";
 import { Layers, FileText } from "lucide-react";
 import { Layout } from "./components/Layout";
-import { UploadAnki } from "./components/UploadAnki";
 import { ThemeProvider, useTheme } from "./components/theme-provider";
 import { PageHeader } from "./components/ui/page-header";
 import { applyTheme } from "./lib/themes";
+import { AnkiBridge } from "./pages/AnkiBridge";
 
 import { WorkspaceProvider, useWorkspace } from "@/context/WorkspaceContext";
 import { FlashcardFactoryProvider } from "@/context/FlashcardFactoryContext";
@@ -25,7 +25,6 @@ import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import MfaSetupPage from "./pages/MfaSetupPage";
 import ProfilePage from "./pages/ProfilePage";
-import { AnkiExportPage } from "./pages/AnkiExportPage";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import { PaperBackground } from "./components/PaperBackground";
@@ -80,11 +79,9 @@ function App() {
                         <Route path="mfa-setup" element={<MfaSetupPage />} />
                         <Route element={<AppLayout />}>
                           {/* These paths are relative to /:lang */}
-                          <Route index element={<UploadWrapper />} />
-                          <Route path="upload" element={<Navigate to="../" replace />} />
+                          <Route index element={<AnkiBridge />} />
                           <Route path="tags" element={<TagsView />} />
                           <Route path="decks" element={<DecksWrapper />} />
-                          <Route path="export" element={<AnkiExportPage />} />
                           <Route path="factory" element={<FlashcardFactory />} />
                           <Route path="notes" element={<NotesWrapper />} />
                           <Route path="profile" element={<ProfilePage />} />
@@ -108,7 +105,7 @@ function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang } = useParams();
-  const [currentView, setCurrentView] = useState<"upload" | "decks" | "tags" | "factory" | "export">("upload");
+  const [currentView, setCurrentView] = useState<"bridge" | "decks" | "tags" | "factory">("bridge");
 
   useEffect(() => {
     // pathname includes /en/ or /pt/
@@ -118,43 +115,26 @@ function AppLayout() {
       path = path.slice(0, -1);
     }
 
-    if (path === "" || path === "/" || path === "/upload") {
-      setCurrentView("upload");
+    if (path === "" || path === "/" || path === "/bridge") {
+      setCurrentView("bridge");
     } else if (path === "/tags") {
       setCurrentView("tags");
     } else if (path === "/factory") {
       setCurrentView("factory");
-    } else if (path === "/export") {
-      setCurrentView("export");
     } else {
       setCurrentView("decks");
     }
   }, [location.pathname]);
 
-  const handleNavigate = (view: "upload" | "decks" | "tags" | "factory" | "export") => {
+  const handleNavigate = (view: "bridge" | "decks" | "tags" | "factory") => {
     const prefix = `/${lang}`;
-    if (view === "upload") navigate(`${prefix}/`);
+    if (view === "bridge") navigate(`${prefix}/`);
     else if (view === "decks") navigate(`${prefix}/decks`);
     else if (view === "tags") navigate(`${prefix}/tags`);
     else if (view === "factory") navigate(`${prefix}/factory`);
-    else if (view === "export") navigate(`${prefix}/export`);
   };
 
   return <Layout currentView={currentView} onNavigate={handleNavigate} />;
-}
-
-function UploadWrapper() {
-  const navigate = useNavigate();
-  const { lang } = useParams();
-  // Note: highlightNewDecks state lifting is tricky with this refactor. 
-  // Ideally, use context or simpler prop drill. 
-  // For now, I'll pass simple handler.
-
-  const handleUploadSuccess = () => {
-    navigate(`/${lang}/decks`, { state: { highlightNew: true } });
-  };
-
-  return <UploadAnki onUploadSuccess={handleUploadSuccess} />;
 }
 
 

@@ -1,0 +1,41 @@
+---
+- name: Setup Server
+  hosts: all
+  become: true
+  tasks:
+    - name: Update package cache
+      dnf:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Install required packages
+      dnf:
+        name:
+          - git
+          - yum-utils
+        state: present
+
+    - name: Add Docker repo
+      command: dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+
+    - name: Install Docker
+      dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
