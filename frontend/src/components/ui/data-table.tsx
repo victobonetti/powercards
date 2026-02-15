@@ -40,9 +40,11 @@ interface DataTableProps<T> {
 
     // Actions/Interaction
     onRowClick?: (item: T, e: React.MouseEvent) => void;
+    onRowDoubleClick?: (item: T, e: React.MouseEvent) => void;
     isLoading?: boolean;
     emptyMessage?: string;
     rowClassName?: (item: T) => string;
+    hideSelectionColumn?: boolean;
 }
 
 export function DataTable<T>({
@@ -63,9 +65,11 @@ export function DataTable<T>({
     isAllSelected,
     onSelectAll,
     onRowClick,
+    onRowDoubleClick,
     isLoading = false,
     emptyMessage = "No data found.",
     rowClassName,
+    hideSelectionColumn = false,
 }: DataTableProps<T>) {
 
     const handleSort = (key: string) => {
@@ -83,13 +87,38 @@ export function DataTable<T>({
         }
     };
 
+    const handleRowInteraction = (item: T, e: React.MouseEvent, key: string | number) => {
+        // Prevent interaction if clicking interactive elements
+        if (
+            (e.target as HTMLElement).closest("button") ||
+            (e.target as HTMLElement).closest("input") ||
+            (e.target as HTMLElement).closest("a")
+        )
+            return;
+
+        const id = Number(key);
+
+        if (selectionMode && onSelectionChange) {
+            if (e.ctrlKey || e.metaKey) {
+                // Toggle selection
+                const isSelected = selectedIds.includes(id);
+                handleSelectRow(id, !isSelected);
+            } else {
+                // Exclusive selection (unless Shift is implemented, defaulting to exclusive)
+                onSelectionChange([id]);
+            }
+        }
+
+        onRowClick?.(item, e);
+    };
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-1 overflow-auto scrollbar-thin">
                 <Table>
                     <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                         <TableRow>
-                            {selectionMode && (
+                            {selectionMode && !hideSelectionColumn && (
                                 <TableHead className="w-10">
                                     <input
                                         type="checkbox"
@@ -135,7 +164,7 @@ export function DataTable<T>({
                         {isLoading ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns.length + (selectionMode ? 1 : 0)}
+                                    colSpan={columns.length + (selectionMode && !hideSelectionColumn ? 1 : 0)}
                                     className="text-center h-24"
                                 >
                                     Loading...
@@ -148,20 +177,17 @@ export function DataTable<T>({
                                 return (
                                     <TableRow
                                         key={key}
+                                        data-state={isSelected ? "selected" : undefined}
                                         className={cn(
-                                            onRowClick ? "cursor-pointer hover:bg-muted/50" : "",
+                                            "transition-colors duration-300",
+                                            (onRowClick || onRowDoubleClick || selectionMode) ? "cursor-pointer hover:bg-muted/50" : "",
+                                            isSelected ? "bg-primary/5 border-l-2 border-primary" : "",
                                             rowClassName?.(item)
                                         )}
-                                        onClick={(e) => {
-                                            if (
-                                                (e.target as HTMLElement).closest("button") ||
-                                                (e.target as HTMLElement).closest("input")
-                                            )
-                                                return;
-                                            onRowClick?.(item, e);
-                                        }}
+                                        onClick={(e) => handleRowInteraction(item, e, key)}
+                                        onDoubleClick={(e) => onRowDoubleClick?.(item, e)}
                                     >
-                                        {selectionMode && (
+                                        {selectionMode && !hideSelectionColumn && (
                                             <TableCell>
                                                 <input
                                                     type="checkbox"
@@ -192,7 +218,7 @@ export function DataTable<T>({
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns.length + (selectionMode ? 1 : 0)}
+                                    colSpan={columns.length + (selectionMode && !hideSelectionColumn ? 1 : 0)}
                                     className="text-center text-muted-foreground h-24"
                                 >
                                     {emptyMessage}

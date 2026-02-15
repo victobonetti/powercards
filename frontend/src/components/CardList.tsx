@@ -276,13 +276,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                                     </div>
                                                 );
                                             },
-                                            sortKey: "sfld" // Backend usually uses 'sfld' (sort field) for note content, verifying with sort logic: previous code toggled 'sfld'?? No, checking previous code: onClick={() => toggleSort("tags")} for tags, but CardList previously didn't sort by content? 
-                                            // Wait, looking at lines 284-293 in original file: 
-                                            // ID sort is 'id'. 
-                                            // Tags sort is 'tags'.
-                                            // Note Content didn't have sort enabled in previous code.
-                                            // I'll leave sortKey undefined for now to match behavior, or add if backend supports.
-                                            // Update: NoteCRUD uses 'sfld', CardList previously didn't show sort icon on Note Content.
+                                            sortKey: "sfld"
                                         },
                                         {
                                             header: "Tags",
@@ -338,7 +332,8 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
 
                                     // Row Interaction
                                     onRowClick={(card) => handleView(card)}
-                                    rowClassName={(card) => editingCard?.id === card.id ? "bg-muted border-l-4 border-l-primary" : ""}
+                                    rowClassName={(card) => editingCard?.id === card.id ? "bg-primary/5 border-l-2 border-primary" : ""}
+                                    hideSelectionColumn={true}
                                     isLoading={loading}
                                     emptyMessage="No cards found."
                                 />
@@ -353,6 +348,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                         <NoteDetail
                             noteId={editingCard.noteId || null}
                             onSaved={handleSaved}
+                            onDraftChange={() => fetchCards(currentPage)} // Refresh to show draft indicator
                             onClose={() => setEditingCard(null)}
                         />
                     </ResizableSidebar>

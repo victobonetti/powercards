@@ -161,11 +161,23 @@ export function SettingsModal({ open, onOpenChange, defaultTab = "general" }: Se
     const handleSaveAi = async () => {
         setLoading(true);
         try {
+            // Test connection first
+            if (aiProvider && aiApiKey) {
+                const { testAIConnection } = await import("@/lib/api");
+                const success = await testAIConnection(aiProvider, aiApiKey);
+                if (!success) {
+                    toast({ title: "Connection Failed", description: "Could not connect to AI provider with this key.", variant: "destructive" });
+                    setLoading(false);
+                    return;
+                }
+            }
+
             const updated = await updateAiSettings(aiProvider, aiApiKey);
             updateProfileLocally(updated);
             setAiApiKey("");
             setHasKey(true);
             toast({ title: t.profile.success, description: t.aiSettings.saved });
+            onOpenChange(false);
         } catch (error) {
             toast({ title: t.profile.error, description: t.aiSettings.saveFailed, variant: "destructive" });
         } finally {

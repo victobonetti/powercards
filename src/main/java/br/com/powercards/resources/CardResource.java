@@ -85,8 +85,26 @@ public class CardResource {
 
         long total = query.count();
         List<Card> cards = query.page(page - 1, perPage).list();
+
+        // Optimized: Batch fetch draft existence for linked notes
+        java.util.Set<Long> notesWithDrafts = new java.util.HashSet<>();
+        if (!cards.isEmpty()) {
+            java.util.List<Long> noteIds = cards.stream()
+                    .filter(c -> c.note != null)
+                    .map(c -> c.note.id)
+                    .distinct()
+                    .toList();
+
+            if (!noteIds.isEmpty()) {
+                // We just need to know if a draft exists for these notes
+                java.util.List<br.com.powercards.model.NoteDraft> drafts = br.com.powercards.model.NoteDraft
+                        .list("note.id in ?1", noteIds);
+                drafts.forEach(d -> notesWithDrafts.add(d.note.id));
+            }
+        }
+
         List<CardResponse> data = cards.stream()
-                .map(this::toResponse)
+                .map(c -> toResponse(c, c.note != null && notesWithDrafts.contains(c.note.id)))
                 .toList();
 
         long totalPages = (total + perPage - 1) / perPage;
@@ -102,6 +120,8 @@ public class CardResource {
                 builder.queryParam("search", search);
             if (sort != null)
                 builder.queryParam("sort", sort);
+            if (deckId != null)
+                builder.queryParam("deckId", deckId);
             nextPageUri = builder.build().toString();
         }
 
@@ -112,6 +132,8 @@ public class CardResource {
             lastPageBuilder.queryParam("search", search);
         if (sort != null)
             lastPageBuilder.queryParam("sort", sort);
+        if (deckId != null)
+            lastPageBuilder.queryParam("deckId", deckId);
         String lastPageUri = lastPageBuilder.build().toString();
 
         PaginationMeta meta = new PaginationMeta(total, page, nextPageUri, lastPageUri);
@@ -128,7 +150,7 @@ public class CardResource {
         if (card == null) {
             throw new NotFoundException();
         }
-        return toResponse(card);
+        return toResponse(card, false);
     }
 
     @POST
@@ -139,7 +161,7 @@ public class CardResource {
         Card card = new Card();
         updateEntity(card, cardRequest);
         card.persist();
-        return Response.status(Response.Status.CREATED).entity(toResponse(card)).build();
+        return Response.status(Response.Status.CREATED).entity(toResponse(card, false)).build();
     }
 
     @PUT
@@ -154,7 +176,7 @@ public class CardResource {
             throw new NotFoundException();
         }
         updateEntity(entity, cardRequest);
-        return toResponse(entity);
+        return toResponse(entity, false);
     }
 
     @DELETE
@@ -227,7 +249,7 @@ public class CardResource {
         }
     }
 
-    private CardResponse toResponse(Card card) {
+    private CardResponse toResponse(Card card, boolean isDraft) {
         String noteField = "";
         if (card.note != null && card.note.flds != null) {
             String[] fields = card.note.flds.split("\u001f");
@@ -265,6 +287,6 @@ public class CardResource {
                 card.data,
                 noteField,
                 card.note != null ? card.note.tags : "",
-                card.note != null && br.com.powercards.model.NoteDraft.count("note.id", card.note.id) > 0);
+                isDraft);
     }
 }

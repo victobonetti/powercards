@@ -66,4 +66,26 @@ public class AIResource {
                     .build();
         }
     }
+
+    @POST
+    @Path("/test")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response testConnection(java.util.Map<String, String> settings) {
+        String provider = settings.get("provider");
+        String apiKey = settings.get("apiKey");
+
+        if (provider == null || apiKey == null) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        boolean success = userAIProxyService.testConnection(provider, apiKey);
+        if (success) {
+            return Response.ok(java.util.Map.of("success", true)).build();
+        } else {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(java.util.Map.of("success", false, "message", "Connection failed"))
+                    .build();
+        }
+    }
 }

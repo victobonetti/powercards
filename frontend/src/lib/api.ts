@@ -86,3 +86,21 @@ export const enhanceModel = async (contents: string[]): Promise<string[]> => {
     return response.data;
 };
 
+export const testAIConnection = async (provider: string, apiKey: string): Promise<boolean> => {
+    try {
+        const response = await axiosInstance.post<{ success: boolean; message?: string }>(
+            '/v1/ai/test',
+            { provider, apiKey },
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        return response.data.success;
+    } catch (error) {
+        console.error("AI Connection Test Failed", error);
+        return false;
+    }
+};
+

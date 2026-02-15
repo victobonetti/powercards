@@ -441,11 +441,15 @@ export function NoteCRUD() {
                                     }}
 
                                     // Row Interaction
-                                    onRowClick={(note) => handleViewClick(note)}
+                                    onRowDoubleClick={(note) => handleViewClick(note)}
+                                    hideSelectionColumn={true}
                                     rowClassName={(note) => editingNote?.id === note.id ? "bg-muted border-l-4 border-l-primary" : ""}
                                     isLoading={loading}
                                     emptyMessage={t.notes.empty}
                                 />
+                                <div className="p-2 text-xs text-muted-foreground text-center border-t border-muted/20">
+                                    Tip: Use Ctrl+Click to select multiple. Double-click to open.
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -458,6 +462,9 @@ export function NoteCRUD() {
                             noteId={editingNote.id || null}
                             onSaved={() => fetchNotes(currentPage)}
                             onClose={() => setEditingNote(null)}
+                            onDraftChange={() => fetchNotes(currentPage)}
+                            onEnhanceStart={(id) => setEnhancingNoteIds(prev => [...prev, id])}
+                            onEnhanceEnd={(id) => setEnhancingNoteIds(prev => prev.filter(nid => nid !== id))}
                         />
                     </ResizableSidebar>
                 )}

@@ -49,6 +49,27 @@ paths:
       summary: Enhance Model
       tags:
       - AI Resource
+  /v1/ai/test:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Test Connection
+      tags:
+      - AI Resource
   /v1/anki/export:
     post:
       summary: Export Anki package

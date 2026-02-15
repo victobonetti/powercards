@@ -17,8 +17,11 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 
 interface NoteDetailProps {
     noteId: number | null;
-    onSaved: () => void;
     onClose: () => void;
+    onSaved?: () => void;
+    onDraftChange?: () => void; // Notify parent of draft status change
+    onEnhanceStart?: (noteId: number) => void;
+    onEnhanceEnd?: (noteId: number) => void;
     className?: string;
 }
 
@@ -36,7 +39,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailProps) {
+export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhanceEnd, className }: NoteDetailProps) {
     const [tags, setTags] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingDetails, setFetchingDetails] = useState(false);
@@ -69,13 +72,24 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
     const initialTags = useRef<string[]>([]);
 
     // Reset state when noteId changes
+    // Reset first load when noteId changes
     useEffect(() => {
         if (noteId) {
             isFirstLoad.current = true;
-            setEditingField(null);
+            initialLoadId.current = noteId;
+            setNote(null);
+            setFieldValues([]);
+            setTags([]);
+            setIsDraft(false);
+            setHistory([]);
+            setFuture([]);
+            setIsDirty(false);
+            checkDirty([], [], [], []);
             fetchNoteDetails(noteId);
         } else {
-            resetState();
+            setNote(null);
+            setFieldValues([]);
+            setTags([]);
         }
     }, [noteId]);
 
@@ -102,6 +116,7 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
             setNote(noteRes.data);
             const isDraftNote = !!noteRes.data.isDraft;
             setIsDraft(isDraftNote);
+            onDraftChange?.(isDraftNote);
 
             // Set tags from note
             const tagString = noteRes.data.tags || "";
@@ -121,7 +136,8 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
             }
 
             // Recalculate dirty state
-            checkDirty(currentFields, tgs, currentFields, tgs);
+            // IMPORTANT: Reset dirty state explicitly after fetch
+            setIsDirty(false);
 
             // 4. If Draft, fetch original for History
             if (isDraftNote) {
@@ -144,25 +160,51 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
             toast({ title: "Error", description: "Failed to load note details", variant: "destructive" });
         } finally {
             setFetchingDetails(false);
-            // Small delay to prevent auto-save triggering immediately after load
+            // Critical: Only unset isFirstLoad after we are sure data is set
+            // and give a small tick for the debounced values to stabilize if needed
             setTimeout(() => {
-                isFirstLoad.current = false;
-            }, 500);
+                if (initialLoadId.current === id) {
+                    isFirstLoad.current = false;
+                }
+            }, 600);
         }
     };
 
     const checkDirty = (currentFlds: string[], currentTgs: string[], initFlds: string[], initTgs: string[]) => {
-        const fldsDirty = joinAnkiFields(currentFlds) !== joinAnkiFields(initFlds);
-        const tagsDirty = currentTgs.join(" ") !== initTgs.join(" ");
-        setIsDirty(fldsDirty || tagsDirty);
-        return fldsDirty || tagsDirty;
+        // Deep compare
+        const fldsDirty = JSON.stringify(currentFlds) !== JSON.stringify(initFlds);
+        const tagsDirty = JSON.stringify(currentTgs) !== JSON.stringify(initTgs);
+
+        // If field values are empty and initial are empty, it's not dirty
+        // This handles cases where splitting empty string gives [""] vs []
+        const cleanCurrentFlds = currentFlds.filter(f => f !== "");
+        const cleanInitFlds = initFlds.filter(f => f !== "");
+        const fldsReallyDirty = JSON.stringify(cleanCurrentFlds) !== JSON.stringify(cleanInitFlds);
+
+        const isReallyDirty = fldsReallyDirty || tagsDirty;
+        setIsDirty(isReallyDirty);
+        return isReallyDirty;
     };
 
     // Auto-save draft effect
     useEffect(() => {
-        if (isFirstLoad.current || !noteId || !note) return;
+        if (!noteId || !note) return;
 
-        // Update dirty state on every change
+        // Ensure we don't trigger save on initial load or if nothing changed
+        if (isFirstLoad.current) {
+            return;
+        }
+
+        // Additional safety: if we are loading, don't save
+        if (fetchingDetails) return;
+
+        // Double check against initial state
+        // If the current debounced state matches existing draft or original note, do not save new draft
+        // Logic:
+        // 1. If currently Draft -> We are editing a draft. Auto-save updates the draft.
+        // 2. If currently NOT Draft -> We are editing original. Auto-save CREATES a draft.
+        // In both cases, we only save if content != initial content loaded.
+
         const dirty = checkDirty(debouncedFields, debouncedTags, initialFields.current, initialTags.current);
 
         if (dirty) {
@@ -172,6 +214,11 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
 
     const saveDraft = async () => {
         if (!noteId || !note) return;
+        // Verify dirty one last time to prevent race conditions
+        const isActuallyDirty = JSON.stringify(debouncedFields) !== JSON.stringify(initialFields.current) ||
+            JSON.stringify(debouncedTags) !== JSON.stringify(initialTags.current);
+
+        if (!isActuallyDirty) return;
 
         setSavingDraft(true);
         try {
@@ -183,6 +230,9 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
 
             setIsDraft(true);
             setLastSaved(new Date());
+            // Do NOT update initialRefs here, because "Undo" needs to go back to original state?
+            // Actually, if we save draft, the "base" is still the original note (if we discard).
+            // So initialRefs should remain pointing to the state we reverted to if we discard.
         } catch (error) {
             console.error("Failed to save draft", error);
         } finally {
@@ -357,6 +407,20 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
         }
     };
 
+    useEffect(() => {
+        return () => {
+            if (noteId && loading) {
+                // If we unmount while loading, we should try to clear the parent's loading state
+                // However, we can't efficiently notify the parent to 'cancel' the specific spin logic if it's based on ID.
+                // But we CAN ensure we call onEnhanceEnd if strict mode double invocation isn't the issue.
+                // Actually, the issue description says "if i play the enhancement it never stop from loading".
+                // This suggests onEnhanceEnd is not called if, say, the user closes the modal/sidebar?
+                // The sidebar unmounting destroys this component.
+                onEnhanceEnd?.(noteId);
+            }
+        };
+    }, [noteId, loading]); // Dependency on loading ensures we only trigger if it WAS loading
+
     const handleEnhanceModel = async () => {
         if (!profile?.hasAiApiKey) {
             setShowAIKeyModal(true);
@@ -367,6 +431,7 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
             return;
         }
 
+        if (noteId) onEnhanceStart?.(noteId);
         saveToHistory();
         toast({ title: "Enhancing Note...", description: "AI is improving all fields." });
         setLoading(true);
@@ -387,6 +452,7 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
             }
         } finally {
             setLoading(false);
+            if (noteId) onEnhanceEnd?.(noteId);
         }
     };
 
@@ -452,43 +518,48 @@ export function NoteDetail({ noteId, onSaved, onClose, className }: NoteDetailPr
                                     <TooltipTrigger asChild>
                                         <Button
                                             variant="ghost"
-                                            size="sm"
+                                            size="icon"
                                             onClick={handleDiscardDraft}
-                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            className="text-destructive hover:bg-destructive/10"
                                             disabled={loading}
                                         >
-                                            <Trash2 className="h-4 w-4 mr-2" />
-                                            Discard Draft
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Revert to original note</TooltipContent>
+                                    <TooltipContent>Discard Draft</TooltipContent>
                                 </Tooltip>
                             )}
 
                             <div className="w-px h-4 bg-border mx-1" />
 
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2 text-primary border-primary/20 hover:bg-primary/5 hidden md:flex"
-                                onClick={handleEnhanceModel}
-                                disabled={loading}
-                            >
-                                <Sparkles className="h-4 w-4" />
-                                Enhance
-                            </Button>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-primary hover:bg-primary/10"
+                                        onClick={handleEnhanceModel}
+                                        disabled={loading}
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Enhance AI</TooltipContent>
+                            </Tooltip>
 
-                            <div className="w-px h-4 bg-border mx-1 hidden md:block" />
-
-                            <Button
-                                size="sm"
-                                onClick={handleSave}
-                                disabled={loading || !isDirty}
-                                title={!isDirty ? "No changes to save" : "Save changes"}
-                            >
-                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
-                                Save
-                            </Button>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={handleSave}
+                                        disabled={loading || !isDirty}
+                                    >
+                                        <Save className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Save (Ctrl+S)</TooltipContent>
+                            </Tooltip>
 
                             <Button variant="ghost" size="icon" onClick={onClose} title="Close">
                                 <X className="h-4 w-4" />

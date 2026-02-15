@@ -85,8 +85,18 @@ public class NoteResource {
 
         long total = query.count();
         List<Note> notes = query.page(page - 1, perPage).list();
+        // Optimized: Batch fetch draft existence
+        java.util.Set<Long> notesWithDrafts = new java.util.HashSet<>();
+        if (!notes.isEmpty()) {
+            java.util.List<Long> ids = notes.stream().map(n -> n.id).toList();
+            // We just need to know if a draft exists
+            java.util.List<br.com.powercards.model.NoteDraft> drafts = br.com.powercards.model.NoteDraft
+                    .list("note.id in ?1", ids);
+            drafts.forEach(d -> notesWithDrafts.add(d.note.id));
+        }
+
         List<NoteResponse> data = notes.stream()
-                .map(this::toResponse)
+                .map(n -> toResponse(n, notesWithDrafts.contains(n.id)))
                 .toList();
 
         long totalPages = (total + perPage - 1) / perPage;
@@ -152,7 +162,7 @@ public class NoteResource {
             }
         }
 
-        return toResponse(note);
+        return toResponse(note, false);
     }
 
     @jakarta.inject.Inject
@@ -187,7 +197,7 @@ public class NoteResource {
         note.persist();
         syncTags(note.tags);
         System.out.println("DEBUG: Created note with ID: " + note.id);
-        return Response.status(Response.Status.CREATED).entity(toResponse(note)).build();
+        return Response.status(Response.Status.CREATED).entity(toResponse(note, false)).build();
     }
 
     @PUT
@@ -216,7 +226,7 @@ public class NoteResource {
         // Clear draft on save
         br.com.powercards.model.NoteDraft.delete("note.id", id);
 
-        return toResponse(entity);
+        return toResponse(entity, false);
     }
 
     @POST
@@ -449,7 +459,7 @@ public class NoteResource {
         }
     }
 
-    private NoteResponse toResponse(Note note) {
+    private NoteResponse toResponse(Note note, boolean isDraft) {
         return new NoteResponse(
                 note.id,
                 note.guid,
@@ -462,6 +472,6 @@ public class NoteResource {
                 note.csum,
                 note.flags,
                 note.data,
-                false);
+                isDraft);
     }
 }

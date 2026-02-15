@@ -1170,6 +1170,42 @@ export const AIResourceApiAxiosParamCreator = function (configuration?: Configur
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @summary Test Connection
+         * @param {{ [key: string]: string; }} requestBody 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AiTestPost: async (requestBody: { [key: string]: string; }, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'requestBody' is not null or undefined
+            assertParamExists('v1AiTestPost', 'requestBody', requestBody)
+            const localVarPath = `/v1/ai/test`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(requestBody, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -1206,6 +1242,19 @@ export const AIResourceApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['AIResourceApi.v1AiEnhanceModelPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * 
+         * @summary Test Connection
+         * @param {{ [key: string]: string; }} requestBody 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AiTestPost(requestBody: { [key: string]: string; }, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AiTestPost(requestBody, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AIResourceApi.v1AiTestPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -1235,6 +1284,16 @@ export const AIResourceApiFactory = function (configuration?: Configuration, bas
          */
         v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig): AxiosPromise<any> {
             return localVarFp.v1AiEnhanceModelPost(requestBody, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Test Connection
+         * @param {{ [key: string]: string; }} requestBody 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AiTestPost(requestBody: { [key: string]: string; }, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AiTestPost(requestBody, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1268,6 +1327,18 @@ export class AIResourceApi extends BaseAPI {
      */
     public v1AiEnhanceModelPost(requestBody: Array<string>, options?: RawAxiosRequestConfig) {
         return AIResourceApiFp(this.configuration).v1AiEnhanceModelPost(requestBody, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Test Connection
+     * @param {{ [key: string]: string; }} requestBody 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AIResourceApi
+     */
+    public v1AiTestPost(requestBody: { [key: string]: string; }, options?: RawAxiosRequestConfig) {
+        return AIResourceApiFp(this.configuration).v1AiTestPost(requestBody, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -221,6 +221,80 @@ public class UserAIProxyService {
         }
     }
 
+    public boolean testConnection(String provider, String apiKey) {
+        try {
+            return switch (provider) {
+                case "openai" -> testOpenAI(apiKey);
+                case "gemini" -> testGemini(apiKey);
+                case "deepseek" -> testDeepSeek(apiKey);
+                default -> false;
+            };
+        } catch (Exception e) {
+            LOGGER.error("Test connection failed for provider: " + provider, e);
+            return false;
+        }
+    }
+
+    private boolean testOpenAI(String apiKey) throws Exception {
+        var requestBody = objectMapper.writeValueAsString(Map.of(
+                "model", "gpt-4o-mini",
+                "messages", List.of(Map.of("role", "user", "content", "Say Hi")),
+                "max_tokens", 1));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.openai.com/v1/chat/completions"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + apiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            LOGGER.warn("OpenAI Test Failed: " + response.body());
+        }
+        return response.statusCode() == 200;
+    }
+
+    private boolean testGemini(String apiKey) throws Exception {
+        var requestBody = objectMapper.writeValueAsString(Map.of(
+                "contents", List.of(Map.of("parts", List.of(Map.of("text", "Say Hi")))),
+                "generationConfig", Map.of("maxOutputTokens", 1)));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(
+                        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
+                                + apiKey))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            LOGGER.warn("Gemini Test Failed: " + response.body());
+        }
+        return response.statusCode() == 200;
+    }
+
+    private boolean testDeepSeek(String apiKey) throws Exception {
+        var requestBody = objectMapper.writeValueAsString(Map.of(
+                "model", "deepseek-chat",
+                "messages", List.of(Map.of("role", "user", "content", "Say Hi")),
+                "max_tokens", 1));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.deepseek.com/chat/completions"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + apiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            LOGGER.warn("DeepSeek Test Failed: " + response.body());
+        }
+        return response.statusCode() == 200;
+    }
+
     /**
      * Parse a JSON array from the AI response text.
      * Handles cases where the AI wraps the array in markdown code blocks.
