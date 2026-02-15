@@ -12,6 +12,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import br.com.powercards.client.KeycloakTokenClient;
 import br.com.powercards.dto.LoginRequest;
 import br.com.powercards.dto.TokenResponse;
+import br.com.powercards.dto.ExchangeCodeRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +105,29 @@ public class AuthResource {
         } catch (Exception e) {
             LOGGER.error("Refresh unexpected error", e);
             return Response.status(Response.Status.UNAUTHORIZED).entity("Refresh failed").build();
+        }
+    }
+
+    @POST
+    @Path("/exchange")
+    @PermitAll
+    public Response exchange(ExchangeCodeRequest request) {
+        LOGGER.info("Exchange code attempt");
+        try {
+            TokenResponse token = keycloakTokenClient.exchangeCode(
+                    targetRealm,
+                    clientId,
+                    request.code(),
+                    request.redirectUri(),
+                    "authorization_code");
+            LOGGER.info("Exchange successful");
+            return Response.ok(token).build();
+        } catch (WebApplicationException e) {
+            LOGGER.warn("Exchange failed: {}", e.getMessage());
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Exchange failed").build();
+        } catch (Exception e) {
+            LOGGER.error("Exchange unexpected error", e);
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Exchange failed").build();
         }
     }
 }

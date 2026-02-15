@@ -176,6 +176,35 @@
         "tags" : [ "Anki Resource" ]
       }
     },
+    "/v1/auth/exchange" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExchangeCodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Exchange",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
     "/v1/auth/login" : {
       "post" : {
         "requestBody" : {
@@ -1989,6 +2018,17 @@
           "lastStudied" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "ExchangeCodeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "redirect_uri" : {
+            "type" : "string"
           }
         }
       },

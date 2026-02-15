@@ -15,6 +15,7 @@ interface UserInfo {
 interface AuthContextType {
     isAuthenticated: boolean;
     login: (username: string, password: string) => Promise<void>;
+    loginWithGoogle: () => void;
     logout: () => void;
     token: string | null;
     error: string | null;
@@ -29,6 +30,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const LOGIN_URL = '/api/v1/auth/login';
 const REFRESH_URL = '/api/v1/auth/refresh';
+const EXCHANGE_URL = '/api/v1/auth/exchange';
+
+// Keycloak config
+const KC_AUTH_URL = 'http://localhost:8081/realms/powercards/protocol/openid-connect/auth';
+const CLIENT_ID = 'cli-web-pwc';
 
 // Decode JWT payload (base64url encoded)
 function decodeJwtPayload(token: string): UserInfo | null {
@@ -258,6 +264,63 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [token, refreshProfile]);
 
+    // Handle OAuth Callback (exchange code for tokens)
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (code && !isAuthenticated && !isLoading) {
+            const exchangeCode = async () => {
+                setIsLoading(true);
+                setError(null);
+                try {
+                    // Redirect URI must match what was used in the authorize call
+                    const redirectUri = window.location.origin + window.location.pathname;
+                    const response = await axios.post(EXCHANGE_URL, {
+                        code,
+                        redirect_uri: redirectUri
+                    }, {
+                        _skipAuthRefresh: true,
+                    } as any);
+
+                    if (response.data?.access_token) {
+                        localStorage.setItem("auth_token", response.data.access_token);
+                        if (response.data.refresh_token) {
+                            localStorage.setItem("refresh_token", response.data.refresh_token);
+                        }
+                        setToken(response.data.access_token);
+                        setIsAuthenticated(true);
+
+                        // Clear the code from URL
+                        const newUrl = window.location.pathname;
+                        window.history.replaceState({}, '', newUrl);
+                    } else {
+                        setError("Invalid response during code exchange");
+                    }
+                } catch (err: any) {
+                    console.error("Code exchange failed", err);
+                    setError("Google login failed. Please try again.");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            exchangeCode();
+        }
+    }, [isAuthenticated, isLoading]);
+
+    const loginWithGoogle = useCallback(() => {
+        const redirectUri = window.location.origin + window.location.pathname;
+        const authUrl = new URL(KC_AUTH_URL);
+        authUrl.searchParams.append('client_id', CLIENT_ID);
+        authUrl.searchParams.append('response_type', 'code');
+        authUrl.searchParams.append('scope', 'openid email profile');
+        authUrl.searchParams.append('redirect_uri', redirectUri);
+        authUrl.searchParams.append('kc_idp_hint', 'google');
+
+        window.location.href = authUrl.toString();
+    }, []);
+
     const login = async (username: string, password: string) => {
         setIsLoading(true);
         setError(null);
@@ -307,7 +370,7 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, token, error, isLoading, user, profile, refreshProfile, updateProfileLocally }}>
+        <AuthContext.Provider value={{ isAuthenticated, login, loginWithGoogle, logout, token, error, isLoading, user, profile, refreshProfile, updateProfileLocally }}>
             {children}
         </AuthContext.Provider>
     );
