@@ -673,6 +673,25 @@ export interface LoginRequest {
 /**
  * 
  * @export
+ * @interface MfaVerifyRequest
+ */
+export interface MfaVerifyRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof MfaVerifyRequest
+     */
+    'secret'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MfaVerifyRequest
+     */
+    'code'?: string;
+}
+/**
+ * 
+ * @export
  * @interface NoteRequest
  */
 export interface NoteRequest {
@@ -1125,6 +1144,18 @@ export interface UserRegistrationRequest {
      * @memberof UserRegistrationRequest
      */
     'lastName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRegistrationRequest
+     */
+    'studyGoal'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof UserRegistrationRequest
+     */
+    'newsletterOptIn'?: boolean;
 }
 /**
  * 
@@ -2018,6 +2049,76 @@ export const AuthResourceApiAxiosParamCreator = function (configuration?: Config
     return {
         /**
          * 
+         * @summary Check Email
+         * @param {string} [email] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthCheckEmailGet: async (email?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/auth/check-email`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (email !== undefined) {
+                localVarQueryParameter['email'] = email;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Check Username
+         * @param {string} [username] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthCheckUsernameGet: async (username?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/auth/check-username`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (username !== undefined) {
+                localVarQueryParameter['username'] = username;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Exchange
          * @param {ExchangeCodeRequest} exchangeCodeRequest 
          * @param {*} [options] Override http request option.
@@ -2082,6 +2183,132 @@ export const AuthResourceApiAxiosParamCreator = function (configuration?: Config
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(loginRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Mfa Disable
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthMfaDisablePost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/auth/mfa/disable`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Mfa Setup
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthMfaSetupPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/auth/mfa/setup`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Mfa Status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthMfaStatusGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/v1/auth/mfa/status`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Mfa Verify
+         * @param {MfaVerifyRequest} mfaVerifyRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthMfaVerifyPost: async (mfaVerifyRequest: MfaVerifyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'mfaVerifyRequest' is not null or undefined
+            assertParamExists('v1AuthMfaVerifyPost', 'mfaVerifyRequest', mfaVerifyRequest)
+            const localVarPath = `/v1/auth/mfa/verify`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(mfaVerifyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -2171,6 +2398,32 @@ export const AuthResourceApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Check Email
+         * @param {string} [email] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthCheckEmailGet(email?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthCheckEmailGet(email, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthCheckEmailGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Check Username
+         * @param {string} [username] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthCheckUsernameGet(username?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthCheckUsernameGet(username, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthCheckUsernameGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Exchange
          * @param {ExchangeCodeRequest} exchangeCodeRequest 
          * @param {*} [options] Override http request option.
@@ -2193,6 +2446,55 @@ export const AuthResourceApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthLoginPost(loginRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthLoginPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Mfa Disable
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthMfaDisablePost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthMfaDisablePost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthMfaDisablePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Mfa Setup
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthMfaSetupPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthMfaSetupPost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthMfaSetupPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Mfa Status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthMfaStatusGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthMfaStatusGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthMfaStatusGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Mfa Verify
+         * @param {MfaVerifyRequest} mfaVerifyRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1AuthMfaVerifyPost(mfaVerifyRequest: MfaVerifyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1AuthMfaVerifyPost(mfaVerifyRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthResourceApi.v1AuthMfaVerifyPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2233,6 +2535,26 @@ export const AuthResourceApiFactory = function (configuration?: Configuration, b
     return {
         /**
          * 
+         * @summary Check Email
+         * @param {string} [email] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthCheckEmailGet(email?: string, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthCheckEmailGet(email, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Check Username
+         * @param {string} [username] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthCheckUsernameGet(username?: string, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthCheckUsernameGet(username, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Exchange
          * @param {ExchangeCodeRequest} exchangeCodeRequest 
          * @param {*} [options] Override http request option.
@@ -2250,6 +2572,43 @@ export const AuthResourceApiFactory = function (configuration?: Configuration, b
          */
         v1AuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
             return localVarFp.v1AuthLoginPost(loginRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Mfa Disable
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthMfaDisablePost(options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthMfaDisablePost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Mfa Setup
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthMfaSetupPost(options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthMfaSetupPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Mfa Status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthMfaStatusGet(options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthMfaStatusGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Mfa Verify
+         * @param {MfaVerifyRequest} mfaVerifyRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1AuthMfaVerifyPost(mfaVerifyRequest: MfaVerifyRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.v1AuthMfaVerifyPost(mfaVerifyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2283,6 +2642,30 @@ export const AuthResourceApiFactory = function (configuration?: Configuration, b
 export class AuthResourceApi extends BaseAPI {
     /**
      * 
+     * @summary Check Email
+     * @param {string} [email] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthCheckEmailGet(email?: string, options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthCheckEmailGet(email, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Check Username
+     * @param {string} [username] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthCheckUsernameGet(username?: string, options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthCheckUsernameGet(username, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Exchange
      * @param {ExchangeCodeRequest} exchangeCodeRequest 
      * @param {*} [options] Override http request option.
@@ -2303,6 +2686,51 @@ export class AuthResourceApi extends BaseAPI {
      */
     public v1AuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig) {
         return AuthResourceApiFp(this.configuration).v1AuthLoginPost(loginRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Mfa Disable
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthMfaDisablePost(options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthMfaDisablePost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Mfa Setup
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthMfaSetupPost(options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthMfaSetupPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Mfa Status
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthMfaStatusGet(options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthMfaStatusGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Mfa Verify
+     * @param {MfaVerifyRequest} mfaVerifyRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthResourceApi
+     */
+    public v1AuthMfaVerifyPost(mfaVerifyRequest: MfaVerifyRequest, options?: RawAxiosRequestConfig) {
+        return AuthResourceApiFp(this.configuration).v1AuthMfaVerifyPost(mfaVerifyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -97,13 +97,89 @@ export interface Translations {
     };
     auth: {
         loginTitle: string;
-        registerTitle: string;
-        email: string;
-        password: string;
-        confirmPassword: string;
-        submit: string;
-        alreadyHaveAccount: string;
+        welcomeBack: string;
+        signInDescription: string;
+        emailLabel: string;
+        passwordLabel: string;
+        emailPlaceholder: string;
+        passwordPlaceholder: string;
+        signInButton: string;
+        orContinueWith: string;
+        continueWithGoogle: string;
         dontHaveAccount: string;
+        registerNow: string;
+
+        registerTitle: string;
+        startJourney: string;
+        joinThousands: string;
+        stepLabel: string;
+        authStep: string;
+        profileStep: string;
+        persoStep: string;
+
+        firstNameLabel: string;
+        lastNameLabel: string;
+        usernameLabel: string;
+        firstNamePlaceholder: string;
+        lastNamePlaceholder: string;
+        usernamePlaceholder: string;
+
+        learnGoalLabel: string;
+        learnGoalPlaceholder: string;
+        newsletter: string;
+        newsletterDetail: string;
+        termsAccept: string;
+        termsOfService: string;
+        privacyPolicy: string;
+        and: string;
+        createAccount: string;
+
+        welcomeHeadline: string;
+        successSubtext: string;
+        redirecting: string;
+        goLogin: string;
+
+        looksGood: string;
+        usernameGood: string;
+        usernameHelp: string;
+
+        weak: string;
+        fair: string;
+        good: string;
+        strong: string;
+        weakHint: string;
+        fairHint: string;
+        goodHint: string;
+        strongHint: string;
+        alreadyHaveAccount: string;
+
+        emailTaken: string;
+        usernameTaken: string;
+        checking: string;
+
+        forgotPassword: string;
+        resetPasswordTitle: string;
+        resetPasswordDescription: string;
+        sendResetLink: string;
+        checkYourEmail: string;
+        checkYourEmailDescription: string;
+        backToLogin: string;
+
+        mfaTitle: string;
+        mfaDescription: string;
+        mfaEnabled: string;
+        mfaDisabled: string;
+        enableMfa: string;
+        disableMfa: string;
+        mfaSetupTitle: string;
+        mfaSetupDescription: string;
+        mfaScanQr: string;
+        mfaEnterCode: string;
+        mfaCodePlaceholder: string;
+        mfaVerify: string;
+        mfaSetupSuccess: string;
+        mfaSkip: string;
+        mfaRequired: string;
     };
     tags: {
         title: string;
@@ -143,6 +219,7 @@ export interface Translations {
         uploading: string;
         success: string;
         error: string;
+        security: string;
     };
     aiSettings: {
         title: string;
@@ -286,13 +363,89 @@ export const translations: Record<Language, Translations> = {
         },
         auth: {
             loginTitle: "Login",
-            registerTitle: "Create Account",
-            email: "Email",
-            password: "Password",
-            confirmPassword: "Confirm Password",
-            submit: "Submit",
-            alreadyHaveAccount: "Already have an account? Login",
-            dontHaveAccount: "Don't have an account? Register",
+            welcomeBack: "Welcome back",
+            signInDescription: "Please enter your details to sign in.",
+            emailLabel: "Email address",
+            passwordLabel: "Password",
+            emailPlaceholder: "name@example.com",
+            passwordPlaceholder: "Enter your password",
+            signInButton: "Sign in",
+            orContinueWith: "OR CONTINUE WITH",
+            continueWithGoogle: "Continue with Google",
+            dontHaveAccount: "Don't have an account?",
+            registerNow: "Register now",
+
+            registerTitle: "Create your account",
+            startJourney: "Start your learning journey today.",
+            joinThousands: "Join thousands of learners using AI-powered flashcards to master any subject, faster.",
+            stepLabel: "STEP {step} OF 3 — {name}",
+            authStep: "AUTHENTICATION",
+            profileStep: "PROFILE",
+            persoStep: "PERSONALIZATION",
+
+            firstNameLabel: "First name",
+            lastNameLabel: "Last name",
+            usernameLabel: "Username",
+            firstNamePlaceholder: "John",
+            lastNamePlaceholder: "Doe",
+            usernamePlaceholder: "johndoe",
+
+            learnGoalLabel: "What are you studying?",
+            learnGoalPlaceholder: "e.g., Medical boards, Spanish, Bar exam...",
+            newsletter: "Keep me updated",
+            newsletterDetail: "Minor updates and tips to improve your learning.",
+            termsAccept: "I agree to the",
+            termsOfService: "Terms of Service",
+            privacyPolicy: "Privacy Policy",
+            and: "and",
+            createAccount: "Create Account",
+
+            welcomeHeadline: "Welcome to PowerCards!",
+            successSubtext: "Your account has been created successfully. We're getting things ready for you.",
+            redirecting: "Redirecting you to login",
+            goLogin: "Go to Login",
+
+            looksGood: "Looks good",
+            usernameGood: "Username looks good",
+            usernameHelp: "3-20 characters, letters, numbers, and underscores only",
+
+            weak: "Weak",
+            fair: "Fair",
+            good: "Good",
+            strong: "Strong",
+            weakHint: "Too short",
+            fairHint: "Add numbers or symbols",
+            goodHint: "Add mixed case",
+            strongHint: "Excellent! Your password is strong",
+            alreadyHaveAccount: "Already have an account? Sign in",
+
+            emailTaken: "This email is already registered",
+            usernameTaken: "This username is already taken",
+            checking: "Checking...",
+
+            forgotPassword: "Forgot password?",
+            resetPasswordTitle: "Reset your password",
+            resetPasswordDescription: "Enter your email address and we'll send you a link to reset your password.",
+            sendResetLink: "Send reset link",
+            checkYourEmail: "Check your email",
+            checkYourEmailDescription: "We've sent a password reset link to your email address. Please check your inbox.",
+            backToLogin: "Back to login",
+
+            mfaTitle: "Two-Factor Authentication",
+            mfaDescription: "Add an extra layer of security to your account using an authenticator app.",
+            mfaEnabled: "Enabled",
+            mfaDisabled: "Disabled",
+            enableMfa: "Enable 2FA",
+            disableMfa: "Disable 2FA",
+            mfaSetupTitle: "Set up Two-Factor Authentication",
+            mfaSetupDescription: "Scan the QR code below with your authenticator app (e.g. Google Authenticator, Authy).",
+            mfaScanQr: "Scan this QR code",
+            mfaEnterCode: "Enter the 6-digit code from your app",
+            mfaCodePlaceholder: "000000",
+            mfaVerify: "Verify & Enable",
+            mfaSetupSuccess: "Two-factor authentication has been enabled!",
+            mfaSkip: "Skip for now",
+            mfaRequired: "Set up two-factor authentication to secure your account.",
         },
         tags: {
             title: "Tags",
@@ -332,6 +485,7 @@ export const translations: Record<Language, Translations> = {
             uploading: "Uploading...",
             success: "Success",
             error: "Error",
+            security: "Security",
         },
         aiSettings: {
             title: "AI Settings",
@@ -473,13 +627,89 @@ export const translations: Record<Language, Translations> = {
         },
         auth: {
             loginTitle: "Entrar",
-            registerTitle: "Criar Conta",
-            email: "E-mail",
-            password: "Senha",
-            confirmPassword: "Confirmar Senha",
-            submit: "Enviar",
+            welcomeBack: "Bem-vindo de volta",
+            signInDescription: "Por favor, insira seus dados para entrar.",
+            emailLabel: "Endereço de e-mail",
+            passwordLabel: "Senha",
+            emailPlaceholder: "nome@exemplo.com",
+            passwordPlaceholder: "Digite sua senha",
+            signInButton: "Entrar",
+            orContinueWith: "OU CONTINUE COM",
+            continueWithGoogle: "Continuar com Google",
+            dontHaveAccount: "Não tem uma conta?",
+            registerNow: "Registre-se agora",
+
+            registerTitle: "Crie sua conta",
+            startJourney: "Comece sua jornada de aprendizado hoje.",
+            joinThousands: "Junte-se a milhares de estudantes usando flashcards com IA para dominar qualquer assunto, mais rápido.",
+            stepLabel: "PASSO {step} DE 3 — {name}",
+            authStep: "AUTENTICAÇÃO",
+            profileStep: "PERFIL",
+            persoStep: "PERSONALIZAÇÃO",
+
+            firstNameLabel: "Nome",
+            lastNameLabel: "Sobrenome",
+            usernameLabel: "Nome de usuário",
+            firstNamePlaceholder: "João",
+            lastNamePlaceholder: "Silva",
+            usernamePlaceholder: "joaosilva",
+
+            learnGoalLabel: "O que você está estudando?",
+            learnGoalPlaceholder: "ex: Medicina, Espanhol, Concursos...",
+            newsletter: "Mantenha-me atualizado",
+            newsletterDetail: "Pequenas atualizações e dicas para melhorar seu aprendizado.",
+            termsAccept: "Eu concordo com os",
+            termsOfService: "Termos de Serviço",
+            privacyPolicy: "Política de Privacidade",
+            and: "e",
+            createAccount: "Criar Conta",
+
+            welcomeHeadline: "Bem-vindo ao PowerCards!",
+            successSubtext: "Sua conta foi criada com sucesso. Estamos preparando tudo para você.",
+            redirecting: "Redirecionando para o login",
+            goLogin: "Ir para o Login",
+
+            looksGood: "Parece bom",
+            usernameGood: "Nome de usuário disponível",
+            usernameHelp: "3-20 caracteres, apenas letras, números e sublinhados",
+
+            weak: "Fraca",
+            fair: "Razoável",
+            good: "Boa",
+            strong: "Forte",
+            weakHint: "Muito curta",
+            fairHint: "Adicione números ou símbolos",
+            goodHint: "Use maiúsculas e minúsculas",
+            strongHint: "Excelente! Sua senha é forte",
             alreadyHaveAccount: "Já tem uma conta? Entre",
-            dontHaveAccount: "Não tem uma conta? Registre-se",
+
+            emailTaken: "Este e-mail já está cadastrado",
+            usernameTaken: "Este nome de usuário já está em uso",
+            checking: "Verificando...",
+
+            forgotPassword: "Esqueceu a senha?",
+            resetPasswordTitle: "Redefinir sua senha",
+            resetPasswordDescription: "Digite seu endereço de e-mail e enviaremos um link para redefinir sua senha.",
+            sendResetLink: "Enviar link de redefinição",
+            checkYourEmail: "Verifique seu e-mail",
+            checkYourEmailDescription: "Enviamos um link de redefinição de senha para o seu e-mail. Verifique sua caixa de entrada.",
+            backToLogin: "Voltar para o login",
+
+            mfaTitle: "Autenticação em Dois Fatores",
+            mfaDescription: "Adicione uma camada extra de segurança à sua conta usando um aplicativo autenticador.",
+            mfaEnabled: "Ativada",
+            mfaDisabled: "Desativada",
+            enableMfa: "Ativar 2FA",
+            disableMfa: "Desativar 2FA",
+            mfaSetupTitle: "Configurar Autenticação em Dois Fatores",
+            mfaSetupDescription: "Escaneie o QR code abaixo com seu aplicativo autenticador (ex: Google Authenticator, Authy).",
+            mfaScanQr: "Escaneie este QR code",
+            mfaEnterCode: "Digite o código de 6 dígitos do seu aplicativo",
+            mfaCodePlaceholder: "000000",
+            mfaVerify: "Verificar e Ativar",
+            mfaSetupSuccess: "Autenticação em dois fatores ativada com sucesso!",
+            mfaSkip: "Pular por enquanto",
+            mfaRequired: "Configure a autenticação em dois fatores para proteger sua conta.",
         },
         tags: {
             title: "Etiquetas",
@@ -519,6 +749,7 @@ export const translations: Record<Language, Translations> = {
             uploading: "Enviando...",
             success: "Sucesso",
             error: "Erro",
+            security: "Segurança",
         },
         aiSettings: {
             title: "Configurações de IA",

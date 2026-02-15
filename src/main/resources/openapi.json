@@ -176,6 +176,52 @@
         "tags" : [ "Anki Resource" ]
       }
     },
+    "/v1/auth/check-email" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "email",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Check Email",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
+    "/v1/auth/check-username" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "username",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Check Username",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
     "/v1/auth/exchange" : {
       "post" : {
         "requestBody" : {
@@ -231,6 +277,83 @@
           }
         },
         "summary" : "Login",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
+    "/v1/auth/mfa/disable" : {
+      "post" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Mfa Disable",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
+    "/v1/auth/mfa/setup" : {
+      "post" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Mfa Setup",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
+    "/v1/auth/mfa/status" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Mfa Status",
+        "tags" : [ "Auth Resource" ]
+      }
+    },
+    "/v1/auth/mfa/verify" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MfaVerifyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Mfa Verify",
         "tags" : [ "Auth Resource" ]
       }
     },
@@ -2048,6 +2171,17 @@
           }
         }
       },
+      "MfaVerifyRequest" : {
+        "type" : "object",
+        "properties" : {
+          "secret" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          }
+        }
+      },
       "NoteRequest" : {
         "type" : "object",
         "properties" : {
@@ -2325,6 +2459,12 @@
           },
           "lastName" : {
             "type" : "string"
+          },
+          "studyGoal" : {
+            "type" : "string"
+          },
+          "newsletterOptIn" : {
+            "type" : "boolean"
           }
         }
       },

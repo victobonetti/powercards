@@ -2,11 +2,13 @@ import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/context/LanguageContext";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
     const { login, loginWithGoogle, isAuthenticated, error, isLoading } = useAuth();
+    const { t } = useLanguage();
     const navigate = useNavigate();
 
     const [username, setUsername] = useState("");
@@ -35,10 +37,10 @@ export default function LoginPage() {
             <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-[#A8B5A0] p-12 text-[#FFF8F0] lg:flex">
                 <div className="relative z-10">
                     <h1 style={{ fontFamily: '"DM Serif Display", serif' }} className="text-5xl leading-tight">
-                        Master your knowledge <br /> with PowerCards.
+                        {t.auth.startJourney}
                     </h1>
                     <p style={{ fontFamily: '"DM Sans", sans-serif' }} className="mt-4 text-lg opacity-90">
-                        An elegant, powerful way to create and review flashcards. Elevate your learning experience.
+                        {t.auth.joinThousands}
                     </p>
                 </div>
 
@@ -60,44 +62,54 @@ export default function LoginPage() {
                 <div className="mx-auto w-full max-w-[400px]">
                     <div className="mb-8 text-center lg:text-left">
                         <h2 style={{ fontFamily: '"DM Serif Display", serif' }} className="text-4xl text-[#1a1a1a]">
-                            Welcome back
+                            {t.auth.welcomeBack}
                         </h2>
                         <p style={{ fontFamily: '"DM Sans", sans-serif' }} className="mt-2 text-gray-600">
-                            Please enter your details to sign in.
+                            {t.auth.signInDescription}
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <Label htmlFor="username" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700">
-                                Username
+                            <Label htmlFor="username" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700 font-medium">
+                                {t.auth.usernameLabel}
                             </Label>
                             <Input
                                 id="username"
                                 type="text"
-                                placeholder="Enter your username"
+                                placeholder={t.auth.usernamePlaceholder}
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 disabled={isLoading}
-                                className="h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35]"
+                                className="h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] text-gray-900"
                                 style={{ fontFamily: '"DM Sans", sans-serif' }}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="password" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700">
-                                Password
+                            <Label htmlFor="password" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700 font-medium">
+                                {t.auth.passwordLabel}
                             </Label>
                             <Input
                                 id="password"
                                 type="password"
-                                placeholder="Enter your password"
+                                placeholder={t.auth.passwordPlaceholder}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={isLoading}
-                                className="h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35]"
+                                className="h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] text-gray-900"
                                 style={{ fontFamily: '"DM Sans", sans-serif' }}
                             />
+                        </div>
+
+                        <div className="flex justify-end -mt-2">
+                            <Link
+                                to="/forgot-password"
+                                className="text-xs text-gray-500 hover:text-[#FF6B35] font-medium transition-colors"
+                                style={{ fontFamily: '"DM Sans", sans-serif' }}
+                            >
+                                {t.auth.forgotPassword}
+                            </Link>
                         </div>
 
                         {(error || localError) && (
@@ -109,10 +121,10 @@ export default function LoginPage() {
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="h-11 w-full rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/30"
-                            style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
+                            className="h-11 w-full rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/30 font-semibold"
+                            style={{ fontFamily: '"DM Sans", sans-serif' }}
                         >
-                            {isLoading ? "Logging in..." : "Sign in"}
+                            {isLoading ? t.common.loading : t.auth.signInButton}
                         </Button>
 
                         <div className="relative py-2">
@@ -120,7 +132,9 @@ export default function LoginPage() {
                                 <span className="w-full border-t border-gray-200" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-[#FFF8F0] px-2 text-gray-500">Or continue with</span>
+                                <span className="bg-[#FFF8F0] px-2 text-gray-500 font-medium tracking-wider">
+                                    {t.auth.orContinueWith}
+                                </span>
                             </div>
                         </div>
 
@@ -129,7 +143,7 @@ export default function LoginPage() {
                             variant="outline"
                             disabled={isLoading}
                             onClick={() => loginWithGoogle()}
-                            className="h-11 w-full rounded-lg border-gray-200 bg-white hover:bg-gray-50 transition-all"
+                            className="h-11 w-full rounded-lg border-gray-200 bg-white hover:bg-gray-50 transition-all text-gray-900"
                             style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
                         >
                             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -150,18 +164,17 @@ export default function LoginPage() {
                                     fill="#EA4335"
                                 />
                             </svg>
-                            Continue with Google
+                            {t.auth.continueWithGoogle}
                         </Button>
 
                         <div className="text-center text-sm text-gray-500">
-                            Don't have an account?{" "}
-                            <button
-                                type="button"
-                                onClick={() => navigate("/register")}
+                            {t.auth.dontHaveAccount}{" "}
+                            <Link
+                                to="/register"
                                 className="font-semibold text-[#FF6B35] hover:underline"
                             >
-                                Register now
-                            </button>
+                                {t.auth.registerNow}
+                            </Link>
                         </div>
                     </form>
                 </div>

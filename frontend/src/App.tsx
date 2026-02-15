@@ -22,6 +22,8 @@ import { WorkspaceCreateDialog } from "./components/WorkspaceCreateDialog";
 import { AppAuthProvider } from "./auth/AuthProvider";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import MfaSetupPage from "./pages/MfaSetupPage";
 import ProfilePage from "./pages/ProfilePage";
 import { AnkiExportPage } from "./pages/AnkiExportPage";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
@@ -67,12 +69,15 @@ function App() {
                     <Route path="/" element={<RootRedirect />} />
                     <Route path="/login" element={<Navigate to="/en/login" replace />} />
                     <Route path="/register" element={<Navigate to="/en/register" replace />} />
+                    <Route path="/forgot-password" element={<Navigate to="/en/forgot-password" replace />} />
 
                     <Route path="/:lang" element={<LanguageGuard />}>
                       <Route path="login" element={<LoginPage />} />
                       <Route path="register" element={<RegisterPage />} />
+                      <Route path="forgot-password" element={<ForgotPasswordPage />} />
 
                       <Route element={<ProtectedRoute />}>
+                        <Route path="mfa-setup" element={<MfaSetupPage />} />
                         <Route element={<AppLayout />}>
                           {/* These paths are relative to /:lang */}
                           <Route index element={<UploadWrapper />} />

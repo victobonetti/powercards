@@ -194,6 +194,7 @@ export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem("auth_token");
         localStorage.removeItem("refresh_token");
         localStorage.removeItem("user-palette"); // Clear palette cache
+        sessionStorage.removeItem("mfa_checked"); // Reset MFA gate for next login
         setToken(null);
         setProfile(null);
         setIsAuthenticated(false);

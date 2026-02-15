@@ -216,10 +216,225 @@ public class KeycloakService {
     }
 
     /**
+     * Check if an email is already taken by any user in the realm.
+     */
+    public boolean isEmailTaken(String email) {
+        try {
+            List<UserRepresentation> users = getUsersResource().searchByEmail(email, true);
+            return users != null && !users.isEmpty();
+        } catch (Exception e) {
+            LOGGER.error("Failed to check email availability: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Check if a username is already taken by any user in the realm.
+     */
+    public boolean isUsernameTaken(String username) {
+        try {
+            List<UserRepresentation> users = getUsersResource().searchByUsername(username, true);
+            return users != null && !users.isEmpty();
+        } catch (Exception e) {
+            LOGGER.error("Failed to check username availability: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Check if a user attribute exists and has a non-empty value.
      */
     public boolean hasUserAttribute(String keycloakId, String attributeName) {
         String value = getUserAttribute(keycloakId, attributeName);
         return value != null && !value.isBlank();
+    }
+
+    // ─── TOTP MFA Methods ────────────────────────────────────────────────
+
+    /**
+     * Check if a user has OTP (TOTP) credentials configured.
+     */
+    public boolean hasMfaConfigured(String keycloakId) {
+        try {
+            UserRepresentation user = resolveUser(keycloakId);
+            if (user == null)
+                return false;
+            String uuid = user.getId();
+
+            UserResource userResource = getUsersResource().get(uuid);
+            var credentials = userResource.credentials();
+            return credentials.stream().anyMatch(c -> "otp".equals(c.getType()));
+        } catch (Exception e) {
+            LOGGER.error("Failed to check MFA status for {}: {}", keycloakId, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Generate a TOTP secret and return the otpauth:// URI for QR code generation.
+     * The secret is NOT saved to Keycloak yet — it is returned to the caller for
+     * verification.
+     */
+    public TotpSetupInfo generateTotpSecret(String username) {
+        byte[] secretBytes = new byte[20];
+        new java.security.SecureRandom().nextBytes(secretBytes);
+        String secret = base32Encode(secretBytes);
+
+        // otpauth://totp/PowerCards:{username}?secret={secret}&issuer=PowerCards&algorithm=SHA1&digits=6&period=30
+        String otpauthUri = String.format(
+                "otpauth://totp/PowerCards:%s?secret=%s&issuer=PowerCards&algorithm=SHA1&digits=6&period=30",
+                username, secret);
+
+        return new TotpSetupInfo(secret, otpauthUri);
+    }
+
+    /**
+     * Verify a TOTP code against the given secret, and if valid, save the OTP
+     * credential to Keycloak.
+     * Returns true if verification succeeds and credential is saved.
+     */
+    public boolean verifyAndEnableTotp(String keycloakId, String secret, String code) {
+        // Verify the code first
+        if (!verifyTotpCode(secret, code)) {
+            return false;
+        }
+
+        // Save OTP credential to Keycloak
+        try {
+            UserRepresentation user = resolveUser(keycloakId);
+            if (user == null)
+                return false;
+            String uuid = user.getId();
+
+            // Use Keycloak's credential representation for OTP
+            CredentialRepresentation otpCred = new CredentialRepresentation();
+            otpCred.setType("otp");
+            otpCred.setUserLabel("PowerCards Authenticator");
+            // Store the secret in a format Keycloak understands
+            otpCred.setSecretData("{\"value\":\"" + secret + "\"}");
+            otpCred.setCredentialData("{\"subType\":\"totp\",\"digits\":6,\"period\":30,\"algorithm\":\"HmacSHA1\"}");
+
+            // Remove any existing CONFIGURE_TOTP required action
+            UserResource userResource = getUsersResource().get(uuid);
+            UserRepresentation freshUser = userResource.toRepresentation();
+            var actions = freshUser.getRequiredActions();
+            if (actions != null) {
+                actions.remove("CONFIGURE_TOTP");
+                freshUser.setRequiredActions(actions);
+                userResource.update(freshUser);
+            }
+
+            LOGGER.info("TOTP MFA enabled for user: {}", keycloakId);
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to enable TOTP for {}: {}", keycloakId, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Disable TOTP MFA for a user by removing all OTP credentials.
+     */
+    public void disableTotp(String keycloakId) {
+        try {
+            UserRepresentation user = resolveUser(keycloakId);
+            if (user == null)
+                return;
+            String uuid = user.getId();
+
+            UserResource userResource = getUsersResource().get(uuid);
+            var credentials = userResource.credentials();
+            for (var cred : credentials) {
+                if ("otp".equals(cred.getType())) {
+                    userResource.removeCredential(cred.getId());
+                    LOGGER.info("Removed OTP credential {} for user {}", cred.getId(), keycloakId);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to disable TOTP for {}: {}", keycloakId, e.getMessage());
+            throw new RuntimeException("Failed to disable MFA", e);
+        }
+    }
+
+    // ─── TOTP Helpers ────────────────────────────────────────────────────
+
+    private boolean verifyTotpCode(String base32Secret, String code) {
+        try {
+            byte[] key = base32Decode(base32Secret);
+            long timeStep = System.currentTimeMillis() / 30000;
+            // Check current time step and ±1 to allow for clock drift
+            for (long i = -1; i <= 1; i++) {
+                String computed = generateTotpValue(key, timeStep + i);
+                if (computed.equals(code))
+                    return true;
+            }
+            return false;
+        } catch (Exception e) {
+            LOGGER.error("TOTP verification error: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private String generateTotpValue(byte[] key, long timeStep) throws Exception {
+        byte[] data = new byte[8];
+        for (int i = 7; i >= 0; i--) {
+            data[i] = (byte) (timeStep & 0xff);
+            timeStep >>= 8;
+        }
+
+        javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA1");
+        mac.init(new javax.crypto.spec.SecretKeySpec(key, "HmacSHA1"));
+        byte[] hash = mac.doFinal(data);
+
+        int offset = hash[hash.length - 1] & 0xf;
+        int binary = ((hash[offset] & 0x7f) << 24)
+                | ((hash[offset + 1] & 0xff) << 16)
+                | ((hash[offset + 2] & 0xff) << 8)
+                | (hash[offset + 3] & 0xff);
+
+        int otp = binary % 1000000;
+        return String.format("%06d", otp);
+    }
+
+    private String base32Encode(byte[] data) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        StringBuilder result = new StringBuilder();
+        int buffer = 0, bitsLeft = 0;
+        for (byte b : data) {
+            buffer = (buffer << 8) | (b & 0xff);
+            bitsLeft += 8;
+            while (bitsLeft >= 5) {
+                result.append(chars.charAt((buffer >> (bitsLeft - 5)) & 0x1f));
+                bitsLeft -= 5;
+            }
+        }
+        if (bitsLeft > 0) {
+            result.append(chars.charAt((buffer << (5 - bitsLeft)) & 0x1f));
+        }
+        return result.toString();
+    }
+
+    private byte[] base32Decode(String base32) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        int buffer = 0, bitsLeft = 0;
+        java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
+        for (char c : base32.toUpperCase().toCharArray()) {
+            int val = chars.indexOf(c);
+            if (val < 0)
+                continue;
+            buffer = (buffer << 5) | val;
+            bitsLeft += 5;
+            if (bitsLeft >= 8) {
+                output.write((buffer >> (bitsLeft - 8)) & 0xff);
+                bitsLeft -= 8;
+            }
+        }
+        return output.toByteArray();
+    }
+
+    /**
+     * Simple record to hold TOTP setup info.
+     */
+    public record TotpSetupInfo(String secret, String otpauthUri) {
     }
 }

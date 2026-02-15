@@ -2,11 +2,12 @@ import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { registerUser, RegistrationData } from "@/api/auth";
+import { registerUser, RegistrationData, checkEmailAvailable, checkUsernameAvailable } from "@/api/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/context/LanguageContext";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Check, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Check, ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, X } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type Step = 1 | 2 | 3;
@@ -24,22 +25,14 @@ interface FieldErrors {
 // ─── Password Strength ──────────────────────────────────────────────
 type StrengthLevel = 0 | 1 | 2 | 3 | 4;
 
-function getPasswordStrength(pw: string): { level: StrengthLevel; label: string; hint: string } {
-    if (!pw) return { level: 0, label: "", hint: "" };
+function getPasswordStrength(pw: string): StrengthLevel {
+    if (!pw) return 0;
     let score = 0;
     if (pw.length >= 8) score++;
     if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
     if (/\d/.test(pw)) score++;
     if (/[^a-zA-Z0-9]/.test(pw)) score++;
-
-    const map: Record<number, { label: string; hint: string }> = {
-        0: { label: "", hint: "Password must be at least 8 characters" },
-        1: { label: "Weak", hint: "Add uppercase and lowercase letters" },
-        2: { label: "Fair", hint: "Add some numbers to strengthen" },
-        3: { label: "Good", hint: "Add a special character for maximum security" },
-        4: { label: "Strong", hint: "Excellent! Your password is strong" },
-    };
-    return { level: score as StrengthLevel, ...map[score] };
+    return score as StrengthLevel;
 }
 
 const strengthColors: Record<StrengthLevel, string> = {
@@ -62,9 +55,10 @@ function isValidEmail(email: string): boolean {
 
 // ─── Component ───────────────────────────────────────────────────────
 export default function RegisterPage() {
-    const { loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
+    const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
     const navigate = useNavigate();
     const { toast } = useToast();
+    const { t } = useLanguage();
 
     // Step state
     const [currentStep, setCurrentStep] = useState<Step>(1);
@@ -87,58 +81,129 @@ export default function RegisterPage() {
     const [errors, setErrors] = useState<FieldErrors>({});
     const [emailTouched, setEmailTouched] = useState(false);
 
+    // Availability checks
+    const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+    const [emailChecking, setEmailChecking] = useState(false);
+    const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+    const [usernameChecking, setUsernameChecking] = useState(false);
+
     // Submission
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
 
     // Refs for auto-focus
     const emailRef = useRef<HTMLInputElement>(null);
     const firstNameRef = useRef<HTMLInputElement>(null);
     const studyGoalRef = useRef<HTMLTextAreaElement>(null);
 
+    // Debounce timer refs
+    const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const usernameCheckTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
     // Redirect if already authenticated
     useEffect(() => {
         if (isAuthenticated) navigate("/");
     }, [isAuthenticated, navigate]);
 
-    // Auto-suggest username from email (only if user hasn't manually edited)
+    // Auto-suggest username from email
     useEffect(() => {
         if (email && !usernameTouched) {
             setUsername(suggestUsername(email));
         }
     }, [email, usernameTouched]);
 
+    // ── Debounced email availability check ───────────────────────────
+    const checkEmail = useCallback((emailValue: string) => {
+        if (emailCheckTimerRef.current) clearTimeout(emailCheckTimerRef.current);
+        if (!emailValue || !isValidEmail(emailValue)) {
+            setEmailAvailable(null);
+            setEmailChecking(false);
+            return;
+        }
+        setEmailChecking(true);
+        emailCheckTimerRef.current = setTimeout(async () => {
+            try {
+                const available = await checkEmailAvailable(emailValue);
+                setEmailAvailable(available);
+                if (!available) {
+                    setErrors((p) => ({ ...p, email: t.auth.emailTaken }));
+                } else {
+                    setErrors((p) => ({ ...p, email: undefined }));
+                }
+            } catch {
+                setEmailAvailable(null);
+            } finally {
+                setEmailChecking(false);
+            }
+        }, 600);
+    }, [t]);
+
+    // ── Debounced username availability check ────────────────────────
+    const checkUsername = useCallback((usernameValue: string) => {
+        if (usernameCheckTimerRef.current) clearTimeout(usernameCheckTimerRef.current);
+        if (!usernameValue || usernameValue.length < 3 || !/^[a-zA-Z0-9_]+$/.test(usernameValue)) {
+            setUsernameAvailable(null);
+            setUsernameChecking(false);
+            return;
+        }
+        setUsernameChecking(true);
+        usernameCheckTimerRef.current = setTimeout(async () => {
+            try {
+                const available = await checkUsernameAvailable(usernameValue);
+                setUsernameAvailable(available);
+                if (!available) {
+                    setErrors((p) => ({ ...p, username: t.auth.usernameTaken }));
+                } else {
+                    setErrors((p) => ({ ...p, username: undefined }));
+                }
+            } catch {
+                setUsernameAvailable(null);
+            } finally {
+                setUsernameChecking(false);
+            }
+        }, 500);
+    }, [t]);
+
     // Password strength
-    const strength = useMemo(() => getPasswordStrength(password), [password]);
+    const strengthLevel = useMemo(() => getPasswordStrength(password), [password]);
+    const strengthInfo = useMemo(() => {
+        if (!password) return { label: "", hint: t.auth.passwordPlaceholder };
+        const maps = {
+            1: { label: t.auth.weak, hint: t.auth.weakHint },
+            2: { label: t.auth.fair, hint: t.auth.fairHint },
+            3: { label: t.auth.good, hint: t.auth.goodHint },
+            4: { label: t.auth.strong, hint: t.auth.strongHint },
+        };
+        return strengthLevel === 0 ? { label: "", hint: t.auth.weakHint } : maps[strengthLevel as keyof typeof maps];
+    }, [password, strengthLevel, t]);
 
     // ── Validation ───────────────────────────────────────────────────
     const validateStep1 = useCallback((): boolean => {
         const e: FieldErrors = {};
-        if (!email) e.email = "Email is required";
-        else if (!isValidEmail(email)) e.email = "Please enter a valid email address";
-        if (!password) e.password = "Password is required";
-        else if (password.length < 8) e.password = "Password must be at least 8 characters";
+        if (!email) e.email = t.auth.emailLabel;
+        else if (!isValidEmail(email)) e.email = t.auth.usernameHelp;
+        else if (emailAvailable === false) e.email = t.auth.emailTaken;
+        if (!password) e.password = t.auth.passwordLabel;
+        else if (password.length < 8) e.password = t.auth.weakHint;
         setErrors(e);
         return Object.keys(e).length === 0;
-    }, [email, password]);
+    }, [email, password, emailAvailable, t]);
 
     const validateStep2 = useCallback((): boolean => {
         const e: FieldErrors = {};
-        if (!firstName.trim()) e.firstName = "First name is required";
-        if (!lastName.trim()) e.lastName = "Last name is required";
-        if (!username.trim()) e.username = "Username is required";
-        else if (username.length < 3) e.username = "Username must be at least 3 characters";
-        else if (!/^[a-zA-Z0-9_]+$/.test(username)) e.username = "Use only letters, numbers, and underscores";
+        if (!firstName.trim()) e.firstName = t.auth.firstNameLabel;
+        if (!lastName.trim()) e.lastName = t.auth.lastNameLabel;
+        if (!username.trim()) e.username = t.auth.usernameLabel;
+        else if (usernameAvailable === false) e.username = t.auth.usernameTaken;
         setErrors(e);
         return Object.keys(e).length === 0;
-    }, [firstName, lastName, username]);
+    }, [firstName, lastName, username, usernameAvailable, t]);
 
     const validateStep3 = useCallback((): boolean => {
         const e: FieldErrors = {};
-        if (!termsAccepted) e.terms = "You must accept the Terms of Service";
+        if (!termsAccepted) e.terms = t.auth.termsAccept + " " + t.auth.termsOfService;
         setErrors(e);
         return Object.keys(e).length === 0;
-    }, [termsAccepted]);
+    }, [termsAccepted, t]);
 
     // ── Step Navigation ──────────────────────────────────────────────
     const goNext = useCallback(() => {
@@ -166,7 +231,7 @@ export default function RegisterPage() {
         }, 300);
     }, [currentStep]);
 
-    // ── Submit ───────────────────────────────────────────────────────
+    // ── Submit with auto-login ───────────────────────────────────────
     const handleSubmit = useCallback(async () => {
         if (!validateStep3()) return;
 
@@ -185,22 +250,26 @@ export default function RegisterPage() {
 
         try {
             await registerUser(data);
-            setShowSuccess(true);
-            setTimeout(() => navigate("/login"), 3000);
+            // Auto-login with the same credentials
+            toast({
+                title: t.auth.welcomeHeadline,
+                description: t.auth.successSubtext,
+            });
+            await login(email, password);
+            // AuthProvider will set isAuthenticated → useEffect redirects to /
         } catch (err: any) {
             console.error("Registration failed", err);
             const message = err.response?.data || "Registration failed. Please try again.";
             toast({
-                title: "Registration failed",
-                description: typeof message === "string" ? message : "Something went wrong",
+                title: t.profile.error,
+                description: typeof message === "string" ? message : t.profile.error,
                 variant: "destructive",
             });
         } finally {
             setIsSubmitting(false);
         }
-    }, [email, password, firstName, lastName, username, studyGoal, newsletter, validateStep3, navigate, toast]);
+    }, [email, password, firstName, lastName, username, studyGoal, newsletter, validateStep3, login, toast, t]);
 
-    // Keyboard: Enter to advance
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
             if (e.key === "Enter") {
@@ -212,43 +281,9 @@ export default function RegisterPage() {
         [currentStep, goNext, handleSubmit]
     );
 
-    // ── Step 1 enabled ───────────────────────────────────────────────
-    const step1Valid = email && isValidEmail(email) && password.length >= 8;
-    const step2Valid = firstName.trim() && lastName.trim() && username.trim().length >= 3 && /^[a-zA-Z0-9_]+$/.test(username);
+    const step1Valid = email && isValidEmail(email) && password.length >= 8 && emailAvailable !== false;
+    const step2Valid = firstName.trim() && lastName.trim() && username.trim().length >= 3 && /^[a-zA-Z0-9_]+$/.test(username) && usernameAvailable !== false;
 
-    // ─── Success Screen ──────────────────────────────────────────────
-    if (showSuccess) {
-        return (
-            <div className="flex min-h-screen w-full items-center justify-center bg-[#FFF8F0]">
-                <div className="flex flex-col items-center gap-6 text-center">
-                    {/* Animated checkmark */}
-                    <div className="animate-bounce-in flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30">
-                        <Check className="h-12 w-12 text-white" strokeWidth={3} />
-                    </div>
-                    <div>
-                        <h1 style={{ fontFamily: '"DM Serif Display", serif' }} className="text-4xl text-[#1a1a1a]">
-                            Welcome to PowerCards!
-                        </h1>
-                        <p style={{ fontFamily: '"DM Sans", sans-serif' }} className="mt-2 text-gray-600">
-                            Your account has been created successfully
-                        </p>
-                    </div>
-                    <p style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-sm text-gray-400">
-                        Redirecting you to login...
-                    </p>
-                    <Button
-                        onClick={() => navigate("/login")}
-                        className="h-11 rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20"
-                        style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
-                    >
-                        Go to Login
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
-    // ─── Animation classes ───────────────────────────────────────────
     const stepAnimClass = isAnimating
         ? direction === "forward"
             ? "animate-slide-out-left"
@@ -257,26 +292,21 @@ export default function RegisterPage() {
             ? "animate-slide-in-right"
             : "animate-slide-in-left";
 
-    // ─── Main Render ─────────────────────────────────────────────────
     return (
         <div className="flex min-h-screen w-full bg-[#FFF8F0]">
-            {/* ── Left Side — Brand Story ── */}
             <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-[#A8B5A0] p-12 text-[#FFF8F0] lg:flex">
                 <div className="relative z-10">
                     <h1 style={{ fontFamily: '"DM Serif Display", serif' }} className="text-5xl leading-tight">
-                        Start your learning <br /> journey today.
+                        {t.auth.startJourney}
                     </h1>
                     <p style={{ fontFamily: '"DM Sans", sans-serif' }} className="mt-4 text-lg opacity-90">
-                        Join thousands of learners using AI-powered flashcards to master any subject, faster.
+                        {t.auth.joinThousands}
                     </p>
                 </div>
-
-                {/* Animated Orbs */}
                 <div className="absolute top-0 left-0 h-full w-full overflow-hidden">
                     <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-[#FF6B35] opacity-20 blur-[100px] animate-slow-rotate" />
                     <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-[#FFF8F0] opacity-10 blur-[120px] animate-slow-rotate [animation-duration:30s]" />
                 </div>
-
                 <div className="relative z-10">
                     <p style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-sm opacity-75">
                         © 2026 PowerCards
@@ -284,16 +314,14 @@ export default function RegisterPage() {
                 </div>
             </div>
 
-            {/* ── Right Side — Registration Form ── */}
             <div className="flex w-full flex-col justify-center px-8 bg-[#FFF8F0] lg:w-1/2 lg:px-12">
                 <div className="mx-auto w-full max-w-[440px]">
-                    {/* Header */}
                     <div className="mb-6 text-center lg:text-left">
                         <h2 style={{ fontFamily: '"DM Serif Display", serif' }} className="text-4xl text-[#1a1a1a]">
-                            Create your account
+                            {t.auth.registerTitle}
                         </h2>
                         <p style={{ fontFamily: '"DM Sans", sans-serif' }} className="mt-2 text-gray-600">
-                            It only takes a minute to get started.
+                            {t.auth.signInDescription}
                         </p>
                     </div>
 
@@ -301,19 +329,17 @@ export default function RegisterPage() {
                     <div className="mb-8 flex items-center justify-center gap-0">
                         {[1, 2, 3].map((step) => (
                             <div key={step} className="flex items-center">
-                                {/* Circle */}
                                 <div
                                     className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all duration-300 ${step < currentStep
-                                            ? "border-[#FF6B35] bg-[#FF6B35] text-white"
-                                            : step === currentStep
-                                                ? "border-[#FF6B35] bg-[#FF6B35]/10 text-[#FF6B35] scale-110"
-                                                : "border-gray-300 bg-white text-gray-400"
+                                        ? "border-[#FF6B35] bg-[#FF6B35] text-white"
+                                        : step === currentStep
+                                            ? "border-[#FF6B35] bg-[#FF6B35]/10 text-[#FF6B35] scale-110"
+                                            : "border-gray-300 bg-white text-gray-400"
                                         }`}
                                     style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 600, fontSize: "0.85rem" }}
                                 >
                                     {step < currentStep ? <Check className="h-4 w-4" strokeWidth={3} /> : step}
                                 </div>
-                                {/* Connector line */}
                                 {step < 3 && (
                                     <div className="relative mx-1 h-0.5 w-12 bg-gray-200 overflow-hidden rounded-full">
                                         <div
@@ -331,10 +357,13 @@ export default function RegisterPage() {
                         style={{ fontFamily: '"DM Sans", sans-serif' }}
                         className="mb-6 text-center text-xs font-medium uppercase tracking-wider text-gray-400"
                     >
-                        Step {currentStep} of 3
-                        {currentStep === 1 && " — Authentication"}
-                        {currentStep === 2 && " — Profile"}
-                        {currentStep === 3 && " — Personalization"}
+                        {t.auth.stepLabel
+                            .replace("{step}", currentStep.toString())
+                            .replace("{name}",
+                                currentStep === 1 ? t.auth.authStep :
+                                    currentStep === 2 ? t.auth.profileStep :
+                                        t.auth.persoStep
+                            )}
                     </p>
 
                     {/* ── Form Steps ── */}
@@ -349,7 +378,7 @@ export default function RegisterPage() {
                                         variant="outline"
                                         disabled={authLoading}
                                         onClick={() => loginWithGoogle()}
-                                        className="h-12 w-full rounded-lg border-gray-200 bg-white hover:bg-gray-50 transition-all shadow-sm"
+                                        className="h-12 w-full rounded-lg border-gray-200 bg-white hover:bg-gray-50 transition-all shadow-sm text-gray-900"
                                         style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
                                     >
                                         <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -358,7 +387,7 @@ export default function RegisterPage() {
                                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
                                             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                                         </svg>
-                                        Sign up with Google
+                                        {t.auth.continueWithGoogle}
                                     </Button>
 
                                     {/* Divider */}
@@ -367,66 +396,88 @@ export default function RegisterPage() {
                                             <span className="w-full border-t border-gray-200" />
                                         </div>
                                         <div className="relative flex justify-center text-xs uppercase">
-                                            <span className="bg-[#FFF8F0] px-2 text-gray-500" style={{ fontFamily: '"DM Sans", sans-serif' }}>
-                                                Or sign up with email
+                                            <span className="bg-[#FFF8F0] px-2 text-gray-400 font-medium tracking-wider" style={{ fontFamily: '"DM Sans", sans-serif' }}>
+                                                {t.auth.orContinueWith}
                                             </span>
                                         </div>
                                     </div>
 
-                                    {/* Email */}
+                                    {/* Email with availability check */}
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="reg-email" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700">
-                                            Email address
+                                        <Label htmlFor="reg-email" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700 font-medium">
+                                            {t.auth.emailLabel}
                                         </Label>
-                                        <Input
-                                            ref={emailRef}
-                                            id="reg-email"
-                                            type="email"
-                                            placeholder="you@example.com"
-                                            value={email}
-                                            onChange={(e) => {
-                                                setEmail(e.target.value);
-                                                if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
-                                            }}
-                                            onBlur={() => {
-                                                setEmailTouched(true);
-                                                if (email && !isValidEmail(email)) {
-                                                    setErrors((p) => ({ ...p, email: "Please enter a valid email address" }));
-                                                }
-                                            }}
-                                            className={`h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] ${errors.email ? "border-red-400 focus:border-red-400 focus:ring-red-400" : emailTouched && email && isValidEmail(email) ? "border-emerald-400" : ""
-                                                }`}
-                                            style={{ fontFamily: '"DM Sans", sans-serif' }}
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                ref={emailRef}
+                                                id="reg-email"
+                                                type="email"
+                                                placeholder={t.auth.emailPlaceholder}
+                                                value={email}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setEmail(val);
+                                                    setEmailAvailable(null);
+                                                    if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
+                                                    checkEmail(val);
+                                                }}
+                                                onBlur={() => {
+                                                    setEmailTouched(true);
+                                                    if (email && !isValidEmail(email)) {
+                                                        setErrors((p) => ({ ...p, email: t.auth.usernameHelp }));
+                                                    }
+                                                }}
+                                                className={`h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] text-gray-900 pr-10 ${errors.email ? "border-red-400 focus:border-red-400 focus:ring-red-400" : emailTouched && email && isValidEmail(email) && emailAvailable === true ? "border-emerald-400" : ""
+                                                    }`}
+                                                style={{ fontFamily: '"DM Sans", sans-serif' }}
+                                            />
+                                            {/* Status indicator in input */}
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                {emailChecking && (
+                                                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                                                )}
+                                                {!emailChecking && emailAvailable === true && email && isValidEmail(email) && (
+                                                    <Check className="h-4 w-4 text-emerald-500" strokeWidth={3} />
+                                                )}
+                                                {!emailChecking && emailAvailable === false && (
+                                                    <X className="h-4 w-4 text-red-500" strokeWidth={3} />
+                                                )}
+                                            </div>
+                                        </div>
                                         {/* Validation feedback */}
                                         {errors.email && (
                                             <p className="text-xs text-red-500" style={{ fontFamily: '"DM Sans", sans-serif' }}>
                                                 {errors.email}
                                             </p>
                                         )}
-                                        {emailTouched && email && isValidEmail(email) && !errors.email && (
-                                            <p className="flex items-center gap-1 text-xs text-emerald-600" style={{ fontFamily: '"DM Sans", sans-serif' }}>
-                                                <Check className="h-3 w-3" /> Looks good
+                                        {emailChecking && (
+                                            <p className="text-xs text-gray-400 font-medium" style={{ fontFamily: '"DM Sans", sans-serif' }}>
+                                                {t.auth.checking}
+                                            </p>
+                                        )}
+                                        {!emailChecking && emailTouched && email && isValidEmail(email) && emailAvailable === true && !errors.email && (
+                                            <p className="flex items-center gap-1 text-xs text-emerald-600 font-medium" style={{ fontFamily: '"DM Sans", sans-serif' }}>
+                                                <Check className="h-3 w-3" strokeWidth={3} /> {t.auth.looksGood}
                                             </p>
                                         )}
                                     </div>
 
                                     {/* Password */}
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="reg-password" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700">
-                                            Password
+                                        <Label htmlFor="reg-password" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700 font-medium">
+                                            {t.auth.passwordLabel}
                                         </Label>
                                         <div className="relative">
                                             <Input
                                                 id="reg-password"
                                                 type={showPassword ? "text" : "password"}
-                                                placeholder="Create a strong password"
+                                                placeholder={t.auth.passwordPlaceholder}
                                                 value={password}
                                                 onChange={(e) => {
                                                     setPassword(e.target.value);
                                                     if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
                                                 }}
-                                                className={`h-11 rounded-lg border-gray-200 bg-white/50 pr-10 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] ${errors.password ? "border-red-400" : ""
+                                                className={`h-11 rounded-lg border-gray-200 bg-white/50 pr-10 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] text-gray-900 ${errors.password ? "border-red-400" : ""
                                                     }`}
                                                 style={{ fontFamily: '"DM Sans", sans-serif' }}
                                             />
@@ -452,27 +503,27 @@ export default function RegisterPage() {
                                                     {[1, 2, 3, 4].map((level) => (
                                                         <div
                                                             key={level}
-                                                            className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${level <= strength.level ? strengthColors[strength.level] : "bg-gray-200"
+                                                            className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${level <= strengthLevel ? strengthColors[strengthLevel] : "bg-gray-200"
                                                                 }`}
                                                         />
                                                     ))}
                                                 </div>
                                                 <div className="flex items-center justify-between">
                                                     <span
-                                                        className={`text-xs font-medium ${strength.level <= 1
-                                                                ? "text-red-500"
-                                                                : strength.level === 2
-                                                                    ? "text-orange-500"
-                                                                    : strength.level === 3
-                                                                        ? "text-yellow-600"
-                                                                        : "text-emerald-600"
+                                                        className={`text-xs font-semibold ${strengthLevel <= 1
+                                                            ? "text-red-500"
+                                                            : strengthLevel === 2
+                                                                ? "text-orange-500"
+                                                                : strengthLevel === 3
+                                                                    ? "text-yellow-600"
+                                                                    : "text-emerald-600"
                                                             }`}
                                                         style={{ fontFamily: '"DM Sans", sans-serif' }}
                                                     >
-                                                        {strength.label}
+                                                        {strengthInfo.label}
                                                     </span>
-                                                    <span className="text-xs text-gray-400" style={{ fontFamily: '"DM Sans", sans-serif' }}>
-                                                        {strength.hint}
+                                                    <span className="text-xs text-gray-400 font-medium" style={{ fontFamily: '"DM Sans", sans-serif' }}>
+                                                        {strengthInfo.hint}
                                                     </span>
                                                 </div>
                                             </div>
@@ -484,10 +535,10 @@ export default function RegisterPage() {
                                         type="button"
                                         disabled={!step1Valid}
                                         onClick={goNext}
-                                        className="h-11 w-full rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-                                        style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
+                                        className="h-11 w-full rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none font-semibold"
+                                        style={{ fontFamily: '"DM Sans", sans-serif' }}
                                     >
-                                        Next
+                                        {t.common.next}
                                         <ChevronRight className="ml-1 h-4 w-4" />
                                     </Button>
                                 </div>
@@ -498,19 +549,19 @@ export default function RegisterPage() {
                                 <div className="space-y-5">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1.5">
-                                            <Label htmlFor="reg-firstName" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700">
-                                                First name
+                                            <Label htmlFor="reg-firstName" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700 font-medium">
+                                                {t.auth.firstNameLabel}
                                             </Label>
                                             <Input
                                                 ref={firstNameRef}
                                                 id="reg-firstName"
-                                                placeholder="John"
+                                                placeholder={t.auth.firstNamePlaceholder}
                                                 value={firstName}
                                                 onChange={(e) => {
                                                     setFirstName(e.target.value);
                                                     if (errors.firstName) setErrors((p) => ({ ...p, firstName: undefined }));
                                                 }}
-                                                className={`h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] ${errors.firstName ? "border-red-400" : ""
+                                                className={`h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] text-gray-900 ${errors.firstName ? "border-red-400" : ""
                                                     }`}
                                                 style={{ fontFamily: '"DM Sans", sans-serif' }}
                                             />
@@ -521,18 +572,18 @@ export default function RegisterPage() {
                                             )}
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label htmlFor="reg-lastName" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700">
-                                                Last name
+                                            <Label htmlFor="reg-lastName" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700 font-medium">
+                                                {t.auth.lastNameLabel}
                                             </Label>
                                             <Input
                                                 id="reg-lastName"
-                                                placeholder="Doe"
+                                                placeholder={t.auth.lastNamePlaceholder}
                                                 value={lastName}
                                                 onChange={(e) => {
                                                     setLastName(e.target.value);
                                                     if (errors.lastName) setErrors((p) => ({ ...p, lastName: undefined }));
                                                 }}
-                                                className={`h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] ${errors.lastName ? "border-red-400" : ""
+                                                className={`h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] text-gray-900 ${errors.lastName ? "border-red-400" : ""
                                                     }`}
                                                 style={{ fontFamily: '"DM Sans", sans-serif' }}
                                             />
@@ -544,35 +595,58 @@ export default function RegisterPage() {
                                         </div>
                                     </div>
 
+                                    {/* Username with availability check */}
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="reg-username" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700">
-                                            Username
+                                        <Label htmlFor="reg-username" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700 font-medium">
+                                            {t.auth.usernameLabel}
                                         </Label>
-                                        <Input
-                                            id="reg-username"
-                                            placeholder="johndoe"
-                                            value={username}
-                                            onChange={(e) => {
-                                                setUsername(e.target.value);
-                                                setUsernameTouched(true);
-                                                if (errors.username) setErrors((p) => ({ ...p, username: undefined }));
-                                            }}
-                                            className={`h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] ${errors.username ? "border-red-400" : ""
-                                                }`}
-                                            style={{ fontFamily: '"DM Sans", sans-serif' }}
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                id="reg-username"
+                                                placeholder={t.auth.usernamePlaceholder}
+                                                value={username}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setUsername(val);
+                                                    setUsernameTouched(true);
+                                                    setUsernameAvailable(null);
+                                                    if (errors.username) setErrors((p) => ({ ...p, username: undefined }));
+                                                    checkUsername(val);
+                                                }}
+                                                className={`h-11 rounded-lg border-gray-200 bg-white/50 backdrop-blur-sm transition-all focus:border-[#FF6B35] focus:ring-[#FF6B35] text-gray-900 pr-10 ${errors.username ? "border-red-400" : usernameAvailable === true ? "border-emerald-400" : ""
+                                                    }`}
+                                                style={{ fontFamily: '"DM Sans", sans-serif' }}
+                                            />
+                                            {/* Status indicator */}
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                {usernameChecking && (
+                                                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                                                )}
+                                                {!usernameChecking && usernameAvailable === true && username.length >= 3 && (
+                                                    <Check className="h-4 w-4 text-emerald-500" strokeWidth={3} />
+                                                )}
+                                                {!usernameChecking && usernameAvailable === false && (
+                                                    <X className="h-4 w-4 text-red-500" strokeWidth={3} />
+                                                )}
+                                            </div>
+                                        </div>
                                         {errors.username && (
                                             <p className="text-xs text-red-500" style={{ fontFamily: '"DM Sans", sans-serif' }}>
                                                 {errors.username}
                                             </p>
                                         )}
-                                        {!errors.username && username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username) && (
-                                            <p className="flex items-center gap-1 text-xs text-emerald-600" style={{ fontFamily: '"DM Sans", sans-serif' }}>
-                                                <Check className="h-3 w-3" /> Username looks good
+                                        {usernameChecking && (
+                                            <p className="text-xs text-gray-400 font-medium" style={{ fontFamily: '"DM Sans", sans-serif' }}>
+                                                {t.auth.checking}
                                             </p>
                                         )}
-                                        <p className="text-xs text-gray-400" style={{ fontFamily: '"DM Sans", sans-serif' }}>
-                                            3-20 characters, letters, numbers, and underscores only
+                                        {!usernameChecking && !errors.username && usernameAvailable === true && username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username) && (
+                                            <p className="flex items-center gap-1 text-xs text-emerald-600 font-medium" style={{ fontFamily: '"DM Sans", sans-serif' }}>
+                                                <Check className="h-3 w-3" strokeWidth={3} /> {t.auth.usernameGood}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-gray-400 font-medium" style={{ fontFamily: '"DM Sans", sans-serif' }}>
+                                            {t.auth.usernameHelp}
                                         </p>
                                     </div>
 
@@ -582,20 +656,20 @@ export default function RegisterPage() {
                                             type="button"
                                             variant="outline"
                                             onClick={goBack}
-                                            className="h-11 flex-1 rounded-lg border-gray-200 bg-white hover:bg-gray-50 transition-all"
-                                            style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
+                                            className="h-11 flex-1 rounded-lg border-gray-200 bg-white hover:bg-gray-50 transition-all font-medium text-gray-900"
+                                            style={{ fontFamily: '"DM Sans", sans-serif' }}
                                         >
                                             <ChevronLeft className="mr-1 h-4 w-4" />
-                                            Back
+                                            {t.common.back}
                                         </Button>
                                         <Button
                                             type="button"
                                             disabled={!step2Valid}
                                             onClick={goNext}
-                                            className="h-11 flex-[2] rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-                                            style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
+                                            className="h-11 flex-[2] rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none font-semibold"
+                                            style={{ fontFamily: '"DM Sans", sans-serif' }}
                                         >
-                                            Next
+                                            {t.common.next}
                                             <ChevronRight className="ml-1 h-4 w-4" />
                                         </Button>
                                     </div>
@@ -607,18 +681,18 @@ export default function RegisterPage() {
                                 <div className="space-y-5">
                                     {/* Study Goal */}
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="reg-studyGoal" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700">
-                                            What do you want to learn?{" "}
-                                            <span className="text-gray-400 font-normal">(optional)</span>
+                                        <Label htmlFor="reg-studyGoal" style={{ fontFamily: '"DM Sans", sans-serif' }} className="text-gray-700 font-medium">
+                                            {t.auth.learnGoalLabel}{" "}
+                                            <span className="text-gray-400 font-normal italic md:not-italic">(optional)</span>
                                         </Label>
                                         <textarea
                                             ref={studyGoalRef}
                                             id="reg-studyGoal"
-                                            placeholder="e.g., Learn Spanish, Pass medical board exam..."
+                                            placeholder={t.auth.learnGoalPlaceholder}
                                             value={studyGoal}
                                             onChange={(e) => setStudyGoal(e.target.value)}
                                             rows={2}
-                                            className="flex w-full rounded-lg border border-gray-200 bg-white/50 px-3 py-2 text-sm shadow-sm backdrop-blur-sm transition-all placeholder:text-gray-400 focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35] focus:outline-none resize-none"
+                                            className="flex w-full rounded-lg border border-gray-200 bg-white/50 px-3 py-2 text-sm shadow-sm backdrop-blur-sm transition-all placeholder:text-gray-400 focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35] focus:outline-none resize-none text-gray-900"
                                             style={{ fontFamily: '"DM Sans", sans-serif' }}
                                         />
                                     </div>
@@ -642,9 +716,9 @@ export default function RegisterPage() {
                                                 <Check className="absolute inset-0 h-5 w-5 p-0.5 text-white pointer-events-none" />
                                             )}
                                         </div>
-                                        <span className="text-sm text-gray-600 leading-tight">
-                                            Send me tips, updates, and study tricks
-                                            <span className="block text-xs text-gray-400 mt-0.5">No spam, unsubscribe anytime</span>
+                                        <span className="text-sm text-gray-600 leading-tight select-none">
+                                            {t.auth.newsletter}
+                                            <span className="block text-xs text-gray-400 mt-0.5">{t.auth.newsletterDetail}</span>
                                         </span>
                                     </label>
 
@@ -669,14 +743,14 @@ export default function RegisterPage() {
                                                 <Check className="absolute inset-0 h-5 w-5 p-0.5 text-white pointer-events-none" />
                                             )}
                                         </div>
-                                        <span className="text-sm text-gray-600 leading-tight">
-                                            I agree to the{" "}
-                                            <a href="/terms" target="_blank" className="text-[#FF6B35] hover:underline font-medium">
-                                                Terms of Service
+                                        <span className="text-sm text-gray-600 leading-tight select-none">
+                                            {t.auth.termsAccept}{" "}
+                                            <a href="/terms" target="_blank" className="text-[#FF6B35] hover:underline font-semibold">
+                                                {t.auth.termsOfService}
                                             </a>{" "}
-                                            and{" "}
-                                            <a href="/privacy" target="_blank" className="text-[#FF6B35] hover:underline font-medium">
-                                                Privacy Policy
+                                            {t.auth.and}{" "}
+                                            <a href="/privacy" target="_blank" className="text-[#FF6B35] hover:underline font-semibold">
+                                                {t.auth.privacyPolicy}
                                             </a>
                                             <span className="text-red-500 ml-0.5">*</span>
                                         </span>
@@ -693,26 +767,26 @@ export default function RegisterPage() {
                                             type="button"
                                             variant="outline"
                                             onClick={goBack}
-                                            className="h-11 flex-1 rounded-lg border-gray-200 bg-white hover:bg-gray-50 transition-all"
-                                            style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
+                                            className="h-11 flex-1 rounded-lg border-gray-200 bg-white hover:bg-gray-50 transition-all font-medium text-gray-900"
+                                            style={{ fontFamily: '"DM Sans", sans-serif' }}
                                         >
                                             <ChevronLeft className="mr-1 h-4 w-4" />
-                                            Back
+                                            {t.common.back}
                                         </Button>
                                         <Button
                                             type="button"
                                             disabled={!termsAccepted || isSubmitting}
                                             onClick={handleSubmit}
-                                            className="h-11 flex-[2] rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-                                            style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
+                                            className="h-11 flex-[2] rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none font-bold"
+                                            style={{ fontFamily: '"DM Sans", sans-serif' }}
                                         >
                                             {isSubmitting ? (
                                                 <>
                                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    Creating account...
+                                                    {t.common.loading}
                                                 </>
                                             ) : (
-                                                "Create Account"
+                                                t.auth.createAccount
                                             )}
                                         </Button>
                                     </div>
@@ -723,14 +797,13 @@ export default function RegisterPage() {
 
                     {/* Footer link */}
                     <div className="mt-8 text-center text-sm text-gray-500" style={{ fontFamily: '"DM Sans", sans-serif' }}>
-                        Already have an account?{" "}
-                        <button
-                            type="button"
-                            onClick={() => navigate("/login")}
+                        {t.auth.alreadyHaveAccount}{" "}
+                        <Link
+                            to="/login"
                             className="font-semibold text-[#FF6B35] hover:underline"
                         >
-                            Sign in
-                        </button>
+                            {t.auth.signInButton}
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -8,6 +8,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.util.Map;
+import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import br.com.powercards.client.KeycloakTokenClient;
 import br.com.powercards.dto.LoginRequest;
@@ -26,6 +29,9 @@ public class AuthResource {
 
     @Inject
     KeycloakService keycloakService;
+
+    @Inject
+    SecurityIdentity identity;
 
     @Inject
     @RestClient
@@ -56,6 +62,28 @@ public class AuthResource {
             LOGGER.error("Registration unexpected error", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Registration failed").build();
         }
+    }
+
+    @GET
+    @Path("/check-email")
+    @PermitAll
+    public Response checkEmail(@QueryParam("email") String email) {
+        if (email == null || email.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Email is required").build();
+        }
+        boolean taken = keycloakService.isEmailTaken(email);
+        return Response.ok(Map.of("available", !taken)).build();
+    }
+
+    @GET
+    @Path("/check-username")
+    @PermitAll
+    public Response checkUsername(@QueryParam("username") String username) {
+        if (username == null || username.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Username is required").build();
+        }
+        boolean taken = keycloakService.isUsernameTaken(username);
+        return Response.ok(Map.of("available", !taken)).build();
     }
 
     @POST
@@ -129,5 +157,50 @@ public class AuthResource {
             LOGGER.error("Exchange unexpected error", e);
             return Response.status(Response.Status.UNAUTHORIZED).entity("Exchange failed").build();
         }
+    }
+
+    // ─── MFA Endpoints ─────────────────────────────────────────────────
+
+    @GET
+    @Path("/mfa/status")
+    public Response mfaStatus() {
+        String keycloakId = identity.getPrincipal().getName();
+        boolean enabled = keycloakService.hasMfaConfigured(keycloakId);
+        return Response.ok(Map.of("enabled", enabled)).build();
+    }
+
+    @POST
+    @Path("/mfa/setup")
+    public Response mfaSetup() {
+        String keycloakId = identity.getPrincipal().getName();
+        // Use the keycloakId as the account label in the TOTP URI
+        var setupInfo = keycloakService.generateTotpSecret(keycloakId);
+        return Response.ok(Map.of(
+                "secret", setupInfo.secret(),
+                "otpauthUri", setupInfo.otpauthUri())).build();
+    }
+
+    @POST
+    @Path("/mfa/verify")
+    public Response mfaVerify(MfaVerifyRequest request) {
+        String keycloakId = identity.getPrincipal().getName();
+        boolean success = keycloakService.verifyAndEnableTotp(keycloakId, request.secret(), request.code());
+        if (success) {
+            return Response.ok(Map.of("success", true)).build();
+        }
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(Map.of("success", false, "error", "Invalid code"))
+                .build();
+    }
+
+    @POST
+    @Path("/mfa/disable")
+    public Response mfaDisable() {
+        String keycloakId = identity.getPrincipal().getName();
+        keycloakService.disableTotp(keycloakId);
+        return Response.ok(Map.of("success", true)).build();
+    }
+
+    public record MfaVerifyRequest(String secret, String code) {
     }
 }
