@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/auth/AuthProvider";
 import { updateProfile, updateAiSettings } from "@/api/profile";
+import { getMfaStatus, setupMfa, verifyMfa, disableMfa } from "@/api/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Moon, Sun, Check, Sparkles, Eye, EyeOff, Trash2, Languages } from "lucide-react";
+import { Loader2, Save, Moon, Sun, Check, Sparkles, Eye, EyeOff, Trash2, Languages, Shield, AlertTriangle } from "lucide-react";
 import { palettes, applyTheme } from "@/lib/themes";
 import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/context/LanguageContext";
@@ -52,6 +53,16 @@ export function SettingsModal({ open, onOpenChange, defaultTab = "general" }: Se
     const [aiApiKey, setAiApiKey] = useState("");
     const [showApiKey, setShowApiKey] = useState(false);
     const [hasKey, setHasKey] = useState(false);
+
+    // MFA Settings
+    const [mfaEnabled, setMfaEnabled] = useState(false);
+    const [mfaLoading, setMfaLoading] = useState(false);
+    const [mfaSetupMode, setMfaSetupMode] = useState(false);
+    const [mfaSecret, setMfaSecret] = useState("");
+    const [mfaOtpauthUri, setMfaOtpauthUri] = useState("");
+    const [mfaCode, setMfaCode] = useState("");
+    const [mfaVerifying, setMfaVerifying] = useState(false);
+    const [mfaError, setMfaError] = useState("");
 
     useEffect(() => {
         if (open) {
@@ -201,6 +212,77 @@ export function SettingsModal({ open, onOpenChange, defaultTab = "general" }: Se
         }
     };
 
+    // MFA Handlers
+    const fetchMfaStatus = async () => {
+        setMfaLoading(true);
+        try {
+            const status = await getMfaStatus();
+            setMfaEnabled(status.enabled);
+        } catch (e) {
+            console.error("Failed to fetch MFA status", e);
+        } finally {
+            setMfaLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (open && activeTab === "security") {
+            fetchMfaStatus();
+        }
+    }, [open, activeTab]);
+
+    const handleEnableMfa = async () => {
+        setMfaLoading(true);
+        try {
+            const setup = await setupMfa();
+            setMfaSecret(setup.secret);
+            setMfaOtpauthUri(setup.otpauthUri);
+            setMfaSetupMode(true);
+        } catch (err) {
+            toast({ title: t.profile.error, description: "Failed to initiate MFA setup", variant: "destructive" });
+        } finally {
+            setMfaLoading(false);
+        }
+    };
+
+    const handleVerifyMfa = async () => {
+        if (mfaCode.length !== 6) return;
+        setMfaVerifying(true);
+        setMfaError("");
+        try {
+            const result = await verifyMfa(mfaSecret, mfaCode);
+            if (result.success) {
+                setMfaEnabled(true);
+                setMfaSetupMode(false);
+                setMfaCode("");
+                toast({
+                    title: t.auth.mfaSetupSuccess,
+                    variant: "default"
+                });
+            } else {
+                setMfaError("Invalid code. Please try again.");
+            }
+        } catch {
+            setMfaError("Verification failed. Please try again.");
+        } finally {
+            setMfaVerifying(false);
+        }
+    };
+
+    const handleDisableMfa = async () => {
+        if (!confirm(t.auth.disableMfa + "?")) return;
+        setMfaLoading(true);
+        try {
+            await disableMfa();
+            setMfaEnabled(false);
+            toast({ title: t.profile.success, description: t.auth.mfaDisabled });
+        } catch (error) {
+            toast({ title: t.profile.error, description: "Failed to disable MFA", variant: "destructive" });
+        } finally {
+            setMfaLoading(false);
+        }
+    };
+
     const providers = [
         { value: "openai", label: t.aiSettings.openai },
         { value: "gemini", label: t.aiSettings.gemini },
@@ -218,9 +300,10 @@ export function SettingsModal({ open, onOpenChange, defaultTab = "general" }: Se
                 </DialogHeader>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="general">General</TabsTrigger>
                         <TabsTrigger value="ai">AI Settings</TabsTrigger>
+                        <TabsTrigger value="security">{t.profile.security}</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="general" className="space-y-6 py-4">
@@ -380,6 +463,100 @@ export function SettingsModal({ open, onOpenChange, defaultTab = "general" }: Se
                                     </Button>
                                 )}
                             </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="security" className="space-y-6 py-4">
+                        <div className="flex items-center justify-between bg-muted/50 p-4 rounded-lg border">
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "p-2 rounded-full",
+                                    mfaEnabled ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                                )}>
+                                    <Shield className="h-5 w-5" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <span className="text-sm font-semibold block">{t.auth.mfaTitle}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {mfaEnabled ? t.auth.mfaEnabled : t.auth.mfaDisabled}
+                                    </span>
+                                </div>
+                            </div>
+                            {!mfaSetupMode && (
+                                <Button
+                                    variant={mfaEnabled ? "outline" : "default"}
+                                    size="sm"
+                                    onClick={mfaEnabled ? handleDisableMfa : handleEnableMfa}
+                                    disabled={mfaLoading}
+                                >
+                                    {mfaLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (mfaEnabled ? t.auth.disableMfa : t.auth.enableMfa)}
+                                </Button>
+                            )}
+                        </div>
+
+                        {mfaSetupMode && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="flex items-start gap-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
+                                    <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                                    <p className="text-sm text-blue-800" style={{ fontFamily: '"DM Sans", sans-serif' }}>
+                                        {t.auth.mfaSetupDescription}
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col items-center space-y-4">
+                                    <div className="rounded-xl bg-white p-3 shadow-sm border border-gray-200">
+                                        <img
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(mfaOtpauthUri)}`}
+                                            alt="MFA QR Code"
+                                            className="h-40 w-40"
+                                        />
+                                    </div>
+
+                                    <div className="w-full space-y-2">
+                                        <p className="text-xs text-center text-muted-foreground font-medium uppercase tracking-wider">
+                                            {t.auth.mfaEnterCode}
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={6}
+                                                placeholder="000000"
+                                                value={mfaCode}
+                                                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                                className="h-12 text-center text-xl font-mono tracking-widest focus:ring-primary"
+                                                autoFocus
+                                            />
+                                            <Button
+                                                onClick={handleVerifyMfa}
+                                                disabled={mfaCode.length !== 6 || mfaVerifying}
+                                                className="h-12 px-6"
+                                            >
+                                                {mfaVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : t.common.confirm}
+                                            </Button>
+                                        </div>
+                                        {mfaError && <p className="text-xs text-red-500 text-center">{mfaError}</p>}
+                                    </div>
+
+                                    <div className="w-full text-center">
+                                        <button
+                                            onClick={() => setMfaSetupMode(false)}
+                                            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                                        >
+                                            {t.common.cancel}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="rounded-lg border bg-amber-50/50 p-4 space-y-2">
+                            <h4 className="text-sm font-semibold text-amber-900 border-b border-amber-200 pb-1 flex items-center gap-1.5">
+                                <Shield className="h-4 w-4" /> Why use Two-Factor?
+                            </h4>
+                            <p className="text-xs text-amber-800 leading-relaxed">
+                                {t.auth.mfaDescription}
+                            </p>
                         </div>
                     </TabsContent>
                 </Tabs>
