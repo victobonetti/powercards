@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { deckApi } from "@/lib/api";
 import { DeckResponse } from "@/api/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
     Dialog,
@@ -202,12 +203,18 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                             className="mb-0"
                         />
                         <div className="flex items-center gap-2">
-                            <Input
-                                placeholder={t.decks.searchPlaceholder}
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-64"
-                            />
+                            <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder={t.decks.searchPlaceholder}
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-80 pl-9"
+                                />
+                            </div>
+                            <Button variant="outline" size="icon" title="Filter" className="shrink-0">
+                                <Filter className="h-4 w-4" />
+                            </Button>
                             <Dialog open={isCreateOpen} onOpenChange={handleOpenChangeCreate}>
                                 <DialogTrigger asChild>
                                     <Button size="sm">
@@ -244,26 +251,62 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
                             {
                                 header: "ID",
                                 accessorKey: "id",
-                                className: "w-24 text-xs text-muted-foreground",
+                                className: "w-20 text-xs text-muted-foreground font-mono",
+                                headerClassName: "text-xs font-bold text-muted-foreground uppercase tracking-wider",
                                 sortKey: "id"
                             },
                             {
                                 header: "Name",
                                 accessorKey: "name",
+                                className: "font-medium",
+                                headerClassName: "text-xs font-bold text-muted-foreground uppercase tracking-wider",
                                 sortKey: "name"
                             },
                             {
-                                header: "Cards",
-                                accessorKey: "cardCount",
-                                className: "text-right w-32",
+                                header: "New",
+                                accessorKey: "newCards",
+                                className: "w-24 text-blue-500",
+                                headerClassName: "text-xs font-bold text-muted-foreground uppercase tracking-wider",
+                            },
+                            {
+                                header: "Due",
+                                accessorKey: "dueCards",
+                                className: "w-24 text-orange-500 font-bold",
+                                headerClassName: "text-xs font-bold text-muted-foreground uppercase tracking-wider",
+                            },
+                            {
+                                header: "Last Studied",
+                                accessorKey: "lastStudied",
+                                cell: (deck) => deck.lastStudied ? formatDistanceToNow(new Date(Number(deck.lastStudied)), { addSuffix: true }) : <span className="text-muted-foreground opacity-50">Never</span>,
+                                className: "w-40 text-sm",
+                                headerClassName: "text-xs font-bold text-muted-foreground uppercase tracking-wider",
+                            },
+                            {
+                                header: "Progress",
+                                cell: (deck) => {
+                                    const total = deck.totalCards || deck.cardCount || 0;
+                                    const newCards = deck.newCards || 0;
+                                    const progress = total > 0 ? ((total - newCards) / total) * 100 : 0;
+                                    return (
+                                        <div className="w-full bg-secondary/50 rounded-full h-2 overflow-hidden">
+                                            <div
+                                                className="bg-primary/80 h-full rounded-full transition-all duration-500"
+                                                style={{ width: `${progress}%` }}
+                                            />
+                                        </div>
+                                    );
+                                },
+                                className: "w-32",
+                                headerClassName: "text-xs font-bold text-muted-foreground uppercase tracking-wider",
                             },
                             {
                                 header: "Actions",
-                                className: "text-right",
+                                className: "text-right w-16",
+                                headerClassName: "text-xs font-bold text-muted-foreground uppercase tracking-wider text-right",
                                 cell: (deck) => (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
                                                 <MoreVertical className="h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>

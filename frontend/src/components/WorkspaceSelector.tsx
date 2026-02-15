@@ -29,21 +29,23 @@ export function WorkspaceSelector() {
     const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
 
     return (
-        <div className="font-serif">
-            <label className="text-sm font-medium text-muted-foreground p-1" htmlFor="workspace-select">Workspaces</label>
+        <div className="font-sans w-full">
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
-                        className="w-[200px] justify-between"
+                        className="w-full justify-between h-14 px-3 border-2 hover:border-primary/50 transition-all bg-card shadow-sm group"
                     >
-                        {currentWorkspace ? currentWorkspace.name : "Select Workspace..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <div className="flex flex-col items-start gap-0.5 overflow-hidden">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-primary transition-colors">Workspace</span>
+                            <span className="font-semibold truncate w-full text-left font-sans text-base">{currentWorkspace ? currentWorkspace.name : "Select Workspace..."}</span>
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
+                <PopoverContent className="w-[220px] p-0" align="start">
                     <Command>
                         <CommandInput placeholder="Search workspace..." />
                         <CommandList>

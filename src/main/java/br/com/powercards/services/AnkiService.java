@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.File;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -271,7 +271,8 @@ public class AnkiService {
         List<br.com.powercards.dto.DeckResponse> deckResponses = anki4j.getDecks().stream()
                 .map(d -> deckMap.get(d.getId()))
                 .filter(Objects::nonNull)
-                .map(d -> new br.com.powercards.dto.DeckResponse(d.id, d.name, d.cards.size()))
+                .map(d -> new br.com.powercards.dto.DeckResponse(d.id, d.name, d.cards.size(), 0, 0, 0, 0,
+                        d.cards.size(), null))
                 .collect(Collectors.toList());
 
         String status = (skippedNotes > 0) ? (importedNotes > 0 || updatedNotes > 0 ? "PARTIAL" : "SKIPPED")

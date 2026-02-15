@@ -12,8 +12,8 @@ import { ThemeProvider, useTheme } from "./components/theme-provider";
 import { PageHeader } from "./components/ui/page-header";
 import { applyTheme } from "./lib/themes";
 
-import { WorkspaceProvider, useWorkspace } from "./context/WorkspaceContext";
-import { FlashcardFactoryProvider } from "./context/FlashcardFactoryContext";
+import { WorkspaceProvider, useWorkspace } from "@/context/WorkspaceContext";
+import { FlashcardFactoryProvider } from "@/context/FlashcardFactoryContext";
 import { Toaster } from "./components/ui/toaster";
 import { WorkspaceCreateDialog } from "./components/WorkspaceCreateDialog";
 

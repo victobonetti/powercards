@@ -180,16 +180,11 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                 </div>
 
                 <div className="space-y-1 px-2">
-                    <div className={cn("transition-all duration-300", getItemClass(2))}>
-                        <SidebarButton
-                            icon={Upload}
-                            label={t.navigation.upload}
-                            isActive={currentView === "upload"}
-                            isExpanded={isExpanded}
-                            onClick={() => onNavigate("upload")}
-                        />
+                    {/* Primary Actions Group */}
+                    <div className={cn("px-4 py-2 text-xs font-semibold text-muted-foreground tracking-wider mb-1 mt-2", !isExpanded && "sr-only")}>
+                        MANAGE
                     </div>
-                    <div className={cn("transition-all duration-300", getItemClass(3))}>
+                    <div className={cn("transition-all duration-300", getItemClass(2))}>
                         <SidebarButton
                             icon={Layers}
                             label={t.navigation.decks}
@@ -198,16 +193,6 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                             onClick={() => onNavigate("decks")}
                         />
                     </div>
-                    <div className={cn("transition-all duration-300", getItemClass([3]))}>
-                        <SidebarButton
-                            icon={Download}
-                            label="Download Anki"
-                            isActive={currentView === "export"}
-                            isExpanded={isExpanded}
-                            onClick={() => onNavigate("export")}
-                        />
-                    </div>
-
                     <div className={cn("transition-all duration-300", getItemClass(3))}>
                         <SidebarButton
                             icon={Tag}
@@ -217,14 +202,10 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                             onClick={() => onNavigate("tags")}
                         />
                     </div>
-                    <div className={cn("transition-all duration-300", getItemClass(4))}>
-                        <SidebarButton
-                            icon={Settings}
-                            label={language === 'pt' ? "Configurações" : "Settings"}
-                            isActive={isSettingsOpen}
-                            isExpanded={isExpanded}
-                            onClick={() => openSettings()}
-                        />
+
+                    {/* Tools Group */}
+                    <div className={cn("px-4 py-2 text-xs font-semibold text-muted-foreground tracking-wider mb-1 mt-4", !isExpanded && "sr-only")}>
+                        TOOLS
                     </div>
                     <div className={cn("transition-all duration-300", getItemClass(5))}>
                         <SidebarButton
@@ -235,6 +216,42 @@ export function Sidebar({ currentView, onNavigate, className }: SidebarProps) {
                             isExpanded={isExpanded}
                             onClick={() => onNavigate("factory")}
                             className={factoryButtonClass}
+                        />
+                    </div>
+
+                    <div className={cn("transition-all duration-300", getItemClass([1, 6]))}>
+                        {/* We can use a dropdown or just keep them separate but grouped. 
+                             Plan says: "Consolidate... through a submenu or expandable section".
+                             For simplicity and due to "Import" being a main view ("upload"), I'll keep them but grouped under "DATA".
+                             Actually, let's group Import/Export.
+                          */}
+                        <SidebarButton
+                            icon={Upload}
+                            label={t.navigation.upload} // "Import .Apkg"
+                            isActive={currentView === "upload"}
+                            isExpanded={isExpanded}
+                            onClick={() => onNavigate("upload")}
+                        />
+                        <SidebarButton
+                            icon={Download}
+                            label="Export Anki"
+                            isActive={currentView === "export"}
+                            isExpanded={isExpanded}
+                            onClick={() => onNavigate("export")}
+                        />
+                    </div>
+
+                    {/* Settings Group */}
+                    <div className={cn("px-4 py-2 text-xs font-semibold text-muted-foreground tracking-wider mb-1 mt-4", !isExpanded && "sr-only")}>
+                        SYSTEM
+                    </div>
+                    <div className={cn("transition-all duration-300", getItemClass(4))}>
+                        <SidebarButton
+                            icon={Settings}
+                            label={language === 'pt' ? "Configurações" : "Settings"}
+                            isActive={isSettingsOpen}
+                            isExpanded={isExpanded}
+                            onClick={() => openSettings()}
                         />
                     </div>
                 </div>

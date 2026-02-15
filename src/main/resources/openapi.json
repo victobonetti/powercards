@@ -1965,6 +1965,30 @@
           "cardCount" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "newCards" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "learningCards" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "reviewCards" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "dueCards" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalCards" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lastStudied" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

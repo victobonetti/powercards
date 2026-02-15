@@ -595,6 +595,42 @@ export interface DeckResponse {
      * @memberof DeckResponse
      */
     'cardCount'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DeckResponse
+     */
+    'newCards'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DeckResponse
+     */
+    'learningCards'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DeckResponse
+     */
+    'reviewCards'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DeckResponse
+     */
+    'dueCards'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DeckResponse
+     */
+    'totalCards'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DeckResponse
+     */
+    'lastStudied'?: number;
 }
 /**
  * 

@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useWorkspace } from "./WorkspaceContext";
+import { useAuth } from "@/auth/AuthProvider";
+import { useWorkspace } from "@/context/WorkspaceContext";
 
 export interface Message {
     id: string;
@@ -39,6 +40,7 @@ const FlashcardFactoryContext = createContext<FlashcardFactoryContextType | unde
 
 export function FlashcardFactoryProvider({ children }: { children: ReactNode }) {
     const { currentWorkspaceId } = useWorkspace();
+    const { isAuthenticated } = useAuth();
     const [chats, setChats] = useState<Chat[]>([]);
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -46,6 +48,7 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
     const [itemsLoading, setItemsLoading] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [notificationChatIds, setNotificationChatIds] = useState<Set<string>>(new Set());
+
 
     const { toast } = useToast();
     const location = useLocation();
@@ -59,14 +62,14 @@ export function FlashcardFactoryProvider({ children }: { children: ReactNode }) 
 
     // Fetch chats when workspace changes
     useEffect(() => {
-        if (currentWorkspaceId) {
+        if (currentWorkspaceId && isAuthenticated) {
             fetchChats();
         } else {
             setChats([]);
             setMessages([]);
             setCurrentChatId(null);
         }
-    }, [currentWorkspaceId]);
+    }, [currentWorkspaceId, isAuthenticated]);
 
     // Fetch messages when currentChatId changes
     useEffect(() => {

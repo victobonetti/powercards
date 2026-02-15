@@ -54,8 +54,21 @@ public class DeckResource {
         long total = query.count();
         List<Deck> decks = query.page(page - 1, perPage).list();
         List<DeckResponse> data = decks.stream()
-                .map(d -> new DeckResponse(d.id, d.name, d.cards.size()))
-                .toList();
+                .map(d -> {
+                    long newCards = d.cards.stream().filter(c -> c.queue == 0).count();
+                    long learningCards = d.cards.stream().filter(c -> c.queue == 1 || c.queue == 3).count();
+                    long reviewCards = d.cards.stream().filter(c -> c.queue == 2).count();
+                    // Simplified due count: learning + review (can be refined with due date logic
+                    // later)
+                    long dueCards = learningCards + reviewCards;
+                    long totalCards = d.cards.size();
+                    Long lastStudied = d.cards.stream()
+                            .map(c -> c.mod)
+                            .max(Long::compare)
+                            .orElse(null);
+                    return new DeckResponse(d.id, d.name, totalCards, newCards, learningCards, reviewCards, dueCards,
+                            totalCards, lastStudied);
+                }).toList();
 
         long totalPages = (total + perPage - 1) / perPage;
         if (totalPages == 0)
@@ -75,14 +88,16 @@ public class DeckResource {
 
         var lastPageBuilder = uriInfo.getAbsolutePathBuilder()
                 .queryParam("page", totalPages)
-                .queryParam("perPage", perPage);
+                .queryParam("perPage",
+                        perPage);
         if (search != null)
             lastPageBuilder.queryParam("search", search);
         if (sort != null)
             lastPageBuilder.queryParam("sort", sort);
         String lastPageUri = lastPageBuilder.build().toString();
 
-        PaginationMeta meta = new PaginationMeta(total, page, nextPageUri, lastPageUri);
+        PaginationMeta meta = new PaginationMeta(total, page, nextPageUri,
+                lastPageUri);
         return new PaginatedResponse<>(meta, data);
     }
 
@@ -96,7 +111,17 @@ public class DeckResource {
         if (deck == null) {
             throw new NotFoundException();
         }
-        return new DeckResponse(deck.id, deck.name, deck.cards.size());
+        long newCards = deck.cards.stream().filter(c -> c.queue == 0).count();
+        long learningCards = deck.cards.stream().filter(c -> c.queue == 1 || c.queue == 3).count();
+        long reviewCards = deck.cards.stream().filter(c -> c.queue == 2).count();
+        long dueCards = learningCards + reviewCards;
+        long totalCards = deck.cards.size();
+        Long lastStudied = deck.cards.stream()
+                .map(c -> c.mod)
+                .max(Long::compare)
+                .orElse(null);
+        return new DeckResponse(deck.id, deck.name, totalCards, newCards, learningCards, reviewCards, dueCards,
+                totalCards, lastStudied);
     }
 
     @POST
@@ -113,7 +138,7 @@ public class DeckResource {
         deck.name = deckRequest.name();
         deck.persist();
         return Response.status(Response.Status.CREATED)
-                .entity(new DeckResponse(deck.id, deck.name, 0))
+                .entity(new DeckResponse(deck.id, deck.name, 0, 0, 0, 0, 0, 0, null))
                 .build();
     }
 
@@ -129,7 +154,17 @@ public class DeckResource {
             throw new NotFoundException();
         }
         entity.name = deckRequest.name();
-        return new DeckResponse(entity.id, entity.name, entity.cards.size());
+        long newCards = entity.cards.stream().filter(c -> c.queue == 0).count();
+        long learningCards = entity.cards.stream().filter(c -> c.queue == 1 || c.queue == 3).count();
+        long reviewCards = entity.cards.stream().filter(c -> c.queue == 2).count();
+        long dueCards = learningCards + reviewCards;
+        long totalCards = entity.cards.size();
+        Long lastStudied = entity.cards.stream()
+                .map(c -> c.mod)
+                .max(Long::compare)
+                .orElse(null);
+        return new DeckResponse(entity.id, entity.name, totalCards, newCards, learningCards, reviewCards, dueCards,
+                totalCards, lastStudied);
     }
 
     @DELETE
