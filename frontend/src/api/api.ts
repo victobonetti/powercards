@@ -144,6 +144,19 @@ export interface AnkiTemplateDto {
 /**
  * 
  * @export
+ * @interface BatchEnhanceRequest
+ */
+export interface BatchEnhanceRequest {
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof BatchEnhanceRequest
+     */
+    'noteIds'?: Array<number>;
+}
+/**
+ * 
+ * @export
  * @interface BulkDeleteRequest
  */
 export interface BulkDeleteRequest {
@@ -439,6 +452,12 @@ export interface CardResponse {
      * @memberof CardResponse
      */
     'noteTags'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CardResponse
+     */
+    'isDraft'?: boolean;
 }
 /**
  * 
@@ -710,6 +729,12 @@ export interface NoteResponse {
      * @memberof NoteResponse
      */
     'customData'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof NoteResponse
+     */
+    'isDraft'?: boolean;
 }
 /**
  * 
@@ -3515,6 +3540,42 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
         },
         /**
          * 
+         * @summary Batch enhance notes using AI
+         * @param {BatchEnhanceRequest} batchEnhanceRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesBulkEnhancePost: async (batchEnhanceRequest: BatchEnhanceRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'batchEnhanceRequest' is not null or undefined
+            assertParamExists('v1NotesBulkEnhancePost', 'batchEnhanceRequest', batchEnhanceRequest)
+            const localVarPath = `/v1/notes/bulk/enhance`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(batchEnhanceRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Bulk add tags to notes
          * @param {BulkTagRequest} bulkTagRequest 
          * @param {*} [options] Override http request option.
@@ -3635,12 +3696,87 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
         },
         /**
          * 
-         * @summary Get a note by ID
+         * @summary Discard a note draft
          * @param {number} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesIdGet: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1NotesIdDraftDelete: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('v1NotesIdDraftDelete', 'id', id)
+            const localVarPath = `/v1/notes/{id}/draft`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Save a draft for a note
+         * @param {number} id 
+         * @param {NoteRequest} noteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesIdDraftPost: async (id: number, noteRequest: NoteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('v1NotesIdDraftPost', 'id', id)
+            // verify required parameter 'noteRequest' is not null or undefined
+            assertParamExists('v1NotesIdDraftPost', 'noteRequest', noteRequest)
+            const localVarPath = `/v1/notes/{id}/draft`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(noteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get a note by ID
+         * @param {number} id 
+         * @param {boolean} [draft] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesIdGet: async (id: number, draft?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('v1NotesIdGet', 'id', id)
             const localVarPath = `/v1/notes/{id}`
@@ -3655,6 +3791,10 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (draft !== undefined) {
+                localVarQueryParameter['draft'] = draft;
+            }
 
 
     
@@ -3811,6 +3951,19 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Batch enhance notes using AI
+         * @param {BatchEnhanceRequest} batchEnhanceRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1NotesBulkEnhancePost(batchEnhanceRequest: BatchEnhanceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesBulkEnhancePost(batchEnhanceRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesBulkEnhancePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Bulk add tags to notes
          * @param {BulkTagRequest} bulkTagRequest 
          * @param {*} [options] Override http request option.
@@ -3853,13 +4006,41 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Get a note by ID
+         * @summary Discard a note draft
          * @param {number} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1NotesIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NoteResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesIdGet(id, options);
+        async v1NotesIdDraftDelete(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesIdDraftDelete(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesIdDraftDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Save a draft for a note
+         * @param {number} id 
+         * @param {NoteRequest} noteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1NotesIdDraftPost(id: number, noteRequest: NoteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesIdDraftPost(id, noteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesIdDraftPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get a note by ID
+         * @param {number} id 
+         * @param {boolean} [draft] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1NotesIdGet(id: number, draft?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NoteResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesIdGet(id, draft, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesIdGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -3927,6 +4108,16 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
         },
         /**
          * 
+         * @summary Batch enhance notes using AI
+         * @param {BatchEnhanceRequest} batchEnhanceRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesBulkEnhancePost(batchEnhanceRequest: BatchEnhanceRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1NotesBulkEnhancePost(batchEnhanceRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Bulk add tags to notes
          * @param {BulkTagRequest} bulkTagRequest 
          * @param {*} [options] Override http request option.
@@ -3960,13 +4151,35 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
         },
         /**
          * 
-         * @summary Get a note by ID
+         * @summary Discard a note draft
          * @param {number} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<NoteResponse> {
-            return localVarFp.v1NotesIdGet(id, options).then((request) => request(axios, basePath));
+        v1NotesIdDraftDelete(id: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1NotesIdDraftDelete(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Save a draft for a note
+         * @param {number} id 
+         * @param {NoteRequest} noteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesIdDraftPost(id: number, noteRequest: NoteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1NotesIdDraftPost(id, noteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get a note by ID
+         * @param {number} id 
+         * @param {boolean} [draft] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesIdGet(id: number, draft?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<NoteResponse> {
+            return localVarFp.v1NotesIdGet(id, draft, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4024,6 +4237,18 @@ export class NoteResourceApi extends BaseAPI {
 
     /**
      * 
+     * @summary Batch enhance notes using AI
+     * @param {BatchEnhanceRequest} batchEnhanceRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NoteResourceApi
+     */
+    public v1NotesBulkEnhancePost(batchEnhanceRequest: BatchEnhanceRequest, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesBulkEnhancePost(batchEnhanceRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Bulk add tags to notes
      * @param {BulkTagRequest} bulkTagRequest 
      * @param {*} [options] Override http request option.
@@ -4063,14 +4288,40 @@ export class NoteResourceApi extends BaseAPI {
 
     /**
      * 
-     * @summary Get a note by ID
+     * @summary Discard a note draft
      * @param {number} id 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NoteResourceApi
      */
-    public v1NotesIdGet(id: number, options?: RawAxiosRequestConfig) {
-        return NoteResourceApiFp(this.configuration).v1NotesIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    public v1NotesIdDraftDelete(id: number, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesIdDraftDelete(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Save a draft for a note
+     * @param {number} id 
+     * @param {NoteRequest} noteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NoteResourceApi
+     */
+    public v1NotesIdDraftPost(id: number, noteRequest: NoteRequest, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesIdDraftPost(id, noteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a note by ID
+     * @param {number} id 
+     * @param {boolean} [draft] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NoteResourceApi
+     */
+    public v1NotesIdGet(id: number, draft?: boolean, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesIdGet(id, draft, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

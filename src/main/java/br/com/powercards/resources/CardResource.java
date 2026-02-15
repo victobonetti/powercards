@@ -264,6 +264,7 @@ public class CardResource {
                 card.flags,
                 card.data,
                 noteField,
-                card.note != null ? card.note.tags : "");
+                card.note != null ? card.note.tags : "",
+                card.note != null && br.com.powercards.model.NoteDraft.count("note.id", card.note.id) > 0);
     }
 }

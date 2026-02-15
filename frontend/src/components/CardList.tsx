@@ -6,7 +6,7 @@ import { BulkMoveDialog } from "./BulkMoveDialog";
 import { BulkTagDialog } from "./BulkTagDialog";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { PageHeader } from "./ui/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -36,8 +36,8 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
     const { toast } = useToast();
 
     // Bulk Actions State
+    const [enhancingNoteIds, setEnhancingNoteIds] = useState<number[]>([]);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
     const [isBulkTagOpen, setIsBulkTagOpen] = useState(false);
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
@@ -52,11 +52,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
     // Usually keep selection on current page? Or global?
     // Let's reset on page change for simplicity or keep it?
     // Simple: reset on page change.
-    useEffect(() => {
-        if (!isSelectionMode) {
-            setSelectedIds([]);
-        }
-    }, [isSelectionMode]);
+
 
     useEffect(() => {
         setSelectedIds([]);
@@ -157,6 +153,31 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
         }
     };
 
+    const handleBatchEnhance = async () => {
+        const notesIds = cards
+            .filter(c => selectedIds.includes(c.id!))
+            .map(c => c.noteId!)
+            .filter((id, index, self) => id !== undefined && self.indexOf(id) === index);
+
+        if (notesIds.length === 0) return;
+        if (!confirm(`Are you sure you want to enhance ${notesIds.length} notes with AI? This will create drafts.`)) return;
+
+        setEnhancingNoteIds(notesIds);
+        try {
+            await noteApi.v1NotesBulkEnhancePost({
+                noteIds: notesIds
+            });
+            toast({ title: "Success", description: "Batch enhancement complete. Drafts created." });
+            fetchCards(currentPage);
+            setSelectedIds([]);
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to enhance notes", variant: "destructive" });
+        } finally {
+            setEnhancingNoteIds([]);
+        }
+    };
+
     const handleBulkDelete = async () => {
         try {
             await cardApi.v1CardsBulkDeletePost({
@@ -197,13 +218,6 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                             onChange={(e) => setSearch(e.target.value)}
                                             className="w-64"
                                         />
-                                        <Button
-                                            variant={isSelectionMode ? "secondary" : "outline"}
-                                            onClick={() => setIsSelectionMode(!isSelectionMode)}
-                                            size="sm"
-                                        >
-                                            {isSelectionMode ? "Cancel" : "Select"}
-                                        </Button>
                                     </div>
                                 </PageHeader>
 
@@ -219,6 +233,10 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                             </Button>
                                             <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
                                                 Add Tags
+                                            </Button>
+                                            <Button size="sm" variant="outline" onClick={handleBatchEnhance} disabled={enhancingNoteIds.length > 0}>
+                                                <Sparkles className="mr-2 h-4 w-4" />
+                                                Batch Enhance
                                             </Button>
                                             <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
                                                 Delete
@@ -243,10 +261,19 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                             className: "max-w-xs truncate text-xs py-1 h-8",
                                             cell: (card) => {
                                                 const rawField = getDisplayField((card as any).noteField);
+                                                const isDraft = (card as any).isDraft;
+                                                const isEnhancing = card.noteId ? enhancingNoteIds.includes(card.noteId) : false;
+
                                                 return (
-                                                    <span title={rawField}>
-                                                        {stripHtml(rawField)}
-                                                    </span>
+                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                        {isEnhancing && <Loader2 className="h-3 w-3 animate-spin flex-shrink-0 text-muted-foreground" />}
+                                                        {!isEnhancing && isDraft && (
+                                                            <span className="h-2 w-2 rounded-full bg-orange-400 flex-shrink-0" title="Draft (Unsaved Changes)" />
+                                                        )}
+                                                        <span title={rawField} className="truncate">
+                                                            {stripHtml(rawField)}
+                                                        </span>
+                                                    </div>
                                                 );
                                             },
                                             sortKey: "sfld" // Backend usually uses 'sfld' (sort field) for note content, verifying with sort logic: previous code toggled 'sfld'?? No, checking previous code: onClick={() => toggleSort("tags")} for tags, but CardList previously didn't sort by content? 
@@ -297,7 +324,7 @@ export function CardList({ deckId, deckName, onBack }: CardListProps) {
                                     onSort={toggleSort}
 
                                     // Selection Mode
-                                    selectionMode={isSelectionMode}
+                                    selectionMode={true}
                                     selectedIds={selectedIds}
                                     onSelectionChange={setSelectedIds}
                                     isAllSelected={cards.length > 0 && selectedIds.length === cards.length}

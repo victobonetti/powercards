@@ -981,6 +981,30 @@
         "tags" : [ "Note Resource" ]
       }
     },
+    "/v1/notes/bulk/enhance" : {
+      "post" : {
+        "summary" : "Batch enhance notes using AI",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BatchEnhanceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "tags" : [ "Note Resource" ]
+      }
+    },
     "/v1/notes/bulk/tags" : {
       "post" : {
         "summary" : "Bulk add tags to notes",
@@ -1057,6 +1081,13 @@
             "type" : "integer",
             "format" : "int64"
           }
+        }, {
+          "name" : "draft",
+          "in" : "query",
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1092,6 +1123,57 @@
           },
           "404" : {
             "description" : "Note not found"
+          }
+        },
+        "tags" : [ "Note Resource" ]
+      }
+    },
+    "/v1/notes/{id}/draft" : {
+      "post" : {
+        "summary" : "Save a draft for a note",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NoteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "tags" : [ "Note Resource" ]
+      },
+      "delete" : {
+        "summary" : "Discard a note draft",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         },
         "tags" : [ "Note Resource" ]
@@ -1519,6 +1601,18 @@
           }
         }
       },
+      "BatchEnhanceRequest" : {
+        "type" : "object",
+        "properties" : {
+          "noteIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }
+      },
       "BulkDeleteRequest" : {
         "type" : "object",
         "properties" : {
@@ -1722,6 +1816,9 @@
           },
           "noteTags" : {
             "type" : "string"
+          },
+          "isDraft" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1886,6 +1983,9 @@
           },
           "customData" : {
             "type" : "string"
+          },
+          "isDraft" : {
+            "type" : "boolean"
           }
         }
       },

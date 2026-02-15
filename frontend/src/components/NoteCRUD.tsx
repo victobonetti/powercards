@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "./ui/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { Plus, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import {
@@ -54,16 +54,10 @@ export function NoteCRUD() {
     const [deleteNoteId, setDeleteNoteId] = useState<number | null>(null);
 
     // Bulk Actions State
+    const [enhancingNoteIds, setEnhancingNoteIds] = useState<number[]>([]);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isBulkTagOpen, setIsBulkTagOpen] = useState(false);
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
-
-    useEffect(() => {
-        if (!isSelectionMode) {
-            setSelectedIds([]);
-        }
-    }, [isSelectionMode]);
 
     // Keyboard Navigation
     useEffect(() => {
@@ -228,6 +222,26 @@ export function NoteCRUD() {
         }
     };
 
+    const handleBatchEnhance = async () => {
+        if (selectedIds.length === 0) return;
+        if (!confirm(`Are you sure you want to enhance ${selectedIds.length} notes with AI? This will create drafts for each note.`)) return;
+
+        setEnhancingNoteIds(selectedIds);
+        try {
+            await noteApi.v1NotesBulkEnhancePost({
+                noteIds: selectedIds
+            });
+            toast({ title: "Success", description: "Batch enhancement complete. Drafts created." });
+            fetchNotes(currentPage);
+            setSelectedIds([]);
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to enhance notes", variant: "destructive" });
+        } finally {
+            setEnhancingNoteIds([]);
+        }
+    };
+
     const handleBulkDelete = async () => {
         if (selectedIds.length === 0) return;
         try {
@@ -318,13 +332,6 @@ export function NoteCRUD() {
                                                 </DialogFooter>
                                             </DialogContent>
                                         </Dialog>
-                                        <Button
-                                            variant={isSelectionMode ? "secondary" : "outline"}
-                                            onClick={() => setIsSelectionMode(!isSelectionMode)}
-                                            size="sm"
-                                        >
-                                            {isSelectionMode ? t.common.cancel : "Select"}
-                                        </Button>
                                     </div>
                                 </PageHeader>
 
@@ -337,6 +344,10 @@ export function NoteCRUD() {
                                         <div className="flex items-center gap-2">
                                             <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
                                                 {t.notes.bulkAddTags}
+                                            </Button>
+                                            <Button size="sm" variant="outline" onClick={handleBatchEnhance} disabled={enhancingNoteIds.length > 0}>
+                                                <Sparkles className="mr-2 h-4 w-4" />
+                                                Batch Enhance
                                             </Button>
                                             <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
                                                 {t.notes.bulkDelete}
@@ -361,10 +372,19 @@ export function NoteCRUD() {
                                             className: "max-w-md truncate text-xs py-1 h-8",
                                             cell: (note) => {
                                                 const rawField = getDisplayField(note.fields);
+                                                const isEnhancing = note.id ? enhancingNoteIds.includes(note.id) : false;
+                                                const isDraft = !!note.isDraft;
+
                                                 return (
-                                                    <span title={rawField}>
-                                                        {stripHtml(rawField)}
-                                                    </span>
+                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                        {isEnhancing && <Loader2 className="h-3 w-3 animate-spin flex-shrink-0 text-muted-foreground" />}
+                                                        {!isEnhancing && isDraft && (
+                                                            <span className="h-2 w-2 rounded-full bg-orange-400 flex-shrink-0" title="Draft (Unsaved Changes)" />
+                                                        )}
+                                                        <span title={rawField} className="truncate">
+                                                            {stripHtml(rawField)}
+                                                        </span>
+                                                    </div>
                                                 );
                                             },
                                             sortKey: "sfld"
@@ -408,7 +428,7 @@ export function NoteCRUD() {
                                     onSort={toggleSort}
 
                                     // Selection Mode
-                                    selectionMode={isSelectionMode}
+                                    selectionMode={true}
                                     selectedIds={selectedIds}
                                     onSelectionChange={setSelectedIds}
                                     isAllSelected={notes.length > 0 && selectedIds.length === notes.length}

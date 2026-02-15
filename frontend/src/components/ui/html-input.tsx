@@ -20,9 +20,11 @@ interface HtmlInputProps {
     disabled?: boolean;
     className?: string;
     id?: string;
+    autoFocus?: boolean;
+    onKeyDown?: React.KeyboardEventHandler<HTMLTextAreaElement>;
 }
 
-export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInputProps) {
+export function HtmlInput({ value, onChange, disabled, className, id, autoFocus, onKeyDown }: HtmlInputProps) {
     // Mode: 'markdown' (Default Edit), 'html' (Raw HTML Edit)
     // When disabled, we always show the rendered preview.
     const [mode, setMode] = useState<'markdown' | 'html'>('markdown');
@@ -231,6 +233,8 @@ export function HtmlInput({ value, onChange, disabled, className, id }: HtmlInpu
                         // Or we can let them resize and it affects height of container. Layout shift might happen.
                         // Let's keep resize-y active, it should be fine.
                     )}
+                    autoFocus={autoFocus}
+                    onKeyDown={onKeyDown}
                     placeholder={mode === 'markdown' ? "Type here... (Markdown supported)" : "Enter HTML here..."}
                 />
 

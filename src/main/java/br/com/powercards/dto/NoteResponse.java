@@ -16,15 +16,16 @@ package br.com.powercards.dto;
  * @param customData            Custom data.
  */
 public record NoteResponse(
-                Long id,
-                String guid,
-                Long modelId,
-                Long modificationTimestamp,
-                Integer updateSequenceNumber,
-                String tags,
-                String fields,
-                String sortField,
-                Long checksum,
-                Integer flags,
-                String customData) {
+        Long id,
+        String guid,
+        Long modelId,
+        Long modificationTimestamp,
+        Integer updateSequenceNumber,
+        String tags,
+        String fields,
+        String sortField,
+        Long checksum,
+        Integer flags,
+        String customData,
+        Boolean isDraft) {
 }

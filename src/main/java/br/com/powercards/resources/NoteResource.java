@@ -123,11 +123,35 @@ public class NoteResource {
     @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Get a note by ID")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Note found")
     @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
-    public NoteResponse get(@PathParam("id") Long id) {
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "200", description = "Note found")
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "404", description = "Note not found")
+    public NoteResponse get(@PathParam("id") Long id, @QueryParam("draft") @DefaultValue("true") boolean includeDraft) {
         Note note = Note.findById(id);
         if (note == null) {
             throw new NotFoundException();
         }
+
+        if (includeDraft) {
+            br.com.powercards.model.NoteDraft draft = br.com.powercards.model.NoteDraft.find("note.id", id)
+                    .firstResult();
+            if (draft != null) {
+                // Overlay draft content
+                return new NoteResponse(
+                        note.id,
+                        note.guid,
+                        note.model != null ? note.model.id : null,
+                        note.mod,
+                        note.usn,
+                        draft.tags != null ? draft.tags : note.tags,
+                        ankiService.replaceMediaWithUrls(note.id, draft.flds != null ? draft.flds : note.flds),
+                        note.sfld,
+                        note.csum,
+                        note.flags,
+                        note.data,
+                        true);
+            }
+        }
+
         return toResponse(note);
     }
 
@@ -188,7 +212,32 @@ public class NoteResource {
         Note.getEntityManager().flush();
         syncTags(entity.tags);
         deleteOrphanTags();
+
+        // Clear draft on save
+        br.com.powercards.model.NoteDraft.delete("note.id", id);
+
         return toResponse(entity);
+    }
+
+    @POST
+    @Path("/{id}/draft")
+    @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Save a draft for a note")
+    public void saveDraft(@PathParam("id") Long id, NoteRequest noteRequest) {
+        ensureFilter();
+        Note note = Note.findById(id);
+        if (note == null) {
+            throw new NotFoundException();
+        }
+
+        br.com.powercards.model.NoteDraft draft = br.com.powercards.model.NoteDraft.find("note.id", id).firstResult();
+        if (draft == null) {
+            draft = new br.com.powercards.model.NoteDraft();
+            draft.note = note;
+        }
+        draft.flds = noteRequest.fields();
+        draft.tags = noteRequest.tags();
+        draft.persist();
     }
 
     @DELETE
@@ -203,6 +252,8 @@ public class NoteResource {
         if (entity == null) {
             throw new NotFoundException();
         }
+        // Delete draft first
+        br.com.powercards.model.NoteDraft.delete("note.id", id);
         br.com.powercards.model.Card.delete("note.id = ?1", id);
         entity.delete();
         deleteOrphanTags();
@@ -252,6 +303,8 @@ public class NoteResource {
         ensureFilter();
         if (request.ids() != null && !request.ids().isEmpty()) {
             // Delete associated cards first to satisfy Foreign Key constraints
+            // Also drafts
+            br.com.powercards.model.NoteDraft.delete("note.id in ?1", request.ids());
             br.com.powercards.model.Card.delete("note.id in ?1", request.ids());
             Note.delete("id in ?1", request.ids());
             deleteOrphanTags();
@@ -296,6 +349,82 @@ public class NoteResource {
         }
     }
 
+    @jakarta.inject.Inject
+    br.com.powercards.services.AIEnhancementService aiEnhancementService;
+
+    @POST
+    @Path("/bulk/enhance")
+    @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Batch enhance notes using AI")
+    public void batchEnhance(br.com.powercards.dto.BatchEnhanceRequest request) {
+        ensureFilter();
+        if (request.noteIds() != null && !request.noteIds().isEmpty()) {
+            List<Note> notes = Note.list("id in ?1", request.noteIds());
+            for (Note note : notes) {
+                // Check for existing draft to start from? Or always source from original note?
+                // Plan says "Process AI enhancement. Save results as NoteDrafts."
+                // Usually one enhances the ORIGINAL content.
+                // If a draft exists, should we enhance the draft?
+                // Probably yes, if the user has unsaved edits they want enhanced.
+                // But for bulk, maybe safety first: Enhance original?
+                // Let's enhance ORIGINAL for simplicity in bulk.
+                // Or check draft?
+                // Let's check draft. If draft exists, use it.
+
+                String fieldsToEnhance = note.flds;
+                br.com.powercards.model.NoteDraft existingDraft = br.com.powercards.model.NoteDraft
+                        .find("note.id", note.id).firstResult();
+                if (existingDraft != null) {
+                    fieldsToEnhance = existingDraft.flds;
+                }
+
+                // Split fields (Anki uses \u001f separator)
+                // But wait, the AI service expects a List<String>.
+                // Note fields are stored as a single string joined by \u001f?
+                // Accessing `note.flds`: it is a String.
+                // We need to split it.
+                // AnkiSEPARATOR is usually \u001f (Unit Separator).
+
+                String[] fieldsArray = fieldsToEnhance.split("\u001f", -1); // -1 to keep empty trailing fields
+                java.util.List<String> fieldsList = java.util.Arrays.asList(fieldsArray);
+
+                try {
+                    java.util.List<String> enhancedFields = aiEnhancementService.enhanceModel(fieldsList);
+
+                    // Join back
+                    String newFields = String.join("\u001f", enhancedFields);
+
+                    // Create or Update Draft
+                    if (existingDraft == null) {
+                        existingDraft = new br.com.powercards.model.NoteDraft();
+                        existingDraft.note = note;
+                    }
+                    existingDraft.flds = newFields;
+                    // Keep tags as is (or should AI enhance tags? Service doesn't seem to)
+                    existingDraft.tags = (existingDraft.tags != null) ? existingDraft.tags : note.tags;
+                    existingDraft.persist();
+
+                } catch (Exception e) {
+                    System.err.println("Failed to enhance note " + note.id + ": " + e.getMessage());
+                    // Continue with other notes
+                }
+            }
+        }
+    }
+
+    @DELETE
+    @Path("/{id}/draft")
+    @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Discard a note draft")
+    public void discardDraft(@PathParam("id") Long id) {
+        ensureFilter();
+        Note note = Note.findById(id);
+        if (note == null) {
+            throw new jakarta.ws.rs.NotFoundException();
+        }
+        br.com.powercards.model.NoteDraft.delete("note.id = ?1", id);
+    }
+
     @POST
     @Path("/bulk/tags")
     @Transactional
@@ -332,6 +461,7 @@ public class NoteResource {
                 note.sfld,
                 note.csum,
                 note.flags,
-                note.data);
+                note.data,
+                false);
     }
 }
