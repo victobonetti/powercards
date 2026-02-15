@@ -32,6 +32,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/auth/AuthProvider";
 import { updateProfile } from "@/api/profile";
 import { useTask } from "@/context/TaskContext";
+import { AIKeyRequiredModal } from "./AIKeyRequiredModal";
+
 
 interface NoteCRUDProps {
     deckId?: number;
@@ -71,6 +73,10 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
     const [isBulkTagOpen, setIsBulkTagOpen] = useState(false);
     const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+
+    // AI Check State
+    const [showAIKeyModal, setShowAIKeyModal] = useState(false);
+    const [isEnhanceConfirmOpen, setIsEnhanceConfirmOpen] = useState(false);
 
     // Keyboard Navigation
     useEffect(() => {
@@ -291,10 +297,20 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
         }
     };
 
-    const handleBatchEnhance = async () => {
+    const initiateBatchEnhance = () => {
         if (selectedIds.length === 0) return;
-        if (!confirm(`Are you sure you want to enhance ${selectedIds.length} notes with AI? This will create drafts for each note.`)) return;
 
+        // Check for API Key
+        if (!profile?.hasAiApiKey) {
+            setShowAIKeyModal(true);
+            return;
+        }
+
+        setIsEnhanceConfirmOpen(true);
+    };
+
+    const confirmBatchEnhance = async () => {
+        setIsEnhanceConfirmOpen(false);
         setIsBatchEnhancing(true);
         try {
             await noteApi.v1NotesBulkEnhancePost({
@@ -310,8 +326,6 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
             setIsBatchEnhancing(false);
         }
     };
-
-
 
     const handleBulkDelete = async () => {
         if (selectedIds.length === 0) return;
@@ -432,7 +446,7 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
                                             <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
                                                 {t.notes.bulkAddTags}
                                             </Button>
-                                            <Button size="sm" variant="outline" onClick={handleBatchEnhance} disabled={enhancingNoteIds.length > 0}>
+                                            <Button size="sm" variant="outline" onClick={initiateBatchEnhance} disabled={enhancingNoteIds.length > 0}>
                                                 <Sparkles className="mr-2 h-4 w-4" />
                                                 Batch Enhance
                                             </Button>
@@ -460,12 +474,15 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
                                             cell: (note) => {
                                                 const rawField = getDisplayField(note.fields);
                                                 const isEnhancing = note.id ? enhancingNoteIds.includes(note.id) : false;
+                                                // Should show loader if globally enhancing loop includes this note OR if manual enhance
+                                                const isPendingEnhance = note.id ? (isBatchEnhancing && selectedIds.includes(note.id)) : false;
+                                                const showLoader = isEnhancing || isPendingEnhance;
                                                 const isDraft = !!note.isDraft;
 
                                                 return (
                                                     <div className="flex items-center gap-2 overflow-hidden">
-                                                        {isEnhancing && <Loader2 className="h-3 w-3 animate-spin flex-shrink-0 text-muted-foreground" />}
-                                                        {!isEnhancing && isDraft && (
+                                                        {showLoader && <Loader2 className="h-3 w-3 animate-spin flex-shrink-0 text-muted-foreground" />}
+                                                        {!showLoader && isDraft && (
                                                             <span className="h-2 w-2 rounded-full bg-orange-400 flex-shrink-0" title="Draft (Unsaved Changes)" />
                                                         )}
                                                         <span title={rawField} className="truncate">
@@ -531,7 +548,7 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
                                     onRowDoubleClick={(note) => handleViewClick(note)}
                                     hideSelectionColumn={true}
                                     rowClassName={(note) => (editingNote?.id === note.id ? "bg-muted border-l-4 border-l-primary" : "") + " select-none"}
-                                    isLoading={loading || isBatchEnhancing}
+                                    isLoading={loading} // Removed isBatchEnhancing to allow rows to be seen
                                     emptyMessage={t.notes.empty}
                                 />
                                 <div className="p-2 text-xs text-muted-foreground text-center border-t border-muted/20">
@@ -599,6 +616,20 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
                     title={t.notes.unsavedChangesTitle}
                     description={t.notes.unsavedChangesDescription}
                 />
+
+                <ConfirmationDialog
+                    open={isEnhanceConfirmOpen}
+                    onOpenChange={setIsEnhanceConfirmOpen}
+                    onConfirm={confirmBatchEnhance}
+                    title="Batch Enhance"
+                    description={`Are you sure you want to enhance ${selectedIds.length} notes with AI? This will create drafts for each note.`}
+                />
+
+                <AIKeyRequiredModal
+                    open={showAIKeyModal}
+                    onOpenChange={setShowAIKeyModal}
+                />
+
                 <BulkTagDialog
                     open={isBulkTagOpen}
                     onOpenChange={setIsBulkTagOpen}

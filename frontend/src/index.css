@@ -25,6 +25,14 @@
     --input: 20 5.9% 90%;
     --ring: 24.6 95% 53.1%;
     --radius: 0.75rem;
+
+    /* New Login Palette */
+    --cream: 32 100% 97%;
+    /* #FFF8F0 */
+    --coral: 16 100% 60%;
+    /* #FF6B35 */
+    --sage: 97 12% 67%;
+    /* #A8B5A0 */
   }
 
   .dark {
@@ -184,4 +192,18 @@
 .scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
+
+@keyframes slow-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-slow-rotate {
+  animation: slow-rotate 20s linear infinite;
 }

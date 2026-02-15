@@ -22,7 +22,7 @@ import { DataTable } from "./ui/data-table";
 import { useLanguage } from "@/context/LanguageContext";
 
 export function TagList() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [tags, setTags] = useState<TagStats[]>([]);
     const [totalTags, setTotalTags] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -93,7 +93,7 @@ export function TagList() {
     };
 
     const handleTagClick = (tagName: string) => {
-        navigate(`/notes?search=tag:${encodeURIComponent(tagName)}`);
+        navigate(`/${language}/notes?search=tag:${encodeURIComponent(tagName)}`);
     };
 
     const totalPages = Math.ceil(totalTags / perPage) || 1;
