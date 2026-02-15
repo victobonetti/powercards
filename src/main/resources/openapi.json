@@ -2187,6 +2187,9 @@
           },
           "aiApiKey" : {
             "type" : "string"
+          },
+          "preferences" : {
+            "type" : "string"
           }
         }
       },
@@ -2223,6 +2226,9 @@
           },
           "hasAiApiKey" : {
             "type" : "boolean"
+          },
+          "preferences" : {
+            "type" : "string"
           }
         }
       },

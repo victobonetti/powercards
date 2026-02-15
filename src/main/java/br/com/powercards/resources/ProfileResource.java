@@ -37,7 +37,7 @@ public class ProfileResource {
         String keycloakId = identity.getPrincipal().getName();
         // Step 1: Save DB fields (transactional)
         User user = profileService.updateProfile(keycloakId, request.displayName(), request.description(),
-                request.colorPalette(), request.darkMode(), request.aiProvider());
+                request.colorPalette(), request.darkMode(), request.aiProvider(), request.preferences());
 
         // Step 2: Save AI API key to Keycloak (non-transactional, won't roll back DB)
         Boolean explicitHasKey = null;
@@ -124,6 +124,7 @@ public class ProfileResource {
                 user.colorPalette,
                 user.darkMode,
                 user.aiProvider,
-                hasKey);
+                hasKey,
+                user.preferences);
     }
 }

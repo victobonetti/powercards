@@ -940,6 +940,12 @@ export interface ProfileRequest {
      * @memberof ProfileRequest
      */
     'aiApiKey'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileRequest
+     */
+    'preferences'?: string;
 }
 /**
  * 
@@ -1007,6 +1013,12 @@ export interface ProfileResponse {
      * @memberof ProfileResponse
      */
     'hasAiApiKey'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileResponse
+     */
+    'preferences'?: string;
 }
 /**
  * 

@@ -1507,6 +1507,8 @@ components:
           type: string
         aiApiKey:
           type: string
+        preferences:
+          type: string
     ProfileResponse:
       type: object
       properties:
@@ -1531,6 +1533,8 @@ components:
           type: string
         hasAiApiKey:
           type: boolean
+        preferences:
+          type: string
     Tag:
       type: object
       properties:

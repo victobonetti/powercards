@@ -13,6 +13,7 @@ export interface ProfileData {
     darkMode: boolean | null;
     aiProvider: string | null;
     hasAiApiKey: boolean;
+    preferences: string | null;
 }
 
 export interface ProfileUpdateRequest {
@@ -22,6 +23,7 @@ export interface ProfileUpdateRequest {
     darkMode?: boolean;
     aiProvider?: string;
     aiApiKey?: string;
+    preferences?: string;
 }
 
 // Note: Auth headers are automatically added by axios interceptor in AuthProvider

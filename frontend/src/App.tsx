@@ -14,6 +14,7 @@ import { applyTheme } from "./lib/themes";
 
 import { WorkspaceProvider, useWorkspace } from "@/context/WorkspaceContext";
 import { FlashcardFactoryProvider } from "@/context/FlashcardFactoryContext";
+import { TaskProvider } from "@/context/TaskContext";
 import { Toaster } from "./components/ui/toaster";
 import { WorkspaceCreateDialog } from "./components/WorkspaceCreateDialog";
 
@@ -59,34 +60,36 @@ function App() {
         <WorkspaceProvider>
           <FlashcardFactoryProvider>
             <LanguageProvider>
-              <PaperBackground />
-              <ForceWorkspaceWrapper>
-                <Routes>
-                  <Route path="/" element={<RootRedirect />} />
-                  <Route path="/login" element={<Navigate to="/en/login" replace />} />
-                  <Route path="/register" element={<Navigate to="/en/register" replace />} />
+              <TaskProvider>
+                <PaperBackground />
+                <ForceWorkspaceWrapper>
+                  <Routes>
+                    <Route path="/" element={<RootRedirect />} />
+                    <Route path="/login" element={<Navigate to="/en/login" replace />} />
+                    <Route path="/register" element={<Navigate to="/en/register" replace />} />
 
-                  <Route path="/:lang" element={<LanguageGuard />}>
-                    <Route path="login" element={<LoginPage />} />
-                    <Route path="register" element={<RegisterPage />} />
+                    <Route path="/:lang" element={<LanguageGuard />}>
+                      <Route path="login" element={<LoginPage />} />
+                      <Route path="register" element={<RegisterPage />} />
 
-                    <Route element={<ProtectedRoute />}>
-                      <Route element={<AppLayout />}>
-                        {/* These paths are relative to /:lang */}
-                        <Route index element={<UploadWrapper />} />
-                        <Route path="upload" element={<Navigate to="../" replace />} />
-                        <Route path="tags" element={<TagsView />} />
-                        <Route path="decks" element={<DecksWrapper />} />
-                        <Route path="export" element={<AnkiExportPage />} />
-                        <Route path="factory" element={<FlashcardFactory />} />
-                        <Route path="notes" element={<NotesWrapper />} />
-                        <Route path="profile" element={<ProfilePage />} />
+                      <Route element={<ProtectedRoute />}>
+                        <Route element={<AppLayout />}>
+                          {/* These paths are relative to /:lang */}
+                          <Route index element={<UploadWrapper />} />
+                          <Route path="upload" element={<Navigate to="../" replace />} />
+                          <Route path="tags" element={<TagsView />} />
+                          <Route path="decks" element={<DecksWrapper />} />
+                          <Route path="export" element={<AnkiExportPage />} />
+                          <Route path="factory" element={<FlashcardFactory />} />
+                          <Route path="notes" element={<NotesWrapper />} />
+                          <Route path="profile" element={<ProfilePage />} />
+                        </Route>
                       </Route>
                     </Route>
-                  </Route>
-                </Routes>
-                <Toaster />
-              </ForceWorkspaceWrapper>
+                  </Routes>
+                  <Toaster />
+                </ForceWorkspaceWrapper>
+              </TaskProvider>
             </LanguageProvider>
           </FlashcardFactoryProvider>
         </WorkspaceProvider>

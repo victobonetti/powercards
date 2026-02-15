@@ -29,6 +29,9 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { ResizableSidebar } from "./ui/resizable-sidebar";
 import { NoteDetail } from "./NoteDetail";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/auth/AuthProvider";
+import { updateProfile } from "@/api/profile";
+import { useTask } from "@/context/TaskContext";
 
 interface NoteCRUDProps {
     deckId?: number;
@@ -38,6 +41,8 @@ interface NoteCRUDProps {
 
 export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
     const { t } = useLanguage();
+    const { profile, updateProfileLocally } = useAuth();
+    const { enhanceNote, enhancingNoteIds, registerNoteUpdateCallback } = useTask();
     const [notes, setNotes] = useState<NoteResponse[]>([]);
     const [models, setModels] = useState<AnkiModelResponse[]>([]);
     const [totalNotes, setTotalNotes] = useState(0);
@@ -61,8 +66,8 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
     const [deleteNoteId, setDeleteNoteId] = useState<number | null>(null);
 
     // Bulk Actions State
-    const [enhancingNoteIds, setEnhancingNoteIds] = useState<number[]>([]);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isBatchEnhancing, setIsBatchEnhancing] = useState(false);
     const [isBulkTagOpen, setIsBulkTagOpen] = useState(false);
     const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
@@ -70,14 +75,39 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
     // Keyboard Navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Only navigate if a note is currently selected/editing
-            if (!editingNote) return;
+            if (e.key === 'Escape') {
+                if (selectedIds.length > 0) {
+                    setSelectedIds([]);
+                    return;
+                }
+                if (editingNote) {
+                    setEditingNote(null);
+                    return;
+                }
+            }
 
-            // Do not navigate if user is typing in an input
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                e.preventDefault();
+                setSelectedIds(notes.map(n => n.id!));
+                return;
+            }
+
+            // Do not handle shortcuts if typing in an input
             const target = e.target as HTMLElement;
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable) {
                 return;
             }
+
+            if (e.key === 'Delete' && selectedIds.length > 0) {
+                e.preventDefault();
+                setIsBulkDeleteOpen(true);
+                return;
+            }
+
+            // Only navigate if a note is currently selected/editing
+            if (!editingNote) return;
+
+            // Navigation logic below...
 
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -100,7 +130,7 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [editingNote, notes]);
+    }, [editingNote, notes, selectedIds]);
 
     useEffect(() => {
         setSelectedIds([]);
@@ -155,6 +185,15 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
         fetchNotes(currentPage);
         fetchModels();
     }, [currentPage, debouncedSearch, sort, perPage, deckId]);
+
+    // Listen for background task updates
+    useEffect(() => {
+        return registerNoteUpdateCallback((noteId) => {
+            setNotes(prev => prev.map(n =>
+                n.id === noteId ? { ...n, isDraft: true } : n
+            ));
+        });
+    }, [registerNoteUpdateCallback]);
 
     // Sync search to URL
     useEffect(() => {
@@ -251,7 +290,7 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
         if (selectedIds.length === 0) return;
         if (!confirm(`Are you sure you want to enhance ${selectedIds.length} notes with AI? This will create drafts for each note.`)) return;
 
-        setEnhancingNoteIds(selectedIds);
+        setIsBatchEnhancing(true);
         try {
             await noteApi.v1NotesBulkEnhancePost({
                 noteIds: selectedIds
@@ -263,7 +302,7 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
             console.error(error);
             toast({ title: "Error", description: "Failed to enhance notes", variant: "destructive" });
         } finally {
-            setEnhancingNoteIds([]);
+            setIsBatchEnhancing(false);
         }
     };
 
@@ -481,8 +520,8 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
                                     // Row Interaction
                                     onRowDoubleClick={(note) => handleViewClick(note)}
                                     hideSelectionColumn={true}
-                                    rowClassName={(note) => editingNote?.id === note.id ? "bg-muted border-l-4 border-l-primary" : ""}
-                                    isLoading={loading}
+                                    rowClassName={(note) => (editingNote?.id === note.id ? "bg-muted border-l-4 border-l-primary" : "") + " select-none"}
+                                    isLoading={loading || isBatchEnhancing}
                                     emptyMessage={t.notes.empty}
                                 />
                                 <div className="p-2 text-xs text-muted-foreground text-center border-t border-muted/20">
@@ -495,14 +534,40 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
 
                 {/* Side Panel for Detail View */}
                 {editingNote && (
-                    <ResizableSidebar>
+                    <ResizableSidebar
+                        initialWidth={profile?.preferences ? JSON.parse(profile.preferences).noteDetailWidth || 450 : 450}
+                        onResizeEnd={(width) => {
+                            const newPrefs = profile?.preferences ? JSON.parse(profile.preferences) : {};
+                            newPrefs.noteDetailWidth = width;
+                            const prefsString = JSON.stringify(newPrefs);
+
+                            // Optimistic update
+                            if (profile) {
+                                updateProfileLocally({ ...profile, preferences: prefsString });
+                            }
+
+                            // Persist to backend
+                            updateProfile({ preferences: prefsString }).catch(err => console.error("Failed to save preferences", err));
+                        }}
+                    >
                         <NoteDetail
                             noteId={editingNote.id || null}
                             onSaved={() => fetchNotes(currentPage)}
                             onClose={() => setEditingNote(null)}
-                            onDraftChange={() => fetchNotes(currentPage)}
-                            onEnhanceStart={(id) => setEnhancingNoteIds(prev => [...prev, id])}
-                            onEnhanceEnd={(id) => setEnhancingNoteIds(prev => prev.filter(nid => nid !== id))}
+                            onDraftChange={(isDraft) => {
+                                // Optimistic update of the local state without refetching
+                                setNotes(prev => prev.map(n =>
+                                    n.id === editingNote.id ? { ...n, isDraft } : n
+                                ));
+                            }}
+                            onEnhanceStart={() => { }} // No-op, handled by context
+                            onEnhanceEnd={() => { }}   // No-op
+                            onEnhance={(id, fields, tags) => {
+                                if (editingNote?.modelId) {
+                                    enhanceNote(id, fields, tags, editingNote.modelId);
+                                }
+                            }}
+                            isEnhancing={!!editingNote.id && enhancingNoteIds.includes(editingNote.id)}
                         />
                     </ResizableSidebar>
                 )}

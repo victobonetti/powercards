@@ -1,4 +1,4 @@
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode, useRef } from "react";
 import { GripVertical } from "lucide-react";
 
 interface ResizableSidebarProps {
@@ -6,16 +6,31 @@ interface ResizableSidebarProps {
     initialWidth?: number;
     minWidth?: number;
     maxWidthPct?: number;
+    onResizeEnd?: (width: number) => void;
 }
 
 export function ResizableSidebar({
     children,
     initialWidth = 450,
     minWidth = 400,
-    maxWidthPct = 0.5
+    maxWidthPct = 0.5,
+    onResizeEnd
 }: ResizableSidebarProps) {
     const [width, setWidth] = useState(initialWidth);
     const [isResizing, setIsResizing] = useState(false);
+
+    // Update width if initialWidth changes (e.g. loaded from profile)
+    useEffect(() => {
+        setWidth(initialWidth);
+    }, [initialWidth]);
+
+    // Use a ref to keep track of width without triggering re-renders of the effect
+    // This allows us to access the current width in the mouseUp handler
+    const widthRef = useRef(width);
+
+    useEffect(() => {
+        widthRef.current = width;
+    }, [width]);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -34,8 +49,15 @@ export function ResizableSidebar({
         };
 
         const handleMouseUp = () => {
-            setIsResizing(false);
-            document.body.style.cursor = 'default';
+            if (isResizing) {
+                setIsResizing(false);
+                document.body.style.cursor = 'default';
+                document.body.style.userSelect = '';
+
+                if (onResizeEnd) {
+                    onResizeEnd(widthRef.current);
+                }
+            }
         };
 
         if (isResizing) {
@@ -51,12 +73,17 @@ export function ResizableSidebar({
             document.body.style.cursor = 'default';
             document.body.style.userSelect = '';
         };
-    }, [isResizing, minWidth, maxWidthPct]);
+    }, [isResizing, minWidth, maxWidthPct, onResizeEnd]);
 
     return (
         <div
             className="relative border-l bg-background shadow-xl z-20 flex"
             style={{ width }}
+            onMouseUp={() => {
+                if (isResizing && onResizeEnd) {
+                    onResizeEnd(width);
+                }
+            }}
         >
             {/* Drag Handle */}
             <div

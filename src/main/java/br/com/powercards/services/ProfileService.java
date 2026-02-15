@@ -42,7 +42,7 @@ public class ProfileService {
 
     @Transactional
     public User updateProfile(String keycloakId, String displayName, String description, String colorPalette,
-            Boolean darkMode, String aiProvider) {
+            Boolean darkMode, String aiProvider, String preferences) {
         User user = User.findOrCreate(keycloakId);
         if (displayName != null) {
             user.displayName = displayName;
@@ -65,6 +65,9 @@ public class ProfileService {
             } else {
                 LOGGER.warn("Invalid AI provider: {}", aiProvider);
             }
+        }
+        if (preferences != null) {
+            user.preferences = preferences;
         }
         return user;
     }

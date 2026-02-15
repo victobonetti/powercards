@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NoteCRUD } from "./NoteCRUD";
-import { noteApi, modelApi } from "@/lib/api";
+import { noteApi } from "@/lib/api";
 import { MemoryRouter } from "react-router-dom";
 
 // Mock APIs
@@ -69,6 +70,23 @@ vi.mock("@/context/LanguageContext", () => ({
         },
         language: "en",
         setLanguage: vi.fn(),
+    }),
+}));
+
+// Mock Auth Context
+vi.mock("@/auth/AuthProvider", () => ({
+    useAuth: () => ({
+        profile: { preferences: "{}" },
+        updateProfileLocally: vi.fn(),
+    }),
+}));
+
+// Mock Task Context
+vi.mock("@/context/TaskContext", () => ({
+    useTask: () => ({
+        enhanceNote: vi.fn(),
+        enhancingNoteIds: [],
+        registerNoteUpdateCallback: vi.fn(() => vi.fn()),
     }),
 }));
 
@@ -173,6 +191,29 @@ describe("NoteCRUD Component", () => {
             // I'll check NoteCRUD implementation to see what BulkMoveDialog renders
             // Actually I didn't verify BulkMoveDialog content, but I can check for role="dialog"
             expect(screen.getByRole("dialog")).toBeInTheDocument();
+        });
+    });
+    it("opens bulk delete dialog when Delete key is pressed with selection", async () => {
+        const user = userEvent.setup();
+        render(
+            <MemoryRouter>
+                <NoteCRUD />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByText("Front 1")).toBeInTheDocument();
+        });
+
+        // Select a note
+        const row = screen.getByText("Front 1").closest("tr");
+        await user.click(row!);
+
+        // Press Delete key
+        await user.keyboard('{Delete}');
+
+        await waitFor(() => {
+            expect(screen.getByText(/Delete \d+ Notes/)).toBeInTheDocument();
         });
     });
 });

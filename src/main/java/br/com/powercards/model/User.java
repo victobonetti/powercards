@@ -33,6 +33,9 @@ public class User extends PanacheEntity {
     @Column(name = "ai_provider")
     public String aiProvider; // "openai", "gemini", "deepseek", or null
 
+    @Column(name = "preferences", columnDefinition = "TEXT")
+    public String preferences;
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     public List<Workspace> workspaces;

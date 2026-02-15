@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { HtmlInput } from "@/components/ui/html-input";
-import { noteApi, modelApi, uploadMedia, enhanceModel } from "@/lib/api";
+import { noteApi, modelApi, uploadMedia } from "@/lib/api";
 import { NoteResponse, AnkiModelResponse, AnkiFieldDto, NoteRequest } from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { TagInput } from "./ui/tag-input";
 import { splitAnkiFields, joinAnkiFields } from "@/lib/anki";
-import { Loader2, X, Save, Image as ImageIcon, Undo, Redo, Sparkles, Trash2 } from "lucide-react";
+import { Loader2, X, Save, Image as ImageIcon, Undo, Redo, Sparkles, Trash2, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/auth/AuthProvider";
@@ -22,6 +22,8 @@ interface NoteDetailProps {
     onDraftChange?: (isDraft: boolean) => void; // Notify parent of draft status change
     onEnhanceStart?: (noteId: number) => void;
     onEnhanceEnd?: (noteId: number) => void;
+    onEnhance?: (noteId: number, fields: string[], tags: string[]) => void;
+    isEnhancing?: boolean;
     className?: string;
 }
 
@@ -39,9 +41,12 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhanceEnd, onDraftChange, className }: NoteDetailProps) {
+export function NoteDetail({ noteId, onSaved, onClose, onEnhance, isEnhancing, onDraftChange, className }: NoteDetailProps) {
     const [tags, setTags] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [localLoading, setLocalLoading] = useState(false);
+
+    // Combine local loading with parent loading state
+    const loading = localLoading || isEnhancing;
     const [fetchingDetails, setFetchingDetails] = useState(false);
     const [isDraft, setIsDraft] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -57,6 +62,8 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
 
     // Dirty state
     const [isDirty, setIsDirty] = useState(false);
+    // Interaction state to prevent auto-save on view
+    const [hasInteracted, setHasInteracted] = useState(false);
 
     const { toast } = useToast();
     const { profile } = useAuth();
@@ -79,6 +86,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
         setTags([]);
         setIsDraft(false);
         setIsDirty(false);
+        setHasInteracted(false);
     };
 
     // Reset state when noteId changes
@@ -100,6 +108,14 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
     }, [noteId]);
 
 
+    // Refetch when enhancement completes
+    const prevEnhancing = useRef(isEnhancing);
+    useEffect(() => {
+        if (prevEnhancing.current && !isEnhancing && noteId) {
+            fetchNoteDetails(noteId);
+        }
+        prevEnhancing.current = isEnhancing;
+    }, [isEnhancing, noteId]);
 
 
     const fetchNoteDetails = async (id: number) => {
@@ -166,7 +182,6 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
 
     const checkDirty = (currentFlds: string[], currentTgs: string[], initFlds: string[], initTgs: string[]) => {
         // Deep compare
-        const fldsDirty = JSON.stringify(currentFlds) !== JSON.stringify(initFlds);
         const tagsDirty = JSON.stringify(currentTgs) !== JSON.stringify(initTgs);
 
         // If field values are empty and initial are empty, it's not dirty
@@ -201,7 +216,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
 
         const dirty = checkDirty(debouncedFields, debouncedTags, initialFields.current, initialTags.current);
 
-        if (dirty) {
+        if (dirty && hasInteracted) {
             saveDraft();
         }
     }, [debouncedFields, debouncedTags]);
@@ -238,7 +253,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
         if (!noteId) return;
         if (!confirm("Are you sure you want to discard unsaved changes? This cannot be undone.")) return;
 
-        setLoading(true);
+        setLocalLoading(true);
         try {
             // Delete draft via API
             await noteApi.v1NotesIdDraftDelete(noteId);
@@ -252,14 +267,14 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
             console.error("Failed to discard draft", error);
             toast({ title: "Error", description: "Failed to discard draft.", variant: "destructive" });
         } finally {
-            setLoading(false);
+            setLocalLoading(false);
         }
     };
 
     const handleSave = async () => {
         if (!note?.id) return;
 
-        setLoading(true);
+        setLocalLoading(true);
         try {
             // Reconstruct flds string
             const flds = joinAnkiFields(fieldValues);
@@ -275,6 +290,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
 
             toast({ title: "Success", description: "Note updated and draft cleared" });
             setIsDraft(false);
+            onDraftChange?.(false); // Explicitly notify parent
             setLastSaved(new Date());
             setEditingField(null); // Close any active edit
 
@@ -289,7 +305,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
             console.error("Failed to update note", error);
             toast({ title: "Error", description: "Failed to update note", variant: "destructive" });
         } finally {
-            setLoading(false);
+            setLocalLoading(false);
         }
     };
 
@@ -362,6 +378,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
         const newValues = [...fieldValues];
         newValues[index] = value;
         setFieldValues(newValues);
+        setHasInteracted(true);
     };
 
     const handleUpload = async (index: number, file: File) => {
@@ -393,6 +410,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
             const newValues = [...fieldValues];
             newValues[index] = newValue;
             setFieldValues(newValues);
+            setHasInteracted(true);
 
             toast({ title: "Success", description: "Media uploaded." });
         } catch (error) {
@@ -403,15 +421,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
 
     useEffect(() => {
         return () => {
-            if (noteId && loading) {
-                // If we unmount while loading, we should try to clear the parent's loading state
-                // However, we can't efficiently notify the parent to 'cancel' the specific spin logic if it's based on ID.
-                // But we CAN ensure we call onEnhanceEnd if strict mode double invocation isn't the issue.
-                // Actually, the issue description says "if i play the enhancement it never stop from loading".
-                // This suggests onEnhanceEnd is not called if, say, the user closes the modal/sidebar?
-                // The sidebar unmounting destroys this component.
-                onEnhanceEnd?.(noteId);
-            }
+            // Cleanup if needed
         };
     }, [noteId, loading]); // Dependency on loading ensures we only trigger if it WAS loading
 
@@ -425,28 +435,12 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
             return;
         }
 
-        if (noteId) onEnhanceStart?.(noteId);
-        saveToHistory();
-        toast({ title: "Enhancing Note...", description: "AI is improving all fields." });
-        setLoading(true);
-        try {
-            const enhancedFields = await enhanceModel(fieldValues);
-            if (enhancedFields.length !== fieldValues.length) {
-                toast({ title: "Warning", description: "AI returned mismatching fields. Aborted.", variant: "destructive" });
-                return;
-            }
-            setFieldValues(enhancedFields);
-            toast({ title: "Note Enhanced!", description: "All fields improved." });
-        } catch (error: any) {
-            const errorData = error?.response?.data;
-            if (errorData?.error === "AI_KEY_NOT_CONFIGURED") {
-                setShowAIKeyModal(true);
-            } else {
-                toast({ title: "Error", description: errorData?.message || "Failed to enhance note.", variant: "destructive" });
-            }
-        } finally {
-            setLoading(false);
-            if (noteId) onEnhanceEnd?.(noteId);
+        if (noteId && onEnhance) {
+            onEnhance(noteId, fieldValues, tags);
+            // We rely on parent to handle state and updating isEnhancing
+        } else {
+            // Fallback to local if no parent handler (though we expect parent handler now)
+            toast({ title: "Error", description: "Enhanced feature not available in this context", variant: "destructive" });
         }
     };
 
@@ -459,6 +453,14 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
                     <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b space-y-0">
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={onClose}
+                                    title="Close"
+                                >
+                                    <ArrowLeft className="h-4 w-4" />
+                                </Button>
                                 <CardTitle className="text-lg font-medium">
                                     Note Details
                                 </CardTitle>
@@ -469,7 +471,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
                                 )}
                             </div>
                             {lastSaved && (
-                                <CardDescription className="text-xs">
+                                <CardDescription className="text-xs ml-10">
                                     {savingDraft ? "Saving..." : `Saved ${lastSaved.toLocaleTimeString()}`}
                                 </CardDescription>
                             )}
@@ -547,7 +549,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
                                         variant="ghost"
                                         size="icon"
                                         onClick={handleSave}
-                                        disabled={loading || !isDirty}
+                                        disabled={loading || (!isDirty && !isDraft)}
                                     >
                                         <Save className="h-4 w-4" />
                                     </Button>
@@ -562,7 +564,7 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
                     </CardHeader>
 
                     <CardContent className="flex-1 overflow-y-auto p-6 relative">
-                        {loading && (
+                        {localLoading && (
                             <div className="absolute inset-0 bg-background/50 flex flex-col items-center justify-center z-50 backdrop-blur-sm">
                                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
                                 <span className="text-sm font-medium text-muted-foreground animate-pulse">Processing...</span>
@@ -645,7 +647,10 @@ export function NoteDetail({ noteId, onSaved, onClose, onEnhanceStart, onEnhance
                                     <Label className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">Tags</Label>
                                     <TagInput
                                         selected={tags}
-                                        onChange={setTags}
+                                        onChange={(newTags) => {
+                                            setTags(newTags);
+                                            setHasInteracted(true);
+                                        }}
                                         placeholder="Add tags..."
                                         disabled={loading} // Always valid
                                     />
