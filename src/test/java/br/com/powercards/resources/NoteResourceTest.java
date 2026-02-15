@@ -89,7 +89,7 @@ public class NoteResourceTest {
                                 .statusCode(200)
                                 .body("data.size()", is(8)); // 0, 2, ... 14 -> 8 numbers
 
-                // Search by tag
+                // Search by tag (Legacy partial match)
                 given()
                                 .header("X-Workspace-Id", workspace.id)
                                 .queryParam("search", "tag=tag1")
@@ -97,6 +97,64 @@ public class NoteResourceTest {
                                 .then()
                                 .statusCode(200)
                                 .body("data[0].tags", is("tag1"));
+        }
+
+        @Test
+        public void testListSearchByExactTag() throws Exception {
+                userTransaction.begin();
+                try {
+                        Note n1 = new Note();
+                        n1.flds = "Cat Note";
+                        n1.tags = "cat";
+                        n1.workspace = br.com.powercards.model.Workspace.findById(workspace.id);
+                        n1.persist();
+
+                        Note n2 = new Note();
+                        n2.flds = "Catch Note";
+                        n2.tags = "catch";
+                        n2.workspace = br.com.powercards.model.Workspace.findById(workspace.id);
+                        n2.persist();
+
+                        Note n3 = new Note();
+                        n3.flds = "Concatenation Note";
+                        n3.tags = "concatenation";
+                        n3.workspace = br.com.powercards.model.Workspace.findById(workspace.id);
+                        n3.persist();
+
+                        Note n4 = new Note();
+                        n4.flds = "Multi Tag Note";
+                        n4.tags = "dog cat bird";
+                        n4.workspace = br.com.powercards.model.Workspace.findById(workspace.id);
+                        n4.persist();
+
+                        userTransaction.commit();
+                } catch (Exception e) {
+                        userTransaction.rollback();
+                        throw e;
+                }
+
+                // 1. Exact match "cat" -> should match n1 ("cat") and n4 ("... cat ...")
+                // but NOT n2 ("catch") or n3 ("concatenation")
+                given()
+                                .header("X-Workspace-Id", workspace.id)
+                                .queryParam("search", "tag:cat")
+                                .when().get("/v1/notes")
+                                .then()
+                                .statusCode(200)
+                                .body("data.size()", is(2))
+                                .body("data.flds", hasItems("Cat Note", "Multi Tag Note"))
+                                .body("data.flds", not(hasItems("Catch Note", "Concatenation Note")));
+
+                // 2. Legacy partial match "tag=cat" -> should match all 4
+                given()
+                                .header("X-Workspace-Id", workspace.id)
+                                .queryParam("search", "tag=cat")
+                                .when().get("/v1/notes")
+                                .then()
+                                .statusCode(200)
+                                .body("data.size()", greaterThanOrEqualTo(4))
+                                .body("data.flds", hasItems("Cat Note", "Catch Note", "Concatenation Note",
+                                                "Multi Tag Note"));
         }
 
         @Test

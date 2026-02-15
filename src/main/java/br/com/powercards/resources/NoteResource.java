@@ -97,7 +97,21 @@ public class NoteResource {
         }
 
         if (search != null && !search.isBlank()) {
-            if (search.toLowerCase().startsWith("tag=")) {
+            if (search.toLowerCase().startsWith("tag:")) {
+                String tag = search.substring(4).trim();
+                // Exact match logic for space-separated tags:
+                // 1. tag is the only tag: "tag"
+                // 2. tag is at the start: "tag %"
+                // 3. tag is at the end: "% tag"
+                // 4. tag is in the middle: "% tag %"
+                queryBuilder.append(
+                        " and (n.tags = :tagExact OR n.tags LIKE :tagStart OR n.tags LIKE :tagEnd OR n.tags LIKE :tagMiddle)");
+                params.put("tagExact", tag);
+                params.put("tagStart", tag + " %");
+                params.put("tagEnd", "% " + tag);
+                params.put("tagMiddle", "% " + tag + " %");
+            } else if (search.toLowerCase().startsWith("tag=")) {
+                // Deprecated but backward compatible partial match
                 String tag = search.substring(4);
                 queryBuilder.append(" and lower(n.tags) like :tag");
                 params.put("tag", "%" + tag.toLowerCase() + "%");

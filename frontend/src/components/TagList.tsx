@@ -93,7 +93,7 @@ export function TagList() {
     };
 
     const handleTagClick = (tagName: string) => {
-        navigate(`/notes?search=tag=${encodeURIComponent(tagName)}`);
+        navigate(`/notes?search=tag:${encodeURIComponent(tagName)}`);
     };
 
     const totalPages = Math.ceil(totalTags / perPage) || 1;
