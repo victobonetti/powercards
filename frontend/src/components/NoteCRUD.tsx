@@ -236,6 +236,11 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
         if (!deleteNoteId) return;
         try {
             await noteApi.v1NotesIdDelete(deleteNoteId);
+
+            if (editingNote?.id === deleteNoteId) {
+                setEditingNote(null);
+            }
+
             setDeleteNoteId(null);
             setIsDeleteOpen(false);
             fetchNotes(currentPage);
@@ -314,6 +319,11 @@ export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
             await noteApi.v1NotesBulkDeletePost({
                 ids: selectedIds
             });
+
+            if (editingNote?.id && selectedIds.includes(editingNote.id)) {
+                setEditingNote(null);
+            }
+
             toast({ title: "Success", description: "Notes deleted successfully" });
             fetchNotes(currentPage);
             setSelectedIds([]);
