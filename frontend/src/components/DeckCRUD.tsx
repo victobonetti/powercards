@@ -21,7 +21,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CardList } from "./CardList";
+import { NoteCRUD } from "./NoteCRUD";
 
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 
@@ -181,7 +181,7 @@ export function DeckCRUD({ highlightNew }: DeckCRUDProps) {
 
     if (selectedDeck) {
         return (
-            <CardList
+            <NoteCRUD
                 deckId={selectedDeck.id}
                 deckName={selectedDeck.name}
                 onBack={() => setSelectedDeck(null)}

@@ -12,10 +12,15 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import jakarta.inject.Inject;
+import jakarta.transaction.UserTransaction;
 
 @QuarkusTest
 @TestSecurity(user = "test-user", roles = "user")
 public class NoteResourceTest {
+
+        @Inject
+        UserTransaction userTransaction;
 
         @io.quarkus.test.InjectMock
         br.com.powercards.services.AIEnhancementService aiEnhancementService;
@@ -355,5 +360,46 @@ public class NoteResourceTest {
                                 .when().get("/v1/notes/" + noteId)
                                 .then()
                                 .body("fields", is("Original"));
+        }
+
+        @Test
+        public void testListWithDeckFilterAndSort() throws Exception {
+                userTransaction.begin();
+                br.com.powercards.model.Deck deck = new br.com.powercards.model.Deck();
+                try {
+                        // 1. Create Deck and Cards
+                        deck.name = "Test Deck";
+                        // Reattach workspace if needed, or rely on merge
+                        // Since workspace is detached, we need to find it or merge it
+                        // But simpler might be to findById inside transaction
+                        br.com.powercards.model.Workspace ws = br.com.powercards.model.Workspace.findById(workspace.id);
+                        deck.workspace = ws;
+                        deck.persist();
+
+                        Note note = new Note();
+                        note.flds = "New Note";
+                        note.workspace = ws;
+                        note.persist();
+
+                        Card card = new Card();
+                        card.deck = deck;
+                        card.note = note;
+                        card.persist();
+
+                        userTransaction.commit();
+                } catch (Exception e) {
+                        userTransaction.rollback();
+                        throw e;
+                }
+
+                // 2. List with deckId and sort=id (triggers join and ambiguity if not fixed)
+                given()
+                                .header("X-Workspace-Id", workspace.id)
+                                .queryParam("deckId", deck.id)
+                                .queryParam("sort", "id") // Ambiguous without alias!
+                                .when().get("/v1/notes")
+                                .then()
+                                .statusCode(200)
+                                .body("data.size()", is(1));
         }
 }

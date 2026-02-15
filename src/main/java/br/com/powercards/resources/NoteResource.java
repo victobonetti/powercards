@@ -8,6 +8,9 @@ import br.com.powercards.dto.PaginatedResponse;
 import br.com.powercards.dto.PaginationMeta;
 import br.com.powercards.dto.BulkDeleteRequest;
 import br.com.powercards.dto.BulkTagRequest;
+import br.com.powercards.dto.BulkMoveNoteRequest;
+import br.com.powercards.model.Card;
+import br.com.powercards.model.Deck;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -54,6 +57,7 @@ public class NoteResource {
             @QueryParam("perPage") @DefaultValue("20") int perPage,
             @QueryParam("search") String search,
             @QueryParam("sort") String sort,
+            @QueryParam("deckId") Long deckId,
             @Context UriInfo uriInfo) {
 
         if (page < 1)
@@ -63,25 +67,47 @@ public class NoteResource {
 
         io.quarkus.panache.common.Sort sortObj = io.quarkus.panache.common.Sort.by("id");
         if (sort != null && !sort.isBlank()) {
+            String sortCol = sort;
+            io.quarkus.panache.common.Sort.Direction direction = io.quarkus.panache.common.Sort.Direction.Ascending;
+
             if (sort.startsWith("-")) {
-                sortObj = io.quarkus.panache.common.Sort.descending(sort.substring(1));
-            } else {
-                sortObj = io.quarkus.panache.common.Sort.ascending(sort);
+                sortCol = sort.substring(1);
+                direction = io.quarkus.panache.common.Sort.Direction.Descending;
             }
+
+            // Fix for ambiguous columns when joining tables (e.g. id exists in Note and
+            // Card)
+            if (!sortCol.contains(".")) {
+                sortCol = "n." + sortCol;
+            }
+
+            sortObj = io.quarkus.panache.common.Sort.by(sortCol).direction(direction);
         }
 
         io.quarkus.hibernate.orm.panache.PanacheQuery<Note> query;
+        StringBuilder queryBuilder = new StringBuilder();
+        java.util.Map<String, Object> params = new java.util.HashMap<>();
+
+        // Base query
+        if (deckId != null) {
+            queryBuilder.append("select distinct n from Note n join n.cards c where c.deck.id = :deckId");
+            params.put("deckId", deckId);
+        } else {
+            queryBuilder.append("select n from Note n where 1=1");
+        }
+
         if (search != null && !search.isBlank()) {
             if (search.toLowerCase().startsWith("tag=")) {
                 String tag = search.substring(4);
-                query = Note.find("lower(tags) like ?1", sortObj, "%" + tag.toLowerCase() + "%");
+                queryBuilder.append(" and lower(n.tags) like :tag");
+                params.put("tag", "%" + tag.toLowerCase() + "%");
             } else {
-                String term = "%" + search.toLowerCase() + "%";
-                query = Note.find("lower(flds) like ?1 or lower(sfld) like ?1", sortObj, term);
+                queryBuilder.append(" and (lower(n.flds) like :search or lower(n.sfld) like :search)");
+                params.put("search", "%" + search.toLowerCase() + "%");
             }
-        } else {
-            query = Note.findAll(sortObj);
         }
+
+        query = Note.find(queryBuilder.toString(), sortObj, params);
 
         long total = query.count();
         List<Note> notes = query.page(page - 1, perPage).list();
@@ -456,6 +482,21 @@ public class NoteResource {
                 note.tags = String.join(" ", tagSet);
                 note.persist();
             }
+        }
+    }
+
+    @POST
+    @Path("/bulk/move")
+    @Transactional
+    @org.eclipse.microprofile.openapi.annotations.Operation(summary = "Bulk move notes (cards) to deck")
+    public void bulkMove(BulkMoveNoteRequest request) {
+        if (request.noteIds() != null && !request.noteIds().isEmpty() && request.targetDeckId() != null) {
+            Deck deck = Deck.findById(request.targetDeckId());
+            if (deck == null) {
+                throw new NotFoundException("Target deck not found");
+            }
+            // Move all cards belonging to these notes to the target deck
+            Card.update("deck = ?1 where note.id in ?2", deck, request.noteIds());
         }
     }
 

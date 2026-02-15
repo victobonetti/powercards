@@ -924,6 +924,13 @@
       "get" : {
         "summary" : "List all notes",
         "parameters" : [ {
+          "name" : "deckId",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "schema" : {
@@ -1021,6 +1028,30 @@
             "application/json" : {
               "schema" : {
                 "$ref" : "#/components/schemas/BatchEnhanceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "tags" : [ "Note Resource" ]
+      }
+    },
+    "/v1/notes/bulk/move" : {
+      "post" : {
+        "summary" : "Bulk move notes (cards) to deck",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BulkMoveNoteRequest"
               }
             }
           },
@@ -1654,6 +1685,22 @@
               "type" : "integer",
               "format" : "int64"
             }
+          }
+        }
+      },
+      "BulkMoveNoteRequest" : {
+        "type" : "object",
+        "properties" : {
+          "noteIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "targetDeckId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

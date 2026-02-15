@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "./ui/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Plus, Loader2, Sparkles } from "lucide-react";
+import { Plus, Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import {
@@ -24,12 +24,19 @@ import { DataTable } from "./ui/data-table";
 import { TagInput } from "./ui/tag-input";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
 import { BulkTagDialog } from "./BulkTagDialog";
+import { BulkMoveDialog } from "./BulkMoveDialog";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ResizableSidebar } from "./ui/resizable-sidebar";
 import { NoteDetail } from "./NoteDetail";
 import { useLanguage } from "@/context/LanguageContext";
 
-export function NoteCRUD() {
+interface NoteCRUDProps {
+    deckId?: number;
+    deckName?: string;
+    onBack?: () => void;
+}
+
+export function NoteCRUD({ deckId, deckName, onBack }: NoteCRUDProps) {
     const { t } = useLanguage();
     const [notes, setNotes] = useState<NoteResponse[]>([]);
     const [models, setModels] = useState<AnkiModelResponse[]>([]);
@@ -57,6 +64,7 @@ export function NoteCRUD() {
     const [enhancingNoteIds, setEnhancingNoteIds] = useState<number[]>([]);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isBulkTagOpen, setIsBulkTagOpen] = useState(false);
+    const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
     // Keyboard Navigation
@@ -96,7 +104,7 @@ export function NoteCRUD() {
 
     useEffect(() => {
         setSelectedIds([]);
-    }, [currentPage, debouncedSearch]);
+    }, [currentPage, debouncedSearch, deckId]);
 
     // Confirmation State
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -123,7 +131,7 @@ export function NoteCRUD() {
     const fetchNotes = async (page: number) => {
         setLoading(true);
         try {
-            const response = await noteApi.v1NotesGet(page, perPage, debouncedSearch, sort);
+            const response = await noteApi.v1NotesGet(deckId, page, perPage, debouncedSearch, sort);
             const paginatedData = response.data as any;
             setNotes(paginatedData.data);
             setTotalNotes(paginatedData.pagination.total);
@@ -146,7 +154,7 @@ export function NoteCRUD() {
     useEffect(() => {
         fetchNotes(currentPage);
         fetchModels();
-    }, [currentPage, debouncedSearch, sort, perPage]);
+    }, [currentPage, debouncedSearch, sort, perPage, deckId]);
 
     // Sync search to URL
     useEffect(() => {
@@ -222,6 +230,23 @@ export function NoteCRUD() {
         }
     };
 
+    const handleBulkMove = async (targetDeckId: number) => {
+        if (selectedIds.length === 0) return;
+        try {
+            // @ts-ignore - Check API generation for precise name if needed, assuming v1NotesBulkMovePost
+            await noteApi.v1NotesBulkMovePost({
+                noteIds: selectedIds,
+                targetDeckId: targetDeckId
+            });
+            toast({ title: "Success", description: "Notes moved successfully" });
+            fetchNotes(currentPage);
+            setSelectedIds([]);
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to move notes", variant: "destructive" });
+        }
+    };
+
     const handleBatchEnhance = async () => {
         if (selectedIds.length === 0) return;
         if (!confirm(`Are you sure you want to enhance ${selectedIds.length} notes with AI? This will create drafts for each note.`)) return;
@@ -241,6 +266,8 @@ export function NoteCRUD() {
             setEnhancingNoteIds([]);
         }
     };
+
+
 
     const handleBulkDelete = async () => {
         if (selectedIds.length === 0) return;
@@ -270,10 +297,17 @@ export function NoteCRUD() {
                         <Card className="flex flex-col border shadow-sm flex-1 overflow-hidden">
                             <CardHeader className="p-8 pb-4 space-y-4 border-b">
                                 <PageHeader
-                                    title={t.notes.title}
-                                    description={t.notes.description}
+                                    title={deckName || t.notes.title}
+                                    description={deckName ? `Manage notes in ${deckName}` : t.notes.description}
                                     className="mb-0"
                                 >
+                                    <div className="flex items-center gap-2">
+                                        {onBack && (
+                                            <Button variant="ghost" size="icon" onClick={onBack}>
+                                                <ArrowLeft className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             placeholder={t.notes.searchPlaceholder}
@@ -287,6 +321,7 @@ export function NoteCRUD() {
                                                     <Plus className="mr-2 h-4 w-4" /> {t.notes.newNote}
                                                 </Button>
                                             </DialogTrigger>
+
                                             {/* ... Create Dialog Content kept as is ... */}
                                             <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
                                                 <DialogHeader>
@@ -342,6 +377,9 @@ export function NoteCRUD() {
                                             {selectedIds.length} {t.notes.bulkSelected}
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            <Button size="sm" variant="outline" onClick={() => setIsBulkMoveOpen(true)}>
+                                                Move to Deck
+                                            </Button>
                                             <Button size="sm" variant="outline" onClick={() => setIsBulkTagOpen(true)}>
                                                 {t.notes.bulkAddTags}
                                             </Button>
@@ -490,6 +528,12 @@ export function NoteCRUD() {
                     open={isBulkTagOpen}
                     onOpenChange={setIsBulkTagOpen}
                     onConfirm={handleBulkTag}
+                    itemCount={selectedIds.length}
+                />
+                <BulkMoveDialog
+                    open={isBulkMoveOpen}
+                    onOpenChange={setIsBulkMoveOpen}
+                    onConfirm={handleBulkMove}
                     itemCount={selectedIds.length}
                 />
 

@@ -170,6 +170,25 @@ export interface BulkDeleteRequest {
 /**
  * 
  * @export
+ * @interface BulkMoveNoteRequest
+ */
+export interface BulkMoveNoteRequest {
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof BulkMoveNoteRequest
+     */
+    'noteIds'?: Array<number>;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkMoveNoteRequest
+     */
+    'targetDeckId'?: number;
+}
+/**
+ * 
+ * @export
  * @interface BulkMoveRequest
  */
 export interface BulkMoveRequest {
@@ -3647,6 +3666,42 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
         },
         /**
          * 
+         * @summary Bulk move notes (cards) to deck
+         * @param {BulkMoveNoteRequest} bulkMoveNoteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesBulkMovePost: async (bulkMoveNoteRequest: BulkMoveNoteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkMoveNoteRequest' is not null or undefined
+            assertParamExists('v1NotesBulkMovePost', 'bulkMoveNoteRequest', bulkMoveNoteRequest)
+            const localVarPath = `/v1/notes/bulk/move`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkMoveNoteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Bulk add tags to notes
          * @param {BulkTagRequest} bulkTagRequest 
          * @param {*} [options] Override http request option.
@@ -3684,6 +3739,7 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary List all notes
+         * @param {number} [deckId] 
          * @param {number} [page] 
          * @param {number} [perPage] 
          * @param {string} [search] 
@@ -3691,7 +3747,7 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesGet: async (page?: number, perPage?: number, search?: string, sort?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        v1NotesGet: async (deckId?: number, page?: number, perPage?: number, search?: string, sort?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/v1/notes`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3703,6 +3759,10 @@ export const NoteResourceApiAxiosParamCreator = function (configuration?: Config
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (deckId !== undefined) {
+                localVarQueryParameter['deckId'] = deckId;
+            }
 
             if (page !== undefined) {
                 localVarQueryParameter['page'] = page;
@@ -4035,6 +4095,19 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Bulk move notes (cards) to deck
+         * @param {BulkMoveNoteRequest} bulkMoveNoteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1NotesBulkMovePost(bulkMoveNoteRequest: BulkMoveNoteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesBulkMovePost(bulkMoveNoteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesBulkMovePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Bulk add tags to notes
          * @param {BulkTagRequest} bulkTagRequest 
          * @param {*} [options] Override http request option.
@@ -4049,6 +4122,7 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary List all notes
+         * @param {number} [deckId] 
          * @param {number} [page] 
          * @param {number} [perPage] 
          * @param {string} [search] 
@@ -4056,8 +4130,8 @@ export const NoteResourceApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async v1NotesGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseNoteResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesGet(page, perPage, search, sort, options);
+        async v1NotesGet(deckId?: number, page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseNoteResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1NotesGet(deckId, page, perPage, search, sort, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['NoteResourceApi.v1NotesGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -4189,6 +4263,16 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
         },
         /**
          * 
+         * @summary Bulk move notes (cards) to deck
+         * @param {BulkMoveNoteRequest} bulkMoveNoteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1NotesBulkMovePost(bulkMoveNoteRequest: BulkMoveNoteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.v1NotesBulkMovePost(bulkMoveNoteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Bulk add tags to notes
          * @param {BulkTagRequest} bulkTagRequest 
          * @param {*} [options] Override http request option.
@@ -4200,6 +4284,7 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
         /**
          * 
          * @summary List all notes
+         * @param {number} [deckId] 
          * @param {number} [page] 
          * @param {number} [perPage] 
          * @param {string} [search] 
@@ -4207,8 +4292,8 @@ export const NoteResourceApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        v1NotesGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseNoteResponse> {
-            return localVarFp.v1NotesGet(page, perPage, search, sort, options).then((request) => request(axios, basePath));
+        v1NotesGet(deckId?: number, page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseNoteResponse> {
+            return localVarFp.v1NotesGet(deckId, page, perPage, search, sort, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4320,6 +4405,18 @@ export class NoteResourceApi extends BaseAPI {
 
     /**
      * 
+     * @summary Bulk move notes (cards) to deck
+     * @param {BulkMoveNoteRequest} bulkMoveNoteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NoteResourceApi
+     */
+    public v1NotesBulkMovePost(bulkMoveNoteRequest: BulkMoveNoteRequest, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesBulkMovePost(bulkMoveNoteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Bulk add tags to notes
      * @param {BulkTagRequest} bulkTagRequest 
      * @param {*} [options] Override http request option.
@@ -4333,6 +4430,7 @@ export class NoteResourceApi extends BaseAPI {
     /**
      * 
      * @summary List all notes
+     * @param {number} [deckId] 
      * @param {number} [page] 
      * @param {number} [perPage] 
      * @param {string} [search] 
@@ -4341,8 +4439,8 @@ export class NoteResourceApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NoteResourceApi
      */
-    public v1NotesGet(page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig) {
-        return NoteResourceApiFp(this.configuration).v1NotesGet(page, perPage, search, sort, options).then((request) => request(this.axios, this.basePath));
+    public v1NotesGet(deckId?: number, page?: number, perPage?: number, search?: string, sort?: string, options?: RawAxiosRequestConfig) {
+        return NoteResourceApiFp(this.configuration).v1NotesGet(deckId, page, perPage, search, sort, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
