@@ -53,7 +53,7 @@ public class ProfileResourceUnitTest {
                 String aiApiKey = "sk-test-key";
 
                 ProfileRequest request = new ProfileRequest(displayName, description, colorPalette, darkMode,
-                                aiProvider, aiApiKey);
+                                aiProvider, aiApiKey, null);
 
                 User mockUser = new User();
                 mockUser.keycloakId = keycloakId;
@@ -65,7 +65,7 @@ public class ProfileResourceUnitTest {
 
                 // Mock service
                 when(profileService.updateProfile(eq(keycloakId), eq(displayName), eq(description), eq(colorPalette),
-                                eq(darkMode), eq(aiProvider)))
+                                eq(darkMode), eq(aiProvider), any()))
                                 .thenReturn(mockUser);
                 when(profileService.saveAiApiKey(eq(keycloakId), eq(aiApiKey))).thenReturn(true);
                 when(profileService.hasAiApiKey(eq(keycloakId))).thenReturn(true);
@@ -90,7 +90,7 @@ public class ProfileResourceUnitTest {
                 mockUser.aiProvider = "openai";
                 mockUser.darkMode = false;
 
-                when(profileService.updateProfile(anyString(), any(), any(), any(), any(), anyString()))
+                when(profileService.updateProfile(anyString(), any(), any(), any(), any(), anyString(), any()))
                                 .thenReturn(mockUser);
 
                 // Simulate successful key save
@@ -105,7 +105,8 @@ public class ProfileResourceUnitTest {
                                 "theme",
                                 false,
                                 "openai",
-                                "sk-test-key");
+                                "sk-test-key",
+                                null);
 
                 // Act
                 ProfileResponse response = profileResource.updateProfile(request);
@@ -123,7 +124,7 @@ public class ProfileResourceUnitTest {
                 mockUser.keycloakId = "test-user";
                 // mockUser.darkMode can be null or default
 
-                when(profileService.updateProfile(anyString(), any(), any(), any(), any(), anyString()))
+                when(profileService.updateProfile(anyString(), any(), any(), any(), any(), anyString(), any()))
                                 .thenReturn(mockUser);
 
                 // Simulate FAILED key save
@@ -137,7 +138,8 @@ public class ProfileResourceUnitTest {
                                 "theme",
                                 false,
                                 "openai",
-                                "sk-test-key");
+                                "sk-test-key",
+                                null);
 
                 // Act
                 ProfileResponse response = profileResource.updateProfile(request);
